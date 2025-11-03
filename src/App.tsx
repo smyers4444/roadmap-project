@@ -1320,8 +1320,16 @@ function App() {
 
                 // ========== TASK SORTING ==========
                 // "Reverse Tetris" algorithm: Pack tasks to the top
-                // Sort by displayOrder only (manual ordering from drag-and-drop)
+                // Sort by: 1) Vacation first, 2) Display order for manual arrangement
                 const sortedTasks = [...visibleTasks].sort((a, b) => {
+                  const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                  const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
+
+                  // Vacation tasks always come first (appear at top)
+                  if (aIsVacation && !bIsVacation) return -1;
+                  if (!aIsVacation && bIsVacation) return 1;
+
+                  // For non-vacation tasks or vacation ties, use display order
                   return (a.displayOrder || 0) - (b.displayOrder || 0);
                 });
 
@@ -1483,8 +1491,16 @@ function App() {
                       const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
                       const phaseTopPadding = 8;
 
-                      // Sort phase tasks by displayOrder only
+                      // Sort phase tasks by: 1) Vacation first, 2) Display order
                       const sortedPhaseTasks = [...phaseTasks].sort((a, b) => {
+                        const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                        const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
+
+                        // Vacation tasks always come first (appear at top)
+                        if (aIsVacation && !bIsVacation) return -1;
+                        if (!aIsVacation && bIsVacation) return 1;
+
+                        // For non-vacation tasks or vacation ties, use display order
                         return (a.displayOrder || 0) - (b.displayOrder || 0);
                       });
 
@@ -1678,7 +1694,7 @@ function App() {
 
                               {/* Vacation background bars - gray overlay for vacation periods */}
                               {phaseTasks
-                                .filter((task) => task.name.toLowerCase().includes("vacation"))
+                                .filter((task) => task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO")
                                 .map((task) => {
                                   const { start, width } = getTaskPosition(task);
                                   return (
@@ -1690,9 +1706,9 @@ function App() {
                                         width: `${width}%`,
                                         top: "0px",
                                         height: "100%",
-                                        backgroundColor: "var(--debug-color)",
+                                        backgroundColor: "#DDD6D0",
                                         zIndex: 0,
-                                        opacity: 0.5,
+                                        opacity: 0.7,
                                       }}
                                     />
                                   );
@@ -1703,8 +1719,11 @@ function App() {
                                 const { start, width } = getTaskPosition(task);
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
-                                const textColor = getTextColor(task.categoryHex);
+                                
+                                // Use default color for vacation/OOO tasks, otherwise use category color
+                                const isVacationTask = task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO";
+                                const bgColor = isVacationTask ? "#645b56" : (task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)");
+                                const textColor = isVacationTask ? getTextColor("645b56") : getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
@@ -1841,8 +1860,16 @@ function App() {
 
                 // ========== TASK SORTING ==========
                 // "Reverse Tetris" algorithm: Pack tasks to the top
-                // Sort by displayOrder only (manual ordering from drag-and-drop)
+                // Sort by: 1) Vacation first, 2) Display order for manual arrangement
                 const sortedTasks = [...visibleTasks].sort((a, b) => {
+                  const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                  const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
+
+                  // Vacation tasks always come first (appear at top)
+                  if (aIsVacation && !bIsVacation) return -1;
+                  if (!aIsVacation && bIsVacation) return 1;
+
+                  // For non-vacation tasks or vacation ties, use display order
                   return (a.displayOrder || 0) - (b.displayOrder || 0);
                 });
 
@@ -1983,8 +2010,16 @@ function App() {
                       const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
                       const phaseTopPadding = 8;
 
-                      // Sort phase tasks by displayOrder only
+                      // Sort phase tasks by: 1) Vacation first, 2) Display order
                       const sortedPhaseTasks = [...phaseTasks].sort((a, b) => {
+                        const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                        const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
+
+                        // Vacation tasks always come first (appear at top)
+                        if (aIsVacation && !bIsVacation) return -1;
+                        if (!aIsVacation && bIsVacation) return 1;
+
+                        // For non-vacation tasks or vacation ties, use display order
                         return (a.displayOrder || 0) - (b.displayOrder || 0);
                       });
 
@@ -2175,7 +2210,7 @@ function App() {
 
                               {/* Vacation background bars - gray overlay for vacation periods */}
                               {phaseTasks
-                                .filter((task) => task.name.toLowerCase().includes("vacation"))
+                                .filter((task) => task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO")
                                 .map((task) => {
                                   const { start, width } = getMonthTaskPosition(task);
                                   return (
@@ -2187,9 +2222,9 @@ function App() {
                                         width: `${width}%`,
                                         top: "0px",
                                         height: "100%",
-                                        backgroundColor: "var(--debug-color3)",
+                                        backgroundColor: "#DDD6D0",
                                         zIndex: 0,
-                                        opacity: 0.5,
+                                        opacity: 0.7,
                                       }}
                                     />
                                   );
@@ -2200,8 +2235,11 @@ function App() {
                                 const { start, width } = getMonthTaskPosition(task);
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
-                                const textColor = getTextColor(task.categoryHex);
+                                
+                                // Use default color for vacation/OOO tasks, otherwise use category color
+                                const isVacationTask = task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO";
+                                const bgColor = isVacationTask ? "#645b56" : (task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)");
+                                const textColor = isVacationTask ? getTextColor("645b56") : getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
