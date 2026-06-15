@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (weekend toggle completed, export-week-number documented)
+Last updated: 2026-06-15 (CSV week export implemented)
 
 ## Current Snapshot
 
@@ -40,18 +40,20 @@ There are now separate feature notes for:
 
 - completed weekend-toggle work at `docs/feature-weekend-toggle.md`
 - proposed layout-orientation work at `docs/feature-layout-orientation-toggle.md`
-- proposed CSV week-number export work at `docs/feature-export-week-number.md`
+- CSV week-number export work at `docs/feature-export-week-number.md`
 
 ## Branch And Working Tree
 
-The latest completed feature commit is:
+The latest completed commits are:
 
 - `57f0d89` `Add weekly weekend toggle`
+- `4d75c8f` `Update roadmap feature docs`
 
-At the time of this handoff, there are local documentation changes only.
+At the time of this handoff, there are uncommitted implementation changes.
 
-- `docs/feature-weekend-toggle.md` has been updated from a proposal note into a completed-status note.
-- `docs/feature-export-week-number.md` now documents the proposed next export feature.
+- `src/App.tsx` now exports a `Week` column in CSV output.
+- `README.md` now documents the exported `Week` field.
+- `docs/feature-export-week-number.md` has been updated from a proposal note into a current-status note for this slice.
 
 ## How to Run
 
@@ -111,9 +113,9 @@ Latest verification, 2026-06-15:
 
 Latest local changes, 2026-06-15:
 
-- Marked `docs/feature-weekend-toggle.md` as completed and verified.
-- Added `docs/feature-export-week-number.md` to capture the next proposed CSV export enhancement.
-- Recorded that browser/manual weekend-toggle verification has now been completed.
+- Added CSV `Week` export in `src/App.tsx`.
+- Export now uses the stored `task.week` when present and falls back to a derived relative week number from `startDate` for manual tasks.
+- Updated `README.md` and `docs/feature-export-week-number.md` to reflect the new export behavior.
 
 ## Key Guardrails
 
@@ -126,8 +128,8 @@ Latest local changes, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Implement the proposed `Week` column in CSV export using the documented fallback rule in `docs/feature-export-week-number.md`.
-2. Verify export output for both imported tasks that already have `Week` values and manually created tasks that do not.
+1. Verify CSV export output for both imported tasks that already have `Week` values and manually created tasks that do not.
+2. If the export values look right, decide whether to commit this CSV export slice or bundle it with any adjacent export cleanup.
 3. After that, return to the next contained UI cleanup such as removing or gating the user-facing `Add Test Task` button.
 
 ## New Chat Start

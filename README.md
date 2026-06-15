@@ -25,6 +25,7 @@ Each task supports these fields:
 - `Task`
 - `Sub-Task`
 - `Owner`
+- `Week`
 - `Line Padding`
 - `Date Start`
 - `Date End`
@@ -67,7 +68,7 @@ Recognized columns include:
 
 When tasks with the same phase, category, and name are imported together, the app groups them and merges their date range.
 
-The export action downloads the current task list as a CSV file.
+The export action downloads the current task list as a CSV file, including a `Week` column. Export uses the task's stored `Week` value when present, and otherwise derives a relative week number from the task start date so manual tasks still export cleanly.
 
 ## Getting Started
 

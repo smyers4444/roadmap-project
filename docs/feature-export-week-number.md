@@ -1,78 +1,62 @@
-# Feature Plan: Export Week Number In CSV
+# Feature Status: Export Week Number In CSV
 
-## Purpose
+## Status
 
-This note captures the recommended approach for adding week-number output to CSV export.
+Implemented in the current working tree after commit `4d75c8f` (`Update roadmap feature docs`).
 
-The goal is to make exported roadmap data easier to sort, review, and hand off without changing the task editing flow or making import stricter.
+Verification pending for this implementation slice:
 
-## Recommendation
+- `npm run build`
+- `npx eslint src/App.tsx`
+- manual CSV export check for imported and manually created tasks
 
-Add a `Week` column to the exported CSV.
+## Shipped Behavior
 
-Recommended placement:
+CSV export now includes a `Week` column.
 
-- after `Owner`
-- before `Date Start`
-
-Recommended export header:
+Export order:
 
 `Phase,Phase Hex,Category,Category HEX,Task,Sub-Task,Owner,Week,Date Start,Date End,Display Order,Line Padding`
 
-## Recommended Week Value
+Week export behavior is forgiving:
 
-Prefer a forgiving export rule that works for both imported and manually created tasks.
+1. if a task already has `task.week`, that value is exported
+2. if `task.week` is missing, the app derives a relative week number from the task `startDate`
 
-1. If `task.week` already exists, export that value.
-2. If `task.week` is blank, derive the week number from the task's `startDate`.
+The derived value:
 
-Recommended derived definition:
+- normalizes to the start of the task's week
+- compares against the earliest task week in the current task list
+- exports a relative week number starting at `1`
 
-- use the task's `startDate`
-- normalize to the start of that week
-- compare against the earliest task week in the current task list
-- export a relative week number starting at `1`
+This keeps CSV export useful for both imported tasks and manual tasks.
 
-This keeps CSV export useful even when tasks were created manually and never received an imported `Week` field.
+## Guardrails Preserved
 
-## Why This Version Is Better
+- import behavior remains flexible
+- export still preserves manual task order
+- no existing CSV columns were removed
+- the file download flow remains unchanged
 
-- preserves existing importer flexibility
-- does not require users to backfill a new field before export works
-- keeps CSV useful for spreadsheet sorting and reporting
-- matches the app's existing relative week-number framing more closely than raw ISO week numbers would
+## Implementation Notes
 
-## Guardrails
+The shipped slice added:
 
-- do not remove any current CSV columns
-- do not make import depend on the `Week` column
-- do not let export week-number logic drift away from the weekly view's relative week-number mental model without documenting that difference
-- preserve manual ordering and the current file download workflow
+1. a relative week-number helper in `src/App.tsx`
+2. a `Week` CSV header between `Owner` and `Date Start`
+3. export fallback logic so manual tasks still receive a sensible week number
 
-## Implementation Slices
+## Remaining Verification
 
-1. Add the export column
-- update the CSV header string in `src/App.tsx`
-- insert the week value into each exported row in the same position
+Before considering this fully wrapped:
 
-2. Extract export week-number logic
-- add a small helper for computing export week numbers
-- reuse existing date normalization assumptions already used elsewhere in the app
+1. export a file from imported tasks that already contain `Week`
+2. export a file from manually created tasks without `Week`
+3. confirm the downloaded CSV column order and values look correct in a spreadsheet
 
-3. Preserve flexible behavior
-- export `task.week` when available
-- derive a week number when it is missing
+## Next Related Docs
 
-4. Verify export output
-- export a file with imported tasks that already contain `Week`
-- export a file with manually created tasks that do not contain `Week`
-- confirm column order stays stable
-- confirm CSV export still downloads correctly
+For current repo state and next steps, read:
 
-## Suggested First Slice
-
-If implementation starts soon, begin with:
-
-1. compute the relative week number helper
-2. add the `Week` CSV column
-3. verify imported and manual tasks both export sensible week values
+- [handoff.md](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap%20Project/docs/handoff.md:1)
+- [feature-layout-orientation-toggle.md](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap%20Project/docs/feature-layout-orientation-toggle.md:1)

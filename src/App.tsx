@@ -542,13 +542,16 @@ function App() {
     };
 
     // Create CSV header
-    const header = "Phase,Phase Hex,Category,Category HEX,Task,Sub-Task,Owner,Date Start,Date End,Display Order,Line Padding";
+    const header = "Phase,Phase Hex,Category,Category HEX,Task,Sub-Task,Owner,Week,Date Start,Date End,Display Order,Line Padding";
 
     // Convert tasks to CSV rows
     const rows = sortedTasks.map(task => {
       const startDate = format(task.startDate, "MM/dd/yyyy");
       const endDate = format(task.endDate, "MM/dd/yyyy");
-      
+      const weekValue = typeof task.week === "number" && !Number.isNaN(task.week)
+        ? task.week
+        : getRelativeWeekNumber(task.startDate, sortedTasks);
+
       return [
         escapeCsv(task.phase || ""),
         escapeCsv(task.phaseHex || ""),
@@ -557,6 +560,7 @@ function App() {
         escapeCsv(task.name || ""),
         escapeCsv(task.subTask || ""),
         escapeCsv(task.owner || ""),
+        weekValue.toString(),
         startDate,
         endDate,
         task.displayOrder.toString(),
@@ -588,6 +592,16 @@ function App() {
   const prevMonth = () => setCurrentMonth(addMonths(currentMonth, -monthSpan));
 
   const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const getRelativeWeekNumber = (date: Date, taskList: Task[]) => {
+    if (taskList.length === 0) return 1;
+
+    const firstTaskDate = new Date(Math.min(...taskList.map((task) => task.startDate.getTime())));
+    const firstTaskWeek = startOfWeek(firstTaskDate);
+    const targetWeek = startOfWeek(date);
+
+    return Math.round((targetWeek.getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  };
 
   const getWeeklyPeriodEnd = () => addDays(currentWeek, weekSpan * 7 - 1);
 
