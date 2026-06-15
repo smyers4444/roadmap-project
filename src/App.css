@@ -362,3 +362,24 @@ table tbody tr:hover {
   background-color: var(--bg-hover);
 }
 
+.task-table {
+  border-spacing: 0;
+}
+
+.task-table th,
+.task-table td {
+  padding: 4px 6px;
+}
+
+.task-table input[type="text"],
+.task-table input[type="number"],
+.task-table .react-datepicker-wrapper input {
+  padding: 4px 6px;
+  height: 28px;
+}
+
+.task-table button {
+  padding: 4px 8px;
+  height: 28px;
+}
+

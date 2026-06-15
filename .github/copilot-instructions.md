@@ -47,13 +47,13 @@ interface Task {
   startDate: Date;
   endDate: Date;
   displayOrder: number;   // For drag-and-drop ordering
+  lineHeightAdjust?: number; // Manual height adjustment for timeline bars
 }
 ```
 
 ### Algorithm Conventions
 - **"Reverse Tetris" Positioning**: Tasks pack vertically from top to bottom
-  - Vacation tasks always positioned first (top)
-  - Then sorted by start date
+  - Tasks sorted by display order (manual drag-and-drop arrangement)
   - Collision detection prevents overlaps
   - Percentage-based horizontal positioning (0-100%)
   - Pixel-based vertical positioning (absolute)
@@ -61,7 +61,8 @@ interface Task {
 - **Text Wrapping Calculation**: 
   - Simulate word wrapping to calculate required lines
   - Dynamic task bar height based on text length
-  - Character width averaging: ~8.5px per character
+  - Character width averaging: ~7.2px per character (Consolas font)
+  - Manual height adjustment via `lineHeightAdjust` property
 
 - **Date Normalization**:
   - Always normalize dates to midnight to avoid DST issues
@@ -104,11 +105,18 @@ npm run lint
 ## File Structure
 ```
 src/
-├── App.tsx           # Main application (2000+ lines)
+├── App.tsx           # Main application (2350+ lines)
 ├── App.css           # All styles with CSS variables
 ├── main.tsx          # React entry point
-└── index.css         # Global/reset styles
+└── index.css         # Global/reset styles (Consolas font family)
 ```
+
+## Recent Features (2024/25)
+- **Drag-and-Drop Timeline**: Tasks can be reordered by dragging directly in the timeline view
+- **CSV Export**: Export tasks to CSV preserving manual ordering (`exportTasks()` function)
+- **Line Height Adjustment**: Manual control over task bar height via `lineHeightAdjust` field
+- **Enhanced Tooltips**: Rich hover information showing all task details and debug info
+- **Improved Font Metrics**: Optimized text wrapping for Consolas font (7.2px per char)
 
 ## Coding Guidelines
 
@@ -154,8 +162,8 @@ const filtered = tasks.filter(task =>
 
 ### Import Data Format
 ```
-Phase	Phase Hex	Category	Category HEX	Task	Sub-Task	Owner	Date Start	Date End
-Foundation	D40E8C	Initiation	D30C55	Kickoff		John	1/4/2026	1/17/2026
+Phase	Phase Hex	Category	Category HEX	Task	Sub-Task	Owner	Date Start	Date End	Line Padding
+Foundation	D40E8C	Initiation	D30C55	Kickoff		John	1/4/2026	1/17/2026	0
 ```
 
 ### Column Mapping Flexibility

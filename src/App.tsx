@@ -121,7 +121,8 @@ interface Task {
   owner?: string; // Person responsible for the task
   startDate: Date; // Task start date
   endDate: Date; // Task end date (inclusive)
-  displayOrder: number; // Order for display in lists (used for sorting)
+  displayOrder: number; // For drag-and-drop ordering
+  lineHeightAdjust?: number; // Optional extra wrapped lines for timeline height control
 }
 
 function App() {
@@ -194,6 +195,7 @@ function App() {
         startDate: new Date(),
         endDate: addDays(new Date(), 1),
         displayOrder: newDisplayOrder,
+        lineHeightAdjust: 0,
       },
     ]);
   };
@@ -204,7 +206,7 @@ function App() {
    * @param field - Field name to update
    * @param value - New value for the field
    */
-  const updateTask = (id: number, field: keyof Task, value: Date | string) => {
+  const updateTask = (id: number, field: keyof Task, value: Date | string | number) => {
     setTasks(tasks.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
   };
 
@@ -214,27 +216,6 @@ function App() {
    */
   const removeTask = (id: number) => {
     setTasks(tasks.filter((t) => t.id !== id));
-  };
-
-  /**
-   * Creates a duplicate of an existing task
-   * @param id - Task ID to duplicate
-   */
-  const duplicateTask = (id: number) => {
-    const taskToDuplicate = tasks.find((t) => t.id === id);
-    if (!taskToDuplicate) return;
-
-    const newId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
-    const newDisplayOrder = tasks.length > 0 ? Math.max(...tasks.map((t) => t.displayOrder || 0)) + 1 : 1;
-
-    const duplicatedTask = {
-      ...taskToDuplicate,
-      id: newId,
-      displayOrder: newDisplayOrder,
-      name: `${taskToDuplicate.name} (Copy)`,
-    };
-
-    setTasks([...tasks, duplicatedTask]);
   };
 
   // ==================== DRAG AND DROP HANDLERS ====================
@@ -248,13 +229,19 @@ function App() {
   };
 
   /**
-   * Handles drag over event to reorder tasks
-   * Calculates new display order and shifts other tasks accordingly
+   * Handles drag over event to allow drop
    * @param e - React drag event
-   * @param targetTaskId - ID of the task being dragged over
    */
-  const handleDragOver = (e: React.DragEvent, targetTaskId: number) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+  };
+
+  /**
+   * Handles drop event to reorder tasks
+   * Calculates new display order and shifts other tasks accordingly
+   * @param targetTaskId - ID of the task where the dragged task was dropped
+   */
+  const handleDrop = (targetTaskId: number) => {
     if (draggedTask === null || draggedTask === targetTaskId) return;
 
     const draggedTaskObj = tasks.find((t) => t.id === draggedTask);
@@ -283,6 +270,8 @@ function App() {
     });
 
     setTasks(newTasks);
+    // Automatically switch to displayOrder sorting to show the reordering
+    setSortBy("displayOrder");
   };
 
   /**
@@ -437,6 +426,11 @@ function App() {
           case "responsible":
             taskData.owner = value;
             break;
+          case "line padding":
+          case "lineheight":
+          case "line height":
+            taskData.lineHeightAdjust = value ? parseInt(value, 10) || 0 : 0;
+            break;
         }
       });
 
@@ -454,6 +448,7 @@ function App() {
           startDate: taskData.startDate || new Date(),
           endDate: taskData.endDate || new Date(),
           displayOrder: nextDisplayOrder++,
+          lineHeightAdjust: typeof taskData.lineHeightAdjust === "number" ? taskData.lineHeightAdjust : 0,
         };
         newTasks.push(newTask);
       }
@@ -515,6 +510,64 @@ function App() {
       setImportData([]);
       setShowImportTable(false);
     }
+  };
+
+  // ==================== EXPORT TASKS ====================
+
+  /** Export tasks to CSV file with manual ordering preserved */
+  const exportTasks = () => {
+    if (tasks.length === 0) {
+      alert("No tasks to export");
+      return;
+    }
+
+    // Sort by displayOrder to preserve manual arrangement
+    const sortedTasks = [...tasks].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+
+    // Helper function to escape CSV values (wrap in quotes if contains comma, quote, or newline)
+    const escapeCsv = (value: string) => {
+      if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+
+    // Create CSV header
+    const header = "Phase,Phase Hex,Category,Category HEX,Task,Sub-Task,Owner,Date Start,Date End,Display Order,Line Padding";
+
+    // Convert tasks to CSV rows
+    const rows = sortedTasks.map(task => {
+      const startDate = format(task.startDate, "MM/dd/yyyy");
+      const endDate = format(task.endDate, "MM/dd/yyyy");
+      
+      return [
+        escapeCsv(task.phase || ""),
+        escapeCsv(task.phaseHex || ""),
+        escapeCsv(task.category || ""),
+        escapeCsv(task.categoryHex || ""),
+        escapeCsv(task.name || ""),
+        escapeCsv(task.subTask || ""),
+        escapeCsv(task.owner || ""),
+        startDate,
+        endDate,
+        task.displayOrder.toString(),
+        (task.lineHeightAdjust ?? 0).toString()
+      ].join(",");
+    });
+
+    // Combine header and rows
+    const csvContent = [header, ...rows].join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `roadmap-tasks-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // ==================== TIMELINE NAVIGATION ====================
@@ -666,7 +719,6 @@ function App() {
     const taskEndInPeriod = task.endDate < periodEnd ? normalizeDate(task.endDate) : normalizeDate(periodEnd);
 
     const normalizedPeriodStart = normalizeDate(periodStart);
-    const normalizedPeriodEnd = normalizeDate(periodEnd);
 
     // Use Math.round to handle any floating point issues from DST
     const startOffset = Math.round((taskStartInPeriod.getTime() - normalizedPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
@@ -1027,6 +1079,15 @@ function App() {
             >
               Add Test Task
             </button>
+            {/* Export Tasks Button */}
+            {/* <div style={{ marginBottom: "1rem" }}> */}
+              <button onClick={exportTasks} style={{ backgroundColor: "var(--success-color)", color: "black" }}>
+                Export Tasks to CSV
+              </button>
+              <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                ({tasks.length} tasks, preserves manual ordering)
+              </span>
+            {/* </div> */}            
             <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", alignItems: "center" }}>
               <input
                 type="text"
@@ -1050,7 +1111,7 @@ function App() {
                 {sortOrder === "asc" ? "↑" : "↓"}
               </button>
             </div>
-            <table>
+            <table className="task-table">
               <thead>
                 <tr>
                   <th style={{ width: "30px" }}></th>
@@ -1062,6 +1123,7 @@ function App() {
                   <th>Task</th>
                   <th>Sub-Task</th>
                   <th>Owner</th>
+                  <th>Line Padding</th>
                   <th>Start Date</th>
                   <th>End Date</th>
                   <th>Actions</th>
@@ -1073,7 +1135,8 @@ function App() {
                     key={t.id}
                     draggable
                     onDragStart={() => handleDragStart(t.id)}
-                    onDragOver={(e) => handleDragOver(e, t.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(t.id)}
                     onDragEnd={handleDragEnd}
                     style={{
                       opacity: draggedTask === t.id ? 0.5 : 1,
@@ -1116,7 +1179,14 @@ function App() {
                     <td>
                       <input type="text" value={t.owner || ""} onChange={(e) => updateTask(t.id, "owner", e.target.value)} />
                     </td>
-
+                    <td>
+                      <input
+                        type="number"
+                        value={t.lineHeightAdjust ?? 0}
+                        onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
+                        style={{ width: "80px" }}
+                      />
+                    </td>
                     <td>
                       <DatePicker
                         selected={t.startDate}
@@ -1176,8 +1246,8 @@ function App() {
                 visibleTasks.forEach((task) => {
                   const { width } = getTaskPosition(task);
                   const actualWidth = (width / 100) * 1800; // Approximate pixel width
-                  const textWidth = actualWidth - 10; // Account for padding
-                  const charsPerLine = Math.max(1, Math.floor(textWidth / 8.5)); // Average char width
+                  const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
+                  const charsPerLine = Math.max(1, Math.floor(textWidth / 7.2)); // Consolas 13px ≈ 7.5px per char (slightly conservative)
 
                   // Simulate word wrapping to count actual lines needed
                   const words = task.name.split(" ");
@@ -1198,6 +1268,12 @@ function App() {
                       currentLineLength = wordLength;
                     }
                   });
+                  
+                  // Add safety margin - add one more line to prevent overflow
+                  // This ensures text never gets cut off even with font rendering variations
+                  if (currentLineLength > charsPerLine * 0.85) {
+                    lines++;
+                  }
 
                   // Calculate height based on number of lines
                   let height;
@@ -1206,8 +1282,11 @@ function App() {
                   } else if (lines === 2) {
                     height = 50;
                   } else {
-                    height = 50 + (lines - 2) * 16; // 16px per additional line
+                    height = 50 + (lines - 2) * 16;
                   }
+                  const manualExtraLines = task.lineHeightAdjust ?? 0;
+                  height += manualExtraLines * 16;
+                  height = Math.max(28, height);
 
                   taskHeights.set(task.id, height);
                   debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
@@ -1218,20 +1297,16 @@ function App() {
 
                 // ========== TASK SORTING ==========
                 // "Reverse Tetris" algorithm: Pack tasks to the top
-                // Sort by: 1) Vacation first, 2) Start date, 3) Display order for ties
+                // Sort by: 1) Vacation first, 2) Display order for manual arrangement
                 const sortedTasks = [...visibleTasks].sort((a, b) => {
-                  const aIsVacation = a.name.toLowerCase().includes("vacation");
-                  const bIsVacation = b.name.toLowerCase().includes("vacation");
+                  const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                  const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
 
                   // Vacation tasks always come first (appear at top)
                   if (aIsVacation && !bIsVacation) return -1;
                   if (!aIsVacation && bIsVacation) return 1;
 
-                  // Sort by start date
-                  const dateCompare = a.startDate.getTime() - b.startDate.getTime();
-                  if (dateCompare !== 0) return dateCompare;
-
-                  // Tie-breaker: use display order
+                  // For non-vacation tasks or vacation ties, use display order
                   return (a.displayOrder || 0) - (b.displayOrder || 0);
                 });
 
@@ -1310,7 +1385,7 @@ function App() {
                             }}
                             title={`${format(week, "MMM dd")} – ${format(addDays(week, 6), "MMM dd, yyyy")}`}
                           >
-                            {showWeekNumbers ? `Week ${weekNumber}` : `${format(week, "MMM dd")} – ${format(addDays(week, 6), "MMM dd")}`}
+                            {showWeekNumbers ? `Wk ${weekNumber}` : `${format(week, "MMM dd")} – ${format(addDays(week, 6), "MMM dd")}`}
                           </div>
                         );
                       })}
@@ -1318,8 +1393,11 @@ function App() {
 
                     {/* ========== PHASE SECTIONS ========== */}
                     {/* Each phase gets its own section with a header bar and task area */}
-                    {phases.map((phase) => {
-                      const phaseTasks = visibleTasks.filter((t) => t.phase === phase);
+                    {/* When phase grouping is disabled, treat all tasks as a single group */}
+                    {(showPhaseLabels ? phases : [""]).map((phase) => {
+                      const phaseTasks = showPhaseLabels 
+                        ? visibleTasks.filter((t) => t.phase === phase)
+                        : visibleTasks; // All tasks in one group when not grouped by phase
                       if (phaseTasks.length === 0) return null; // Skip empty phases
 
                       // Calculate phase start/end dates from all tasks in this phase
@@ -1329,53 +1407,6 @@ function App() {
 
                       // Get phase color from first task in phase
                       const phaseTask = phaseTasks[0];
-                      const bgColorSection = phaseTask.phaseHex ? `#${phaseTask.phaseHex}` : "var(--bg-fallback)";
-
-                      /**
-                       * Lightens a hex color by blending with white
-                       * This creates a lightened background while keeping text readable
-                       * @param hex - Hex color code (with or without #)
-                       * @param amount - Amount of white to blend (0-1, where 1 = full white)
-                       */
-                      const lightenColor = (hex: string, amount: number) => {
-                        const h = hex.replace("#", "");
-                        const r = parseInt(h.substring(0, 2), 16);
-                        const g = parseInt(h.substring(2, 4), 16);
-                        const b = parseInt(h.substring(4, 6), 16);
-
-                        // Blend with white (255, 255, 255)
-                        const lightenedR = Math.round(r * (1 - amount) + 255 * amount);
-                        const lightenedG = Math.round(g * (1 - amount) + 255 * amount);
-                        const lightenedB = Math.round(b * (1 - amount) + 255 * amount);
-
-                        return `rgb(${lightenedR}, ${lightenedG}, ${lightenedB})`;
-                      };
-                      const bgColorSectionLight = lightenColor(bgColorSection, 0.8); // 30% white blend
-
-                      /**
-                       * Calculates appropriate text color for lightened background
-                       * Uses same lightening logic to determine final background luminance
-                       * @param hexColor - Original hex color
-                       * @param lightenAmount - Amount of white blending (0-1)
-                       */
-                      const getTextColorForLight = (hexColor: string, lightenAmount: number) => {
-                        const hex = hexColor.replace("#", "");
-                        const r = parseInt(hex.substring(0, 2), 16);
-                        const g = parseInt(hex.substring(2, 4), 16);
-                        const b = parseInt(hex.substring(4, 6), 16);
-
-                        // Simulate the lightening to calculate final color
-                        const lightenedR = r * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedG = g * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedB = b * (1 - lightenAmount) + 255 * lightenAmount;
-
-                        // Calculate relative luminance of lightened color
-                        const luminance = (0.299 * lightenedR + 0.587 * lightenedG + 0.114 * lightenedB) / 255;
-
-                        return luminance > 0.5 ? "#000000" : "#ffffff";
-                      };
-                      // Use high lighten amount (0.9) for text color calculation to ensure readability
-                      const textColor = phaseTask.phaseHex ? getTextColorForLight(bgColorSection, 0.9) : "var(--text-fallback)";
 
                       // Calculate phase header position based on earliest and latest task dates
                       const { start, width } = getTaskPosition({
@@ -1390,14 +1421,16 @@ function App() {
                       const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
                       const phaseTopPadding = 8;
 
-                      // Sort phase tasks (vacation first, then by date, then display order)
+                      // Sort phase tasks by: 1) Vacation first, 2) Display order
                       const sortedPhaseTasks = [...phaseTasks].sort((a, b) => {
-                        const aIsVacation = a.name.toLowerCase().includes("vacation");
-                        const bIsVacation = b.name.toLowerCase().includes("vacation");
+                        const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                        const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
+
+                        // Vacation tasks always come first (appear at top)
                         if (aIsVacation && !bIsVacation) return -1;
                         if (!aIsVacation && bIsVacation) return 1;
-                        const dateCompare = a.startDate.getTime() - b.startDate.getTime();
-                        if (dateCompare !== 0) return dateCompare;
+
+                        // For non-vacation tasks or vacation ties, use display order
                         return (a.displayOrder || 0) - (b.displayOrder || 0);
                       });
 
@@ -1552,7 +1585,7 @@ function App() {
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
-                              {weekColumns.map((weekStart, index) => {
+                              {weekColumns.map((_, index) => {
                                 // Calculate if this column is within the phase boundaries
                                 const columnPercent = (index / weekSpan) * 100;
                                 const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
@@ -1591,7 +1624,7 @@ function App() {
 
                               {/* Vacation background bars - gray overlay for vacation periods */}
                               {phaseTasks
-                                .filter((task) => task.name.toLowerCase().includes("vacation"))
+                                .filter((task) => task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO")
                                 .map((task) => {
                                   const { start, width } = getTaskPosition(task);
                                   return (
@@ -1603,9 +1636,9 @@ function App() {
                                         width: `${width}%`,
                                         top: "0px",
                                         height: "100%",
-                                        backgroundColor: "var(--debug-color)",
+                                        backgroundColor: "#DDD6D0",
                                         zIndex: 0,
-                                        opacity: 0.5,
+                                        opacity: 0.7,
                                       }}
                                     />
                                   );
@@ -1616,8 +1649,11 @@ function App() {
                                 const { start, width } = getTaskPosition(task);
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
-                                const textColor = getTextColor(task.categoryHex);
+                                
+                                // Use default color for vacation/OOO tasks, otherwise use category color
+                                const isVacationTask = task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO";
+                                const bgColor = isVacationTask ? "#645b56" : (task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)");
+                                const textColor = isVacationTask ? getTextColor("645b56") : getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
@@ -1627,7 +1663,24 @@ function App() {
                                   <div
                                     key={task.id}
                                     className="task-bar"
-                                    title={`${task.name}\nID:${task.id} Top:${top}px\n${debugInfo.get(task.id)}`}
+                                    draggable
+                                    onDragStart={() => handleDragStart(task.id)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={() => handleDrop(task.id)}
+                                    onDragEnd={handleDragEnd}
+                                    title={[
+                                      `Task: ${task.name}`,
+                                      task.subTask ? `Sub-Task: ${task.subTask}` : '',
+                                      task.phase ? `Phase: ${task.phase}` : '',
+                                      task.category ? `Category: ${task.category}` : '',
+                                      task.owner ? `Owner: ${task.owner}` : '',
+                                                                           `Start: ${format(task.startDate, 'MMM dd, yyyy')}`,
+                                      `End: ${format(task.endDate, 'MMM dd, yyyy')}`,
+                                      `ID: ${task.displayOrder}`,
+                                      '',
+                                      `Top: ${top}px`,
+                                      debugInfo.get(task.id) || ''
+                                    ].filter(Boolean).join('\n')}
                                     style={{
                                       left: `calc(${start}% + ${horizontalPadding}%)`,
                                       width: `calc(${width}% - ${horizontalPadding * 2}%)`,
@@ -1637,6 +1690,9 @@ function App() {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "space-between",
+                                      cursor: "move",
+                                      opacity: draggedTask === task.id ? 0.5 : 1,
+                                      transition: "opacity 0.2s",
                                     }}
                                   >
                                     {taskStartsBeforeView && (
@@ -1684,8 +1740,8 @@ function App() {
                 visibleTasks.forEach((task) => {
                   const { width } = getMonthTaskPosition(task);
                   const actualWidth = (width / 100) * 1800; // Approximate pixel width
-                  const textWidth = actualWidth - 10; // Account for padding
-                  const charsPerLine = Math.max(1, Math.floor(textWidth / 8.5)); // Average char width
+                  const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
+                  const charsPerLine = Math.max(1, Math.floor(textWidth / 7.2)); // Consolas 13px ≈ 7.2px per char
 
                   // Simulate word wrapping to count actual lines needed
                   const words = task.name.split(" ");
@@ -1706,6 +1762,11 @@ function App() {
                       currentLineLength = wordLength;
                     }
                   });
+                  
+                  // // Add safety margin - bump up lines by 1 if we're close to the edge
+                  // if (currentLineLength > charsPerLine * 0.85) {
+                  //   lines++;
+                  // }
 
                   // Calculate height based on number of lines
                   let height;
@@ -1714,8 +1775,11 @@ function App() {
                   } else if (lines === 2) {
                     height = 50;
                   } else {
-                    height = 50 + (lines - 2) * 16; // 16px per additional line
+                    height = 50 + (lines - 2) * 16;
                   }
+                  const manualExtraLines = task.lineHeightAdjust ?? 0;
+                  height += manualExtraLines * 16;
+                  height = Math.max(28, height);
 
                   taskHeights.set(task.id, height);
                   debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
@@ -1726,20 +1790,16 @@ function App() {
 
                 // ========== TASK SORTING ==========
                 // "Reverse Tetris" algorithm: Pack tasks to the top
-                // Sort by: 1) Vacation first, 2) Start date, 3) Display order for ties
+                // Sort by: 1) Vacation first, 2) Display order for manual arrangement
                 const sortedTasks = [...visibleTasks].sort((a, b) => {
-                  const aIsVacation = a.name.toLowerCase().includes("vacation");
-                  const bIsVacation = b.name.toLowerCase().includes("vacation");
+                  const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                  const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
 
                   // Vacation tasks always come first (appear at top)
                   if (aIsVacation && !bIsVacation) return -1;
                   if (!aIsVacation && bIsVacation) return 1;
 
-                  // Sort by start date
-                  const dateCompare = a.startDate.getTime() - b.startDate.getTime();
-                  if (dateCompare !== 0) return dateCompare;
-
-                  // Tie-breaker: use display order
+                  // For non-vacation tasks or vacation ties, use display order
                   return (a.displayOrder || 0) - (b.displayOrder || 0);
                 });
 
@@ -1826,8 +1886,11 @@ function App() {
 
                     {/* ========== PHASE SECTIONS ========== */}
                     {/* Each phase gets its own section with a header bar and task area */}
-                    {phases.map((phase) => {
-                      const phaseTasks = visibleTasks.filter((t) => t.phase === phase);
+                    {/* When phase grouping is disabled, treat all tasks as a single group */}
+                    {(showPhaseLabels ? phases : [""]).map((phase) => {
+                      const phaseTasks = showPhaseLabels 
+                        ? visibleTasks.filter((t) => t.phase === phase)
+                        : visibleTasks; // All tasks in one group when not grouped by phase
                       if (phaseTasks.length === 0) return null; // Skip empty phases
 
                       // Calculate phase start/end dates from all tasks in this phase
@@ -1837,32 +1900,6 @@ function App() {
 
                       // Get phase color from first task in phase
                       const phaseTask = phaseTasks[0];
-                      const bgColorSection = phaseTask.phaseHex ? `#${phaseTask.phaseHex}` : "var(--bg-fallback)";
-
-                      /**
-                       * Calculates appropriate text color for lightened background
-                       * Uses same lightening logic to determine final background luminance
-                       * @param hexColor - Original hex color
-                       * @param lightenAmount - Amount of white blending (0-1)
-                       */
-                      const getTextColorForLight = (hexColor: string, lightenAmount: number) => {
-                        const hex = hexColor.replace("#", "");
-                        const r = parseInt(hex.substring(0, 2), 16);
-                        const g = parseInt(hex.substring(2, 4), 16);
-                        const b = parseInt(hex.substring(4, 6), 16);
-
-                        // Simulate the lightening to calculate final color
-                        const lightenedR = r * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedG = g * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedB = b * (1 - lightenAmount) + 255 * lightenAmount;
-
-                        // Calculate relative luminance of lightened color
-                        const luminance = (0.299 * lightenedR + 0.587 * lightenedG + 0.114 * lightenedB) / 255;
-
-                        return luminance > 0.5 ? "#000000" : "#ffffff";
-                      };
-                      // Use high lighten amount (0.9) for text color calculation to ensure readability
-                      const textColor = phaseTask.phaseHex ? getTextColorForLight(bgColorSection, 0.9) : "var(--text-fallback)";
 
                       // Calculate phase header position based on earliest and latest task dates
                       const { start, width } = getMonthTaskPosition({
@@ -1877,14 +1914,16 @@ function App() {
                       const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
                       const phaseTopPadding = 8;
 
-                      // Sort phase tasks (vacation first, then by date, then display order)
+                      // Sort phase tasks by: 1) Vacation first, 2) Display order
                       const sortedPhaseTasks = [...phaseTasks].sort((a, b) => {
-                        const aIsVacation = a.name.toLowerCase().includes("vacation");
-                        const bIsVacation = b.name.toLowerCase().includes("vacation");
+                        const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                        const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
+
+                        // Vacation tasks always come first (appear at top)
                         if (aIsVacation && !bIsVacation) return -1;
                         if (!aIsVacation && bIsVacation) return 1;
-                        const dateCompare = a.startDate.getTime() - b.startDate.getTime();
-                        if (dateCompare !== 0) return dateCompare;
+
+                        // For non-vacation tasks or vacation ties, use display order
                         return (a.displayOrder || 0) - (b.displayOrder || 0);
                       });
 
@@ -2037,7 +2076,7 @@ function App() {
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
-                              {monthColumns.map((monthStart, index) => {
+                              {monthColumns.map((_, index) => {
                                 // Calculate if this column is within the phase boundaries
                                 const columnPercent = (index / monthColumns.length) * 100;
                                 const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
@@ -2075,7 +2114,7 @@ function App() {
 
                               {/* Vacation background bars - gray overlay for vacation periods */}
                               {phaseTasks
-                                .filter((task) => task.name.toLowerCase().includes("vacation"))
+                                .filter((task) => task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO")
                                 .map((task) => {
                                   const { start, width } = getMonthTaskPosition(task);
                                   return (
@@ -2087,9 +2126,9 @@ function App() {
                                         width: `${width}%`,
                                         top: "0px",
                                         height: "100%",
-                                        backgroundColor: "var(--debug-color3)",
+                                        backgroundColor: "#DDD6D0",
                                         zIndex: 0,
-                                        opacity: 0.5,
+                                        opacity: 0.7,
                                       }}
                                     />
                                   );
@@ -2100,8 +2139,11 @@ function App() {
                                 const { start, width } = getMonthTaskPosition(task);
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
-                                const textColor = getTextColor(task.categoryHex);
+                                
+                                // Use default color for vacation/OOO tasks, otherwise use category color
+                                const isVacationTask = task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO";
+                                const bgColor = isVacationTask ? "#645b56" : (task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)");
+                                const textColor = isVacationTask ? getTextColor("645b56") : getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
@@ -2111,7 +2153,24 @@ function App() {
                                   <div
                                     key={task.id}
                                     className="task-bar"
-                                    title={`${task.name}\nID:${task.id} Top:${top}px\n${debugInfo.get(task.id)}`}
+                                    draggable
+                                    onDragStart={() => handleDragStart(task.id)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={() => handleDrop(task.id)}
+                                    onDragEnd={handleDragEnd}
+                                    title={[
+                                      `Task: ${task.name}`,
+                                      task.subTask ? `Sub-Task: ${task.subTask}` : '',
+                                      task.phase ? `Phase: ${task.phase}` : '',
+                                      task.category ? `Category: ${task.category}` : '',
+                                      task.owner ? `Owner: ${task.owner}` : '',
+                                      `Start: ${format(task.startDate, 'MMM dd, yyyy')}`,
+                                      `End: ${format(task.endDate, 'MMM dd, yyyy')}`,
+                                      `ID: ${task.displayOrder}`,
+                                      '',
+                                      `Top: ${top}px`,
+                                      debugInfo.get(task.id) || ''
+                                    ].filter(Boolean).join('\n')}
                                     style={{
                                       left: `calc(${start}% + ${horizontalPadding}%)`,
                                       width: `calc(${width}% - ${horizontalPadding * 2}%)`,
@@ -2121,6 +2180,9 @@ function App() {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "space-between",
+                                      cursor: "move",
+                                      opacity: draggedTask === task.id ? 0.5 : 1,
+                                      transition: "opacity 0.2s",
                                     }}
                                   >
                                     {taskStartsBeforeView && (
@@ -2154,12 +2216,17 @@ function App() {
             periodStart = currentWeek;
             periodEnd = addDays(currentWeek, weekSpan * 7 - 1);
           } else {
-            periodStart = startOfMonth(currentMonth);
-            periodEnd = endOfMonth(addMonths(currentMonth, monthSpan - 1));
+            // Use custom date range if enabled, otherwise use month span
+            periodStart = useCustomMonthRange && customMonthStart 
+              ? customMonthStart 
+              : startOfMonth(currentMonth);
+            periodEnd = useCustomMonthRange && customMonthEnd
+              ? customMonthEnd
+              : endOfMonth(addMonths(currentMonth, monthSpan - 1));
           }
           
-          // Filter tasks visible in current timeline
-          const visibleTasks = getAllTasksSorted().filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
+          // Filter tasks visible in current timeline - use ALL tasks, not filtered by phase
+          const visibleTasks = tasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
           
           // Get unique categories from visible tasks
           const visibleCategories = Array.from(new Set(visibleTasks.map(t => t.category).filter(Boolean)));
