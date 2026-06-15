@@ -1290,9 +1290,6 @@ function App() {
 
                   taskHeights.set(task.id, height);
                   debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
-                  
-                  // Log to console for debugging
-                  console.log(`[WEEKLY] "${task.name}" | ActualW: ${actualWidth.toFixed(0)}px | TextW: ${textWidth.toFixed(0)}px | CharsPerLine: ${charsPerLine} | Lines: ${lines} | Height: ${height}px`);
                 });
 
                 // ========== TASK SORTING ==========
@@ -1783,9 +1780,6 @@ function App() {
 
                   taskHeights.set(task.id, height);
                   debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
-                  
-                  // Log to console for debugging
-                  console.log(`[MONTHLY] "${task.name}" | ActualW: ${actualWidth.toFixed(0)}px | TextW: ${textWidth.toFixed(0)}px | CharsPerLine: ${charsPerLine} | Lines: ${lines} | Height: ${height}px`);
                 });
 
                 // ========== TASK SORTING ==========
