@@ -149,6 +149,7 @@ function App() {
 
   // Filtering and sorting state
   const [filterText, setFilterText] = useState(""); // Text search filter
+  const [selectedTimelineTaskId, setSelectedTimelineTaskId] = useState<number | null>(null); // Timeline click selection filter
   const [sortBy, setSortBy] = useState<"phase" | "name" | "category" | "startDate" | "endDate" | "displayOrder">("displayOrder");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -216,6 +217,9 @@ function App() {
    * @param id - Task ID to remove
    */
   const removeTask = (id: number) => {
+    if (selectedTimelineTaskId === id) {
+      setSelectedTimelineTaskId(null);
+    }
     setTasks(tasks.filter((t) => t.id !== id));
   };
 
@@ -639,7 +643,7 @@ function App() {
   /**
    * Returns tasks filtered by the current search text.
    */
-  const getFilteredTasks = () => {
+  const getTextFilteredTasks = () => {
     let filtered = tasks;
 
     // Apply text filter across multiple task fields
@@ -658,13 +662,23 @@ function App() {
     return filtered;
   };
 
+  const getTaskListFilteredTasks = () => {
+    let filtered = getTextFilteredTasks();
+
+    if (selectedTimelineTaskId !== null) {
+      filtered = filtered.filter((task) => task.id === selectedTimelineTaskId);
+    }
+
+    return filtered;
+  };
+
   /**
    * Returns filtered and sorted tasks based on current filter text and sort settings
    * Filters by text search across multiple fields
    * Sorts by selected field with secondary sort by displayOrder
    */
   const getFilteredAndSortedTasks = () => {
-    const filtered = getFilteredTasks();
+    const filtered = getTaskListFilteredTasks();
 
     // Apply sort with displayOrder as secondary sort for ties
     return [...filtered].sort((a, b) => {
@@ -707,13 +721,20 @@ function App() {
    * Used for timeline visualization where the original manual order is important.
    */
   const getFilteredTasksSortedByDisplayOrder = () => {
-    return [...getFilteredTasks()].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    return [...getTextFilteredTasks()].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   };
 
   const filteredAndSortedTasks = getFilteredAndSortedTasks();
   const timelineTasks = getFilteredTasksSortedByDisplayOrder();
+  const selectedTimelineTask = selectedTimelineTaskId === null
+    ? null
+    : tasks.find((task) => task.id === selectedTimelineTaskId) ?? null;
   const phases = [...new Set(timelineTasks.map((t) => t.phase).filter((c) => c && c.trim()))];
   const categories = [...new Set(timelineTasks.map((t) => t.category).filter((c) => c && c.trim()))];
+
+  const toggleTimelineTaskSelection = (taskId: number) => {
+    setSelectedTimelineTaskId((currentId) => (currentId === taskId ? null : taskId));
+  };
 
   // Unused helper function - kept for reference
   // const assignTaskRows = (tasks: Task[]) => {
@@ -889,6 +910,7 @@ function App() {
               onClick={() => {
                 if (window.confirm(`Are you sure you want to clear all ${tasks.length} tasks? This cannot be undone.`)) {
                   setTasks([]);
+                  setSelectedTimelineTaskId(null);
                 }
               }}
               style={{ backgroundColor: "var(--color-red-600)", color: "var(--color-white)" }}
@@ -971,6 +993,7 @@ function App() {
               onClick={() => {
                 if (window.confirm(`Are you sure you want to clear all ${tasks.length} tasks? This cannot be undone.`)) {
                   setTasks([]);
+                  setSelectedTimelineTaskId(null);
                 }
               }}
               style={{ backgroundColor: "var(--color-red-600)", color: "var(--color-white)" }}
@@ -1139,13 +1162,13 @@ function App() {
               <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
                 ({tasks.length} total tasks, preserves manual ordering)
               </span>
-              {filterText.trim() && (
+              {(filterText.trim() || selectedTimelineTask) && (
                 <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                  Showing {filteredAndSortedTasks.length} filtered tasks in both the table and timeline
+                  Showing {filteredAndSortedTasks.length} task-list result{filteredAndSortedTasks.length === 1 ? "" : "s"}
                 </span>
               )}
-            {/* </div> */}            
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", alignItems: "center" }}>
+            {/* </div> */}
+            <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", alignItems: "center", flexWrap: "wrap" }}>
               <input
                 type="text"
                 placeholder="Filter tasks..."
@@ -1167,6 +1190,20 @@ function App() {
               <button onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")} style={{ padding: "8px 12px" }}>
                 {sortOrder === "asc" ? "↑" : "↓"}
               </button>
+              {selectedTimelineTask && (
+                <>
+                  <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                    Timeline selection: <strong>{selectedTimelineTask.name}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTimelineTaskId(null)}
+                    style={{ padding: "8px 12px" }}
+                  >
+                    Clear Timeline Selection
+                  </button>
+                </>
+              )}
             </div>
             <table className="task-table">
               <thead>
@@ -1738,10 +1775,12 @@ function App() {
                                     key={task.id}
                                     className="task-bar"
                                     draggable
+                                    aria-pressed={selectedTimelineTaskId === task.id}
                                     onDragStart={() => handleDragStart(task.id)}
                                     onDragOver={handleDragOver}
                                     onDrop={() => handleDrop(task.id)}
                                     onDragEnd={handleDragEnd}
+                                    onClick={() => toggleTimelineTaskSelection(task.id)}
                                     title={[
                                       `Task: ${task.name}`,
                                       task.subTask ? `Sub-Task: ${task.subTask}` : '',
@@ -1764,9 +1803,10 @@ function App() {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "space-between",
-                                      cursor: "move",
-                                      opacity: draggedTask === task.id ? 0.5 : 1,
-                                      transition: "opacity 0.2s",
+                                      cursor: "pointer",
+                                      opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
+                                      transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
+                                      boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
                                     }}
                                   >
                                     {taskStartsBeforeView && (
@@ -2225,10 +2265,12 @@ function App() {
                                     key={task.id}
                                     className="task-bar"
                                     draggable
+                                    aria-pressed={selectedTimelineTaskId === task.id}
                                     onDragStart={() => handleDragStart(task.id)}
                                     onDragOver={handleDragOver}
                                     onDrop={() => handleDrop(task.id)}
                                     onDragEnd={handleDragEnd}
+                                    onClick={() => toggleTimelineTaskSelection(task.id)}
                                     title={[
                                       `Task: ${task.name}`,
                                       task.subTask ? `Sub-Task: ${task.subTask}` : '',
@@ -2251,9 +2293,10 @@ function App() {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "space-between",
-                                      cursor: "move",
-                                      opacity: draggedTask === task.id ? 0.5 : 1,
-                                      transition: "opacity 0.2s",
+                                      cursor: "pointer",
+                                      opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
+                                      transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
+                                      boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
                                     }}
                                   >
                                     {taskStartsBeforeView && (

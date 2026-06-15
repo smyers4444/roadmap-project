@@ -7,6 +7,7 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 - Create and edit roadmap tasks with phase, category, owner, start date, end date, and manual line-height padding.
 - Reorder tasks by dragging rows in the task table.
 - Filter and sort tasks directly in the editor, with the timeline and legends following the filtered task set.
+- Click a task bar in weekly or monthly view to isolate that task in the task table while keeping the full timeline visible, with the selected bar visually highlighted until cleared.
 - Switch between weekly and monthly timeline views.
 - Toggle date labels versus week/month numbers.
 - Group tasks by phase, or collapse phase grouping into a single timeline.

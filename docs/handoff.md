@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (CSV week export committed, timeline-click filter documented)
+Last updated: 2026-06-15 (timeline-click selection updated to filter table only)
 
 ## Current Snapshot
 
@@ -45,16 +45,17 @@ There are now separate feature notes for:
 
 ## Branch And Working Tree
 
-The latest completed commits are:
+Recent committed baseline before this feature:
 
 - `57f0d89` `Add weekly weekend toggle`
 - `4d75c8f` `Update roadmap feature docs`
 - `11ef02f` `Export week number in CSV`
 
-At the time of this handoff, there are uncommitted documentation changes only.
+Current feature state for timeline-click task filtering:
 
-- `docs/feature-export-week-number.md` now points to the committed CSV export slice at `11ef02f`.
-- `docs/feature-timeline-click-filters-list.md` now documents the next proposed interaction feature.
+- Timeline task bars in both weekly and monthly view now support single-select filtering into the task table only.
+- The timeline stays fully visible, with the selected bar highlighted and the other bars slightly de-emphasized.
+- Repeat-click clears the selection, and the task filter area exposes a visible clear action.
 
 ## How to Run
 
@@ -107,15 +108,18 @@ Useful manual checks:
 Latest verification, 2026-06-15:
 
 - `npm run build`: passes
+- `npm run lint`: fails on existing `.history/` snapshot files outside the active change set
 - `npx eslint src/App.tsx`: passes
-- browser/manual weekend-toggle verification: passed, per user report
+- `git diff --check`: passes
+- browser/manual timeline-click verification: passed, per user report
 
 ## Latest Change
 
-Latest local changes, 2026-06-15:
+Latest feature update, 2026-06-15:
 
-- Updated `docs/feature-export-week-number.md` to reflect the committed export slice and current verification state.
-- Added `docs/feature-timeline-click-filters-list.md` for the next proposed timeline-to-table filtering feature.
+- Updated single-select timeline-click filtering in `src/App.tsx` so selection narrows only the task table.
+- Kept the timeline fully visible and added stronger selected-bar emphasis.
+- Updated `README.md`, `docs/feature-timeline-click-filters-list.md`, and this handoff note to reflect the revised interaction.
 
 ## Key Guardrails
 
@@ -128,9 +132,9 @@ Latest local changes, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Implement the timeline task-bar click interaction described in `docs/feature-timeline-click-filters-list.md`.
-2. Keep the task table, timeline, legends, and counts aligned under the selected-task filter in both weekly and monthly views.
-3. After that, do a quick manual CSV export sanity check and then return to the next contained UI cleanup such as removing or gating the user-facing `Add Test Task` button.
+1. Do a quick CSV export sanity check after the filtering work to confirm export behavior is unchanged.
+2. Then return to the next contained UI cleanup such as removing or gating the user-facing `Add Test Task` button.
+3. After that, consider whether broader timeline interactions such as phase/category clicks are still desirable or unnecessary.
 
 ## New Chat Start
 
