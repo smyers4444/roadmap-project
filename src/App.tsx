@@ -218,27 +218,6 @@ function App() {
     setTasks(tasks.filter((t) => t.id !== id));
   };
 
-  /**
-   * Creates a duplicate of an existing task
-   * @param id - Task ID to duplicate
-   */
-  const duplicateTask = (id: number) => {
-    const taskToDuplicate = tasks.find((t) => t.id === id);
-    if (!taskToDuplicate) return;
-
-    const newId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
-    const newDisplayOrder = tasks.length > 0 ? Math.max(...tasks.map((t) => t.displayOrder || 0)) + 1 : 1;
-
-    const duplicatedTask = {
-      ...taskToDuplicate,
-      id: newId,
-      displayOrder: newDisplayOrder,
-      name: `${taskToDuplicate.name} (Copy)`,
-    };
-
-    setTasks([...tasks, duplicatedTask]);
-  };
-
   // ==================== DRAG AND DROP HANDLERS ====================
 
   /**
@@ -252,9 +231,8 @@ function App() {
   /**
    * Handles drag over event to allow drop
    * @param e - React drag event
-   * @param targetTaskId - ID of the task being dragged over
    */
-  const handleDragOver = (e: React.DragEvent, targetTaskId: number) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
@@ -741,7 +719,6 @@ function App() {
     const taskEndInPeriod = task.endDate < periodEnd ? normalizeDate(task.endDate) : normalizeDate(periodEnd);
 
     const normalizedPeriodStart = normalizeDate(periodStart);
-    const normalizedPeriodEnd = normalizeDate(periodEnd);
 
     // Use Math.round to handle any floating point issues from DST
     const startOffset = Math.round((taskStartInPeriod.getTime() - normalizedPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
@@ -1158,7 +1135,7 @@ function App() {
                     key={t.id}
                     draggable
                     onDragStart={() => handleDragStart(t.id)}
-                    onDragOver={(e) => handleDragOver(e, t.id)}
+                    onDragOver={handleDragOver}
                     onDrop={() => handleDrop(t.id)}
                     onDragEnd={handleDragEnd}
                     style={{
@@ -1430,53 +1407,6 @@ function App() {
 
                       // Get phase color from first task in phase
                       const phaseTask = phaseTasks[0];
-                      const bgColorSection = phaseTask.phaseHex ? `#${phaseTask.phaseHex}` : "var(--bg-fallback)";
-
-                      /**
-                       * Lightens a hex color by blending with white
-                       * This creates a lightened background while keeping text readable
-                       * @param hex - Hex color code (with or without #)
-                       * @param amount - Amount of white to blend (0-1, where 1 = full white)
-                       */
-                      const lightenColor = (hex: string, amount: number) => {
-                        const h = hex.replace("#", "");
-                        const r = parseInt(h.substring(0, 2), 16);
-                        const g = parseInt(h.substring(2, 4), 16);
-                        const b = parseInt(h.substring(4, 6), 16);
-
-                        // Blend with white (255, 255, 255)
-                        const lightenedR = Math.round(r * (1 - amount) + 255 * amount);
-                        const lightenedG = Math.round(g * (1 - amount) + 255 * amount);
-                        const lightenedB = Math.round(b * (1 - amount) + 255 * amount);
-
-                        return `rgb(${lightenedR}, ${lightenedG}, ${lightenedB})`;
-                      };
-                      const bgColorSectionLight = lightenColor(bgColorSection, 0.8); // 30% white blend
-
-                      /**
-                       * Calculates appropriate text color for lightened background
-                       * Uses same lightening logic to determine final background luminance
-                       * @param hexColor - Original hex color
-                       * @param lightenAmount - Amount of white blending (0-1)
-                       */
-                      const getTextColorForLight = (hexColor: string, lightenAmount: number) => {
-                        const hex = hexColor.replace("#", "");
-                        const r = parseInt(hex.substring(0, 2), 16);
-                        const g = parseInt(hex.substring(2, 4), 16);
-                        const b = parseInt(hex.substring(4, 6), 16);
-
-                        // Simulate the lightening to calculate final color
-                        const lightenedR = r * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedG = g * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedB = b * (1 - lightenAmount) + 255 * lightenAmount;
-
-                        // Calculate relative luminance of lightened color
-                        const luminance = (0.299 * lightenedR + 0.587 * lightenedG + 0.114 * lightenedB) / 255;
-
-                        return luminance > 0.5 ? "#000000" : "#ffffff";
-                      };
-                      // Use high lighten amount (0.9) for text color calculation to ensure readability
-                      const textColor = phaseTask.phaseHex ? getTextColorForLight(bgColorSection, 0.9) : "var(--text-fallback)";
 
                       // Calculate phase header position based on earliest and latest task dates
                       const { start, width } = getTaskPosition({
@@ -1655,7 +1585,7 @@ function App() {
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
-                              {weekColumns.map((weekStart, index) => {
+                              {weekColumns.map((_, index) => {
                                 // Calculate if this column is within the phase boundaries
                                 const columnPercent = (index / weekSpan) * 100;
                                 const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
@@ -1735,7 +1665,7 @@ function App() {
                                     className="task-bar"
                                     draggable
                                     onDragStart={() => handleDragStart(task.id)}
-                                    onDragOver={(e) => handleDragOver(e, task.id)}
+                                    onDragOver={handleDragOver}
                                     onDrop={() => handleDrop(task.id)}
                                     onDragEnd={handleDragEnd}
                                     title={[
@@ -1970,32 +1900,6 @@ function App() {
 
                       // Get phase color from first task in phase
                       const phaseTask = phaseTasks[0];
-                      const bgColorSection = phaseTask.phaseHex ? `#${phaseTask.phaseHex}` : "var(--bg-fallback)";
-
-                      /**
-                       * Calculates appropriate text color for lightened background
-                       * Uses same lightening logic to determine final background luminance
-                       * @param hexColor - Original hex color
-                       * @param lightenAmount - Amount of white blending (0-1)
-                       */
-                      const getTextColorForLight = (hexColor: string, lightenAmount: number) => {
-                        const hex = hexColor.replace("#", "");
-                        const r = parseInt(hex.substring(0, 2), 16);
-                        const g = parseInt(hex.substring(2, 4), 16);
-                        const b = parseInt(hex.substring(4, 6), 16);
-
-                        // Simulate the lightening to calculate final color
-                        const lightenedR = r * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedG = g * (1 - lightenAmount) + 255 * lightenAmount;
-                        const lightenedB = b * (1 - lightenAmount) + 255 * lightenAmount;
-
-                        // Calculate relative luminance of lightened color
-                        const luminance = (0.299 * lightenedR + 0.587 * lightenedG + 0.114 * lightenedB) / 255;
-
-                        return luminance > 0.5 ? "#000000" : "#ffffff";
-                      };
-                      // Use high lighten amount (0.9) for text color calculation to ensure readability
-                      const textColor = phaseTask.phaseHex ? getTextColorForLight(bgColorSection, 0.9) : "var(--text-fallback)";
 
                       // Calculate phase header position based on earliest and latest task dates
                       const { start, width } = getMonthTaskPosition({
@@ -2172,7 +2076,7 @@ function App() {
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
-                              {monthColumns.map((monthStart, index) => {
+                              {monthColumns.map((_, index) => {
                                 // Calculate if this column is within the phase boundaries
                                 const columnPercent = (index / monthColumns.length) * 100;
                                 const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
@@ -2251,7 +2155,7 @@ function App() {
                                     className="task-bar"
                                     draggable
                                     onDragStart={() => handleDragStart(task.id)}
-                                    onDragOver={(e) => handleDragOver(e, task.id)}
+                                    onDragOver={handleDragOver}
                                     onDrop={() => handleDrop(task.id)}
                                     onDragEnd={handleDragEnd}
                                     title={[
