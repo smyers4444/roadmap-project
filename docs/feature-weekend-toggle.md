@@ -1,68 +1,56 @@
-# Feature Plan: Weekend Toggle
+# Feature Status: Weekend Toggle
 
-## Purpose
+## Status
 
-This note captures the recommended approach for adding a weekly-view toggle that shows or hides weekends.
+Implemented in commit `57f0d89` (`Add weekly weekend toggle`).
 
-The goal is to improve workweek planning without changing the task data model, import flow, or CSV export behavior.
+Verified:
 
-## Recommendation
+- `npm run build`
+- `npx eslint src/App.tsx`
+- manual browser check completed by user on 2026-06-15
 
-Add a weekly-view control named `Show weekends`.
+## Shipped Behavior
+
+Weekly view now includes a `Show weekends` control.
 
 - Default: `on`
 - Scope: weekly view only
 - Monthly view: unchanged
 
-When the toggle is `off`, Saturday and Sunday should be removed from the rendered weekly grid instead of only being visually muted.
-
-## Product Behavior
-
-When weekends are hidden:
+When the toggle is `off`:
 
 - the weekly timeline renders 5 visible days per week instead of 7
-- task data still keeps real calendar `startDate` and `endDate`
-- imported and manually created tasks keep their original dates
-- CSV export remains unchanged
+- weekly headers reflect the visible workday range
+- task bars use visible-day positioning rather than assuming all 7 days are rendered
+- tasks spanning a weekend stay visually continuous from Friday to Monday
+- tasks starting or ending on a weekend clip to the nearest visible workday in weekly rendering
 
-This should be a rendering-only feature, not a data transformation feature.
+This remains a rendering-only feature.
 
-## Rendering Rules
+- task `startDate` and `endDate` stay unchanged
+- spreadsheet import behavior stays unchanged
+- CSV export stays unchanged
 
-- weekly headers should reflect the visible day set
-- weekly task positioning should be based on visible workdays only
-- tasks spanning a weekend should appear continuous from Friday to Monday, with hidden days skipped visually
-- tasks starting or ending on a weekend should keep their real dates, but weekly rendering should clip them to the nearest visible workday
+## Implementation Notes
 
-## Implementation Slices
+The shipped slice added:
 
-1. Add weekly UI state
-- add `showWeekends` state in `src/App.tsx`
-- add a control near the existing weekly view controls
+1. weekly `showWeekends` UI state
+2. shared weekly visible-day math for 7-day and 5-day rendering
+3. updated weekly range labels, headers, phase spans, and task positioning
+4. visible-task filtering that stays aligned with the rendered weekly day set
+5. legend visibility that follows the rendered weekly result
 
-2. Extract visible-day math
-- introduce a weekly visible-day model for either 7-day or 5-day rendering
-- stop assuming `weekSpan * 7` for all weekly calculations
+## Follow-On Impact
 
-3. Update weekly header rendering
-- weekly headers should use the visible-day model
-- weekly grid cells should match the same day set used by bar positioning
+This work completed the visible-day cleanup needed before broader weekly layout changes.
 
-4. Update weekly task positioning
-- recalculate `start` and `width` against visible days only
-- preserve clipping for tasks outside the current view
+That makes [feature-layout-orientation-toggle.md](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap%20Project/docs/feature-layout-orientation-toggle.md:1) safer to implement later, because weekly rendering no longer assumes every week always shows seven visible days.
 
-5. Verify alignment
-- manual tasks appear in both table and weekly timeline
-- imported tasks crossing weekends still render sensibly
-- phase sections still align with visible task ranges
-- legends and counts stay consistent with the displayed task set
+## Next Related Docs
 
-## Suggested First Slice
+If the next export-related feature is taken up, read:
 
-If implementation starts soon, begin with:
-
-1. add the `Show weekends` control
-2. extract weekly visible-day math
-3. update weekly headers and task positioning
-4. verify manual tasks and imported tasks in weekly view
+- [feature-export-week-number.md](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap%20Project/docs/feature-export-week-number.md:1)
+- [handoff.md](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap%20Project/docs/handoff.md:1)

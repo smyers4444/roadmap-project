@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (weekend toggle implementation)
+Last updated: 2026-06-15 (weekend toggle completed, export-week-number documented)
 
 ## Current Snapshot
 
@@ -36,19 +36,22 @@ Recent repo-level cleanup work has added project-local Codex skills and refreshe
 - `.codex/skills/fresh-look-review/`: project-agnostic independent review skill, cleaned up for reuse
 - `.github/copilot-instructions.md`: rewritten to match this repo's actual React/Vite workflow and guardrails
 
-There are now separate feature-planning notes for the proposed timeline enhancements at `docs/feature-weekend-toggle.md` and `docs/feature-layout-orientation-toggle.md`.
+There are now separate feature notes for:
+
+- completed weekend-toggle work at `docs/feature-weekend-toggle.md`
+- proposed layout-orientation work at `docs/feature-layout-orientation-toggle.md`
+- proposed CSV week-number export work at `docs/feature-export-week-number.md`
 
 ## Branch And Working Tree
 
-At the time of this handoff, there are uncommitted local changes.
+The latest completed feature commit is:
 
-- `src/App.tsx` now includes a weekly `Show weekends` toggle that switches weekly rendering between 7-day and 5-day visible-day math without changing task data, import behavior, or CSV export.
-- `src/App.tsx` still contains the recent import fallback fix and filtered timeline/legend alignment work from the previous slice.
-- `README.md` has been updated to mention the new weekly weekend-toggle behavior.
+- `57f0d89` `Add weekly weekend toggle`
 
-These changes have not been committed yet in the current branch.
+At the time of this handoff, there are local documentation changes only.
 
-The active working branch should be confirmed before committing or opening a PR.
+- `docs/feature-weekend-toggle.md` has been updated from a proposal note into a completed-status note.
+- `docs/feature-export-week-number.md` now documents the proposed next export feature.
 
 ## How to Run
 
@@ -102,16 +105,15 @@ Latest verification, 2026-06-15:
 
 - `npm run build`: passes
 - `npx eslint src/App.tsx`: passes
-- browser smoke check: not yet run in this handoff
+- browser/manual weekend-toggle verification: passed, per user report
 
 ## Latest Change
 
 Latest local changes, 2026-06-15:
 
-- Added a weekly `Show weekends` control in `src/App.tsx`.
-- Extracted weekly visible-day math so weekly headers, phase spans, task bars, and visible legends stay aligned in both 7-day and 5-day rendering.
-- Weekend hiding is rendering-only: task dates, importer flexibility, and CSV export stay unchanged.
-- `README.md` now notes the weekly weekend-toggle behavior.
+- Marked `docs/feature-weekend-toggle.md` as completed and verified.
+- Added `docs/feature-export-week-number.md` to capture the next proposed CSV export enhancement.
+- Recorded that browser/manual weekend-toggle verification has now been completed.
 
 ## Key Guardrails
 
@@ -124,9 +126,9 @@ Latest local changes, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Verify in the browser that filtering behaves as expected in both weekly and monthly timeline views.
-2. Verify the weekly weekend toggle with tasks that start or end on Saturday/Sunday and with tasks that span Friday to Monday.
-3. If that looks good, the next contained UI cleanup is to remove or gate the user-facing `Add Test Task` button so the production editing surface stays focused on real planning actions.
+1. Implement the proposed `Week` column in CSV export using the documented fallback rule in `docs/feature-export-week-number.md`.
+2. Verify export output for both imported tasks that already have `Week` values and manually created tasks that do not.
+3. After that, return to the next contained UI cleanup such as removing or gating the user-facing `Add Test Task` button.
 
 ## New Chat Start
 
