@@ -1,0 +1,7 @@
+interface:
+  display_name: "Roadmap Wrap-Up"
+  short_description: "Close out Roadmap Project work with docs, commit, and handoff"
+  default_prompt: "Use $roadmap-wrap-up to sync docs or skills, summarize updated files, prepare handoff, and commit only after explicit confirmation."
+
+policy:
+  allow_implicit_invocation: true
