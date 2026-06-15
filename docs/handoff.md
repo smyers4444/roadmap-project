@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (timeline-click selection updated to filter table only)
+Last updated: 2026-06-15 (timeline-click selection plus export/button cleanup)
 
 ## Current Snapshot
 
@@ -112,6 +112,7 @@ Latest verification, 2026-06-15:
 - `npx eslint src/App.tsx`: passes
 - `git diff --check`: passes
 - browser/manual timeline-click verification: passed, per user report
+- CSV export sanity check: export code still uses the full `tasks` array sorted by `displayOrder`, so timeline-click selection does not narrow the exported file
 
 ## Latest Change
 
@@ -119,6 +120,8 @@ Latest feature update, 2026-06-15:
 
 - Updated single-select timeline-click filtering in `src/App.tsx` so selection narrows only the task table.
 - Kept the timeline fully visible and added stronger selected-bar emphasis.
+- Confirmed CSV export still runs against the full task list in manual order.
+- Gated the user-facing `Add Test Task` button to dev mode only.
 - Updated `README.md`, `docs/feature-timeline-click-filters-list.md`, and this handoff note to reflect the revised interaction.
 
 ## Key Guardrails
@@ -132,9 +135,9 @@ Latest feature update, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Do a quick CSV export sanity check after the filtering work to confirm export behavior is unchanged.
-2. Then return to the next contained UI cleanup such as removing or gating the user-facing `Add Test Task` button.
-3. After that, consider whether broader timeline interactions such as phase/category clicks are still desirable or unnecessary.
+1. Do a browser pass on the current branch to verify filtered-list drag ordering still feels correct after timeline selection.
+2. Then decide whether broader timeline interactions such as phase/category clicks are still desirable or unnecessary.
+3. If the timeline interaction model is stabilizing, capture it in a small feature note before the next UI slice.
 
 ## New Chat Start
 

@@ -173,6 +173,7 @@ function App() {
   const [useCustomMonthRange, setUseCustomMonthRange] = useState(false);
   const [customMonthStart, setCustomMonthStart] = useState<Date | null>(null);
   const [customMonthEnd, setCustomMonthEnd] = useState<Date | null>(null);
+  const showDevTaskButton = import.meta.env.DEV;
 
   // ==================== TASK MANAGEMENT FUNCTIONS ====================
 
@@ -198,6 +199,23 @@ function App() {
         endDate: addDays(new Date(), 1),
         displayOrder: newDisplayOrder,
         lineHeightAdjust: 0,
+      },
+    ]);
+  };
+
+  const addTestTask = () => {
+    const newId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
+    const newDisplayOrder = tasks.length > 0 ? Math.max(...tasks.map((t) => t.displayOrder || 0)) + 1 : 1;
+    setTasks([
+      ...tasks,
+      {
+        id: newId,
+        phase: "Test Phase",
+        category: "Test Category",
+        name: "Test Task",
+        startDate: new Date(),
+        endDate: addDays(new Date(), 7),
+        displayOrder: newDisplayOrder,
       },
     ]);
   };
@@ -1133,34 +1151,18 @@ function App() {
             </div>
 
             <button onClick={addTask}>Add Task</button>
-            <button
-              onClick={() => {
-                const newId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
-                const newDisplayOrder = tasks.length > 0 ? Math.max(...tasks.map((t) => t.displayOrder || 0)) + 1 : 1;
-                setTasks([
-                  ...tasks,
-                  {
-                    id: newId,
-                    phase: "Test Phase",
-                    category: "Test Category",
-                    name: "Test Task",
-                    startDate: new Date(),
-                    endDate: addDays(new Date(), 7),
-                    displayOrder: newDisplayOrder,
-                  },
-                ]);
-              }}
-              style={{ marginLeft: "10px" }}
-            >
-              Add Test Task
-            </button>
+            {showDevTaskButton && (
+              <button onClick={addTestTask} style={{ marginLeft: "10px" }}>
+                Add Test Task
+              </button>
+            )}
             {/* Export Tasks Button */}
             {/* <div style={{ marginBottom: "1rem" }}> */}
               <button onClick={exportTasks} style={{ backgroundColor: "var(--success-color)", color: "black" }}>
                 Export Tasks to CSV
               </button>
               <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                ({tasks.length} total tasks, preserves manual ordering)
+                ({tasks.length} total tasks, exports all tasks in manual order)
               </span>
               {(filterText.trim() || selectedTimelineTask) && (
                 <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
