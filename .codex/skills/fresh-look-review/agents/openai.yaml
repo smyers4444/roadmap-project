@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fresh-Look Review"
+  short_description: "Independent read-only gap review"
+  default_prompt: "Use $fresh-look-review to run a low-context read-only review of a target and return a Markdown findings artifact."

@@ -1,202 +1,70 @@
-# Roadmap Project - Copilot Instructions
+# Repository Instructions
 
-## Project Overview
-This is a **React + TypeScript** project using **Vite** as the build tool. It's a sophisticated weekly planning board application with Gantt-chart style timeline visualization.
+This repository contains Roadmap Project, a local planning board for building and reviewing timeline-based project roadmaps.
 
-## Project Type
-- **Framework**: React 19.1 with TypeScript 5.9
-- **Build Tool**: Vite 7.1
-- **UI Pattern**: Functional components with React hooks
-- **Styling**: Custom CSS with CSS Grid and CSS variables
-- **State Management**: React useState (no external state library)
+## Product Principles
 
-## Key Technologies & Dependencies
-- **date-fns** (4.1.0) - All date manipulation and formatting
-- **react-datepicker** (8.7.0) - Date picker UI component
-- **@tanstack/react-table** (8.21.3) - Available but not currently in use
-- **ESLint** (9.36.0) - Code quality with TypeScript rules
+- Make roadmap editing fast enough for day-to-day planning work.
+- Keep the visual timeline aligned with the editable task data.
+- Treat spreadsheet paste/import as a first-class workflow, not a side feature.
+- Preserve flexible manual control over ordering, grouping, and timeline presentation.
+- Prefer practical, understandable implementation over architecture churn.
 
-## Architecture & Code Style
+## Current Implementation
 
-### Component Structure
-- Single-file application in `src/App.tsx` (2000+ lines)
-- Functional component with hooks-based state management
-- No component splitting (intentional for this project size)
-- All state lives in the main App component
+- React + TypeScript app built with Vite.
+- Main application logic lives in `src/App.tsx`.
+- Styling lives primarily in `src/App.css` and `src/index.css`.
+- Timeline behavior supports weekly and monthly views.
+- Tasks can be added manually, edited in place, imported from tab-separated data, reordered, filtered, and exported to CSV.
+- Date handling is done with `date-fns`.
+- No backend service is required. This is a client-side app run through the Vite dev server.
+- Project-specific skills live under `.codex/skills/`.
 
-### State Management Pattern
-```typescript
-// All state uses useState hooks
-const [tasks, setTasks] = useState<Task[]>([]);
-const [view, setView] = useState<"weeks" | "months">("weeks");
-// No Redux, Context, or other state libraries
-```
+## Development Guidance
 
-### Key Interfaces
-```typescript
-interface Task {
-  id: number;
-  phase?: string;
-  phaseHex?: string;      // Color for phase headers/backgrounds
-  category?: string;
-  categoryHex?: string;   // Color for task bars
-  name: string;
-  subTask?: string;
-  week?: number;
-  owner?: string;
-  startDate: Date;
-  endDate: Date;
-  displayOrder: number;   // For drag-and-drop ordering
-  lineHeightAdjust?: number; // Manual height adjustment for timeline bars
-}
-```
+- Keep the core planning flow intact: when a task is added or imported, it should become part of the editable task list and the visible timeline.
+- Do not make the importer stricter unless the user explicitly asks for stricter validation. Spreadsheet paste is a primary workflow.
+- Keep weekly and monthly views behaviorally consistent unless a difference is intentional and documented.
+- Preserve CSV export when changing task fields, ordering behavior, or import logic.
+- Prefer incremental cleanup over large refactors. `src/App.tsx` is intentionally the center of the app right now.
+- Do not add runtime dependencies unless they clearly improve the roadmap workflow and are worth the maintenance cost.
+- Do not hard-code user-specific, machine-specific, environment-specific, or deployment-specific values in docs, source, config, or scripts. Prefer repo-owned defaults and documented commands.
+- Documentation is part of the implementation. Update `README.md`, `.github/copilot-instructions.md`, `docs/handoff.md`, and relevant skill files when changing setup, import/export behavior, task structure, timeline behavior, verification status, or repo workflow.
+- Treat `docs/handoff.md` as the rolling current-state snapshot for both new chats and human resume-after-a-gap use. It should stay focused on current branch/worktree state, recent changes, verification status, and the next recommended task.
+- Never create commits or pull requests without explicit user confirmation for that specific action. You may recommend when work is commit-ready or PR-ready.
+- Preserve clear labels and usable layout when changing the UI.
 
-### Algorithm Conventions
-- **"Reverse Tetris" Positioning**: Tasks pack vertically from top to bottom
-  - Tasks sorted by display order (manual drag-and-drop arrangement)
-  - Collision detection prevents overlaps
-  - Percentage-based horizontal positioning (0-100%)
-  - Pixel-based vertical positioning (absolute)
+## Verification
 
-- **Text Wrapping Calculation**: 
-  - Simulate word wrapping to calculate required lines
-  - Dynamic task bar height based on text length
-  - Character width averaging: ~7.2px per character (Consolas font)
-  - Manual height adjustment via `lineHeightAdjust` property
-
-- **Date Normalization**:
-  - Always normalize dates to midnight to avoid DST issues
-  - Use `new Date(year, month, date)` constructor
-  - Math.round() for day calculations to handle floating point
-
-### Color System
-- **CSS Variables**: All colors defined in `:root` in `App.css`
-- **Phase Colors**: Used for phase header bars and lightened backgrounds
-- **Category Colors**: Used for individual task bars
-- **Luminance Calculation**: Automatic text color (black/white) based on background
-- **Color Lightening**: Blend with white (no transparency/opacity on colors themselves)
-
-### Styling Patterns
-- **Fixed Width**: Root div set to 1800px (not responsive)
-- **CSS Grid**: For timeline columns
-- **Absolute Positioning**: For task bar overlays
-- **Collapsible Sections**: Show/hide using conditional rendering
-- **Semantic CSS Variables**: `--bg-primary`, `--text-secondary`, etc.
-
-## Development Commands
+Run:
 
 ```bash
-# Install dependencies
-npm install
-
-# Start dev server (http://localhost:5173)
-npm run dev
-
-# Build for production
 npm run build
+```
 
-# Preview production build
-npm run preview
+When touching general code quality or lint-sensitive logic, also run:
 
-# Run linter
+```bash
 npm run lint
 ```
 
-## File Structure
-```
-src/
-├── App.tsx           # Main application (2350+ lines)
-├── App.css           # All styles with CSS variables
-├── main.tsx          # React entry point
-└── index.css         # Global/reset styles (Consolas font family)
-```
+For browser verification, start the local app:
 
-## Recent Features (2024/25)
-- **Drag-and-Drop Timeline**: Tasks can be reordered by dragging directly in the timeline view
-- **CSV Export**: Export tasks to CSV preserving manual ordering (`exportTasks()` function)
-- **Line Height Adjustment**: Manual control over task bar height via `lineHeightAdjust` field
-- **Enhanced Tooltips**: Rich hover information showing all task details and debug info
-- **Improved Font Metrics**: Optimized text wrapping for Consolas font (7.2px per char)
-
-## Coding Guidelines
-
-### When Modifying App.tsx
-1. **Preserve Comments**: Extensive inline documentation exists - maintain it
-2. **Section Headers**: Keep the `========== SECTION ==========` comment style
-3. **Algorithm Comments**: Don't remove explanations of positioning logic
-4. **Type Safety**: All functions are properly typed - maintain this
-5. **No Breaking Changes**: Be careful with the positioning algorithm - it's complex
-
-### Adding Features
-- New state should use `useState` at the top of the App component
-- Keep the same functional style (no class components)
-- Maintain the existing comment verbosity (this is intentional)
-- Use date-fns for all date operations (already imported)
-- Follow the existing CSS variable naming convention
-
-### Common Patterns to Follow
-```typescript
-// Date normalization
-const normalizeDate = (date: Date) => 
-  new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-// Color calculation
-const getTextColor = (hexColor: string | undefined) => {
-  // ... luminance calculation ...
-  return luminance > 0.5 ? "#000000" : "#ffffff";
-};
-
-// Task filtering
-const filtered = tasks.filter(task => 
-  task.startDate <= periodEnd && task.endDate >= periodStart
-);
-```
-
-### Testing Locally
-- Use "Add Test Task" button for quick testing
-- Import sample data using tab-separated format
-- Test both weekly and monthly views
-- Verify task positioning with different text lengths
-
-## Known Patterns & Conventions
-
-### Import Data Format
-```
-Phase	Phase Hex	Category	Category HEX	Task	Sub-Task	Owner	Date Start	Date End	Line Padding
-Foundation	D40E8C	Initiation	D30C55	Kickoff		John	1/4/2026	1/17/2026	0
-```
-
-### Column Mapping Flexibility
-- Supports multiple header name variations (e.g., "Date Start", "Start Date", "Start")
-- Date parsing handles MM/DD/YYYY format
-- Auto-groups tasks with same Phase/Category/Name
-
-### Performance Considerations
-- No virtualization (assumes reasonable task count < 500)
-- Task height calculation happens on every render (intentional for simplicity)
-- No memoization currently used
-
-## AI Assistant Guidelines
-
-When helping with this project:
-1. **Understand the positioning algorithm** before suggesting changes to task rendering
-2. **Preserve all detailed comments** - they document complex logic
-3. **Test with both view modes** (weeks and months) when making changes
-4. **Maintain type safety** - TypeScript strict mode is enabled
-5. **Keep the single-file structure** - don't suggest splitting into components unless explicitly requested
-6. **Use date-fns functions** - don't introduce other date libraries
-7. **Follow the CSS variable system** - don't use inline hex colors
-8. **Respect the 1800px fixed width** - this is intentional for the use case
-
-## Debug/Launch Instructions
 ```bash
-# Development
 npm run dev
-# Then open http://localhost:5173
-
-# Production preview
-npm run build && npm run preview
 ```
 
-No additional IDE configuration needed - works with standard VS Code TypeScript/React setup.
+Then open:
 
+```text
+http://localhost:5173
+```
+
+Verify the relevant flow, especially:
+
+- manually added tasks appear in the task list and timeline
+- imported rows become real tasks
+- task counts match the current data
+- weekly and monthly views still render correctly
+- CSV export still works when tasks are present

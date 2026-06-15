@@ -434,6 +434,12 @@ function App() {
         }
       });
 
+      // Be forgiving with imported spreadsheets that omit a dedicated task column.
+      // Some older sheets place the task label in Category or Sub-Task instead.
+      if (!taskData.name) {
+        taskData.name = taskData.category || taskData.subTask;
+      }
+
       if (taskData.name) {
         const newTask = {
           id: nextId++,
@@ -509,6 +515,8 @@ function App() {
       setImportText("");
       setImportData([]);
       setShowImportTable(false);
+    } else {
+      alert('No importable tasks were found. Make sure each row has a task name, or put the task text in the Category column for older sheet formats.');
     }
   };
 
