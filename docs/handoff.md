@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (filter alignment and verification follow-up)
+Last updated: 2026-06-15 (weekend toggle implementation)
 
 ## Current Snapshot
 
@@ -42,10 +42,9 @@ There are now separate feature-planning notes for the proposed timeline enhancem
 
 At the time of this handoff, there are uncommitted local changes.
 
-- `src/App.tsx` includes an import fallback fix so pasted rows still import when the dedicated `Task` column is blank but the task text exists in `Category` or `Sub-Task`.
-- `src/App.tsx` now keeps the timeline and category/phase legends aligned with the current table filter so the roadmap view matches the visible editing subset.
-- `.github/copilot-instructions.md` has been rewritten in a cleaner repository-instructions format.
-- `.codex/` contains the new Roadmap-specific skills and skill cleanup.
+- `src/App.tsx` now includes a weekly `Show weekends` toggle that switches weekly rendering between 7-day and 5-day visible-day math without changing task data, import behavior, or CSV export.
+- `src/App.tsx` still contains the recent import fallback fix and filtered timeline/legend alignment work from the previous slice.
+- `README.md` has been updated to mention the new weekly weekend-toggle behavior.
 
 These changes have not been committed yet in the current branch.
 
@@ -96,18 +95,23 @@ Useful manual checks:
 - import tab-separated rows and confirm they become real tasks
 - confirm the task count updates after import
 - switch between weekly and monthly views
+- in weekly view, toggle `Show weekends` and confirm headers and bar positions compress to visible workdays without affecting monthly view
 - export tasks to CSV when tasks are present
+
+Latest verification, 2026-06-15:
+
+- `npm run build`: passes
+- `npx eslint src/App.tsx`: passes
+- browser smoke check: not yet run in this handoff
 
 ## Latest Change
 
 Latest local changes, 2026-06-15:
 
-- Restored a forgiving import behavior in `src/App.tsx`.
-- If an imported row does not provide a dedicated `Task` value, the importer now falls back to `Category` or `Sub-Task`.
-- If no rows produce importable tasks, the app now shows a direct alert instead of silently doing nothing.
-- The timeline and legends now follow the same filtered task subset shown in the table, instead of continuing to render all tasks while the editor was filtered.
-- The task table UI now labels manual ordering more clearly and reflects filtered date-range/count context more accurately.
-- Added `docs/feature-weekend-toggle.md` and `docs/feature-layout-orientation-toggle.md` to track the weekend toggle and the broader horizontal/vertical layout plan separately.
+- Added a weekly `Show weekends` control in `src/App.tsx`.
+- Extracted weekly visible-day math so weekly headers, phase spans, task bars, and visible legends stay aligned in both 7-day and 5-day rendering.
+- Weekend hiding is rendering-only: task dates, importer flexibility, and CSV export stay unchanged.
+- `README.md` now notes the weekly weekend-toggle behavior.
 
 ## Key Guardrails
 
@@ -121,8 +125,8 @@ Latest local changes, 2026-06-15:
 ## Recommended Next Task
 
 1. Verify in the browser that filtering behaves as expected in both weekly and monthly timeline views.
-2. If that looks good, the next contained UI cleanup is to remove or gate the user-facing `Add Test Task` button so the production editing surface stays focused on real planning actions.
-3. After that, consider narrowing ESLint scope so `npm run lint` becomes a useful repo-level verification command again.
+2. Verify the weekly weekend toggle with tasks that start or end on Saturday/Sunday and with tasks that span Friday to Monday.
+3. If that looks good, the next contained UI cleanup is to remove or gate the user-facing `Add Test Task` button so the production editing surface stays focused on real planning actions.
 
 ## New Chat Start
 

@@ -37,6 +37,7 @@ Each task supports these fields:
 - Navigate backward or forward by week.
 - Pick a starting date from the date picker.
 - Change how many weeks are visible.
+- Show or hide weekends without changing the underlying task dates.
 - Toggle between date ranges and week numbers.
 
 ### Monthly View

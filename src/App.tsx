@@ -163,6 +163,7 @@ function App() {
   // Toggle between showing week numbers or dates in weekly view
   const [showWeekNumbers, setShowWeekNumbers] = useState(false);
   const [showMonthNumbers, setShowMonthNumbers] = useState(false);
+  const [showWeekends, setShowWeekends] = useState(true);
   
   // Toggle for showing/hiding phase labels and colors
   const [showPhaseLabels, setShowPhaseLabels] = useState(true);
@@ -586,10 +587,26 @@ function App() {
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, monthSpan));
   const prevMonth = () => setCurrentMonth(addMonths(currentMonth, -monthSpan));
 
+  const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const getWeeklyPeriodEnd = () => addDays(currentWeek, weekSpan * 7 - 1);
+
+  const isWeekendDate = (date: Date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+
+  const getVisibleWeekDays = (weekStart: Date) =>
+    Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)).filter((date) => showWeekends || !isWeekendDate(date));
+
   // ==================== COLUMN GENERATION ====================
 
   // Generate array of start dates for each week column
   const weekColumns = Array.from({ length: weekSpan }, (_, i) => addDays(currentWeek, i * 7));
+  const visibleWeekColumns = weekColumns.map((weekStart) => getVisibleWeekDays(weekStart));
+  const visibleWeeklyDays = visibleWeekColumns.flat();
+  const weeklyRangeStart = visibleWeeklyDays[0] || currentWeek;
+  const weeklyRangeEnd = visibleWeeklyDays[visibleWeeklyDays.length - 1] || getWeeklyPeriodEnd();
 
   // Generate array of start dates for each month column
   // Use custom date range if enabled, otherwise use currentMonth + monthSpan
@@ -724,25 +741,29 @@ function App() {
    * 5. Add 1 to width calculation to include end day (endDate is inclusive)
    */
   const getTaskPosition = (task: Task) => {
-    const periodStart = currentWeek;
-    const periodEnd = addDays(currentWeek, weekSpan * 7 - 1);
+    const periodStart = normalizeDate(currentWeek);
+    const periodEnd = normalizeDate(getWeeklyPeriodEnd());
+    const totalDays = visibleWeeklyDays.length;
 
-    // Normalize all dates to midnight to avoid DST issues
-    const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    if (totalDays === 0) return null;
 
-    // Calculate where task starts and ends within the visible period
-    const taskStartInPeriod = task.startDate > periodStart ? normalizeDate(task.startDate) : normalizeDate(periodStart);
-    const taskEndInPeriod = task.endDate < periodEnd ? normalizeDate(task.endDate) : normalizeDate(periodEnd);
+    const taskStartInPeriod = normalizeDate(task.startDate > periodStart ? task.startDate : periodStart);
+    const taskEndInPeriod = normalizeDate(task.endDate < periodEnd ? task.endDate : periodEnd);
 
-    const normalizedPeriodStart = normalizeDate(periodStart);
+    const startOffset = visibleWeeklyDays.findIndex((date) => normalizeDate(date).getTime() >= taskStartInPeriod.getTime());
+    let endOffset = -1;
+    for (let index = visibleWeeklyDays.length - 1; index >= 0; index -= 1) {
+      if (normalizeDate(visibleWeeklyDays[index]).getTime() <= taskEndInPeriod.getTime()) {
+        endOffset = index;
+        break;
+      }
+    }
 
-    // Use Math.round to handle any floating point issues from DST
-    const startOffset = Math.round((taskStartInPeriod.getTime() - normalizedPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
-    const endOffset = Math.round((taskEndInPeriod.getTime() - normalizedPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
+    if (startOffset === -1 || endOffset === -1 || startOffset > endOffset) {
+      return null;
+    }
 
-    const totalDays = weekSpan * 7;
     const start = (startOffset / totalDays) * 100;
-    // Add 1 to include the end day (endDate is inclusive)
     const width = ((endOffset - startOffset + 1) / totalDays) * 100;
 
     return { start, width };
@@ -834,7 +855,7 @@ function App() {
               dateFormat="MMM dd, yyyy"
               customInput={
                 <button style={{ padding: "8px 12px", cursor: "pointer" }}>
-                  {format(currentWeek, "MMM dd")} - {format(addDays(currentWeek, weekSpan * 7 - 1), "MMM dd, yyyy")}
+                  {format(weeklyRangeStart, "MMM dd")} - {format(weeklyRangeEnd, "MMM dd, yyyy")}
                 </button>
               }
             />
@@ -847,6 +868,7 @@ function App() {
               style={{ width: "60px", padding: "8px" }}
             />
             <span>Weeks</span>
+            <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
             <button onClick={() => setShowWeekNumbers(!showWeekNumbers)}>{showWeekNumbers ? "Show Dates" : "Show Week Numbers"}</button>
             <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
             <button
@@ -1257,15 +1279,23 @@ function App() {
               (() => {
                 // Calculate visible period and filter tasks that overlap with it
                 const periodStart = currentWeek;
-                const periodEnd = addDays(currentWeek, weekSpan * 7 - 1);
-                const visibleTasks = timelineTasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
+                const periodEnd = getWeeklyPeriodEnd();
+                const visibleTasks = timelineTasks.filter((task) => {
+                  if (task.startDate > periodEnd || task.endDate < periodStart) {
+                    return false;
+                  }
+
+                  return getTaskPosition(task) !== null;
+                });
 
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
                 const taskHeights = new Map<number, number>();
                 const debugInfo = new Map<number, string>();
                 visibleTasks.forEach((task) => {
-                  const { width } = getTaskPosition(task);
+                  const position = getTaskPosition(task);
+                  if (!position) return;
+                  const { width } = position;
                   const actualWidth = (width / 100) * 1800; // Approximate pixel width
                   const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
                   const charsPerLine = Math.max(1, Math.floor(textWidth / 7.2)); // Consolas 13px ≈ 7.5px per char (slightly conservative)
@@ -1336,7 +1366,9 @@ function App() {
 
                 // For each task, find the first available vertical position
                 sortedTasks.forEach((task) => {
-                  const { start, width } = getTaskPosition(task);
+                  const position = getTaskPosition(task);
+                  if (!position) return;
+                  const { start, width } = position;
                   const taskHeight = taskHeights.get(task.id) || 30;
                   const horizontalPadding = 0.3; // Small gap between adjacent tasks
                   const taskStart = start + horizontalPadding;
@@ -1384,6 +1416,9 @@ function App() {
                       }}
                     >
                       {weekColumns.map((week, index) => {
+                        const visibleDays = visibleWeekColumns[index];
+                        const firstVisibleDay = visibleDays[0] || week;
+                        const lastVisibleDay = visibleDays[visibleDays.length - 1] || addDays(week, 6);
                         // Calculate week number relative to first task or just use index
                         let weekNumber = index + 1;
                         if (showWeekNumbers && tasks.length > 0) {
@@ -1397,13 +1432,13 @@ function App() {
                         return (
                           <div 
                             key={index} 
-                            className="day-header" 
+                            className="day-header"
                             style={{
                               borderRight: index < weekColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
                             }}
-                            title={`${format(week, "MMM dd")} – ${format(addDays(week, 6), "MMM dd, yyyy")}`}
+                            title={`${format(firstVisibleDay, "MMM dd")} – ${format(lastVisibleDay, "MMM dd, yyyy")}`}
                           >
-                            {showWeekNumbers ? `Wk ${weekNumber}` : `${format(week, "MMM dd")} – ${format(addDays(week, 6), "MMM dd")}`}
+                            {showWeekNumbers ? `Wk ${weekNumber}` : `${format(firstVisibleDay, "MMM dd")} – ${format(lastVisibleDay, "MMM dd")}`}
                           </div>
                         );
                       })}
@@ -1419,19 +1454,20 @@ function App() {
                       if (phaseTasks.length === 0) return null; // Skip empty phases
 
                       // Calculate phase start/end dates from all tasks in this phase
-                      const normalizeToMidnight = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                      const phaseStart = normalizeToMidnight(new Date(Math.min(...phaseTasks.map((t) => t.startDate.getTime()))));
-                      const phaseEnd = normalizeToMidnight(new Date(Math.max(...phaseTasks.map((t) => t.endDate.getTime()))));
+                      const phaseStart = normalizeDate(new Date(Math.min(...phaseTasks.map((t) => t.startDate.getTime()))));
+                      const phaseEnd = normalizeDate(new Date(Math.max(...phaseTasks.map((t) => t.endDate.getTime()))));
 
                       // Get phase color from first task in phase
                       const phaseTask = phaseTasks[0];
 
                       // Calculate phase header position based on earliest and latest task dates
-                      const { start, width } = getTaskPosition({
+                      const phasePosition = getTaskPosition({
                         ...phaseTask,
                         startDate: phaseStart,
                         endDate: phaseEnd,
                       });
+                      if (!phasePosition) return null;
+                      const { start, width } = phasePosition;
 
                       // ========== PHASE TASK POSITIONING ==========
                       // Apply same packing algorithm within this phase
@@ -1453,7 +1489,9 @@ function App() {
                       });
 
                       sortedPhaseTasks.forEach((task) => {
-                        const { start: taskStart, width: taskWidth } = getTaskPosition(task);
+                        const position = getTaskPosition(task);
+                        if (!position) return;
+                        const { start: taskStart, width: taskWidth } = position;
                         const taskHeight = taskHeights.get(task.id) || 30;
                         const horizontalPadding = 0.3;
                         const taskStartPos = taskStart + horizontalPadding;
@@ -1644,7 +1682,9 @@ function App() {
                               {phaseTasks
                                 .filter((task) => task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO")
                                 .map((task) => {
-                                  const { start, width } = getTaskPosition(task);
+                                  const position = getTaskPosition(task);
+                                  if (!position) return null;
+                                  const { start, width } = position;
                                   return (
                                     <div
                                       key={`vacation-bg-${task.id}`}
@@ -1664,7 +1704,9 @@ function App() {
 
                               {/* Individual task bars with calculated positions */}
                               {phaseTasks.map((task) => {
-                                const { start, width } = getTaskPosition(task);
+                                const position = getTaskPosition(task);
+                                if (!position) return null;
+                                const { start, width } = position;
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
@@ -2229,7 +2271,7 @@ function App() {
           let periodStart, periodEnd;
           if (view === "weeks") {
             periodStart = currentWeek;
-            periodEnd = addDays(currentWeek, weekSpan * 7 - 1);
+            periodEnd = getWeeklyPeriodEnd();
           } else {
             // Use custom date range if enabled, otherwise use month span
             periodStart = useCustomMonthRange && customMonthStart 
@@ -2240,7 +2282,13 @@ function App() {
               : endOfMonth(addMonths(currentMonth, monthSpan - 1));
           }
           
-          const visibleTasks = timelineTasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
+          const visibleTasks = timelineTasks.filter((task) => {
+            if (task.startDate > periodEnd || task.endDate < periodStart) {
+              return false;
+            }
+
+            return view === "weeks" ? getTaskPosition(task) !== null : true;
+          });
           
           // Get unique categories from visible tasks
           const visibleCategories = Array.from(new Set(visibleTasks.map(t => t.category).filter(Boolean)));
