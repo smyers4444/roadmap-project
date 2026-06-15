@@ -6,7 +6,7 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 
 - Create and edit roadmap tasks with phase, category, owner, start date, end date, and manual line-height padding.
 - Reorder tasks by dragging rows in the task table.
-- Filter and sort tasks directly in the editor.
+- Filter and sort tasks directly in the editor, with the timeline and legends following the filtered task set.
 - Switch between weekly and monthly timeline views.
 - Toggle date labels versus week/month numbers.
 - Group tasks by phase, or collapse phase grouping into a single timeline.
@@ -119,4 +119,5 @@ npm run lint
 
 - The main app lives in [src/App.tsx](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap Project/src/App.tsx).
 - Base styles are split between [src/App.css](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap Project/src/App.css) and [src/index.css](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap Project/src/index.css).
-- The current build is not clean yet: `npm run build` fails on unused variables in `src/App.tsx`.
+- `npm run build` currently passes.
+- `npm run lint` currently scans `.history/` snapshot files and produces unrelated errors; `npx eslint src/App.tsx` is the useful targeted check for active app changes until lint scope is narrowed.

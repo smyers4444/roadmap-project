@@ -603,18 +603,12 @@ function App() {
     return Array.from({ length: monthSpan }, (_, i) => addMonths(currentMonth, i));
   })();
 
-  // Extract unique phases and categories from tasks for legends and grouping
-  const phases = [...new Set(tasks.map((t) => t.phase).filter((c) => c && c.trim()))];
-  const categories = [...new Set(tasks.map((t) => t.category).filter((c) => c && c.trim()))];
-
   // ==================== FILTERING AND SORTING ====================
 
   /**
-   * Returns filtered and sorted tasks based on current filter text and sort settings
-   * Filters by text search across multiple fields
-   * Sorts by selected field with secondary sort by displayOrder
+   * Returns tasks filtered by the current search text.
    */
-  const getFilteredAndSortedTasks = () => {
+  const getFilteredTasks = () => {
     let filtered = tasks;
 
     // Apply text filter across multiple task fields
@@ -630,8 +624,19 @@ function App() {
       );
     }
 
+    return filtered;
+  };
+
+  /**
+   * Returns filtered and sorted tasks based on current filter text and sort settings
+   * Filters by text search across multiple fields
+   * Sorts by selected field with secondary sort by displayOrder
+   */
+  const getFilteredAndSortedTasks = () => {
+    const filtered = getFilteredTasks();
+
     // Apply sort with displayOrder as secondary sort for ties
-    const sorted = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let comparison = 0;
 
       // Compare based on selected sort field
@@ -664,17 +669,20 @@ function App() {
       // Apply sort order direction (ascending or descending)
       return sortOrder === "asc" ? comparison : -comparison;
     });
-
-    return sorted;
   };
 
   /**
-   * Returns all tasks sorted by displayOrder only
-   * Used for timeline visualization where original order is important
+   * Returns filtered tasks sorted by displayOrder.
+   * Used for timeline visualization where the original manual order is important.
    */
-  const getAllTasksSorted = () => {
-    return [...tasks].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  const getFilteredTasksSortedByDisplayOrder = () => {
+    return [...getFilteredTasks()].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   };
+
+  const filteredAndSortedTasks = getFilteredAndSortedTasks();
+  const timelineTasks = getFilteredTasksSortedByDisplayOrder();
+  const phases = [...new Set(timelineTasks.map((t) => t.phase).filter((c) => c && c.trim()))];
+  const categories = [...new Set(timelineTasks.map((t) => t.category).filter((c) => c && c.trim()))];
 
   // Unused helper function - kept for reference
   // const assignTaskRows = (tasks: Task[]) => {
@@ -946,10 +954,10 @@ function App() {
           }}
         >
           <h3 style={{ margin: 0, cursor: "pointer", userSelect: "none", fontSize: "1rem" }} onClick={() => setShowTaskList(!showTaskList)}>
-            {showTaskList ? "▼" : "▶"} Tasks ({getFilteredAndSortedTasks().length})
-            {tasks.length > 0 &&
+            {showTaskList ? "▼" : "▶"} Tasks ({filteredAndSortedTasks.length})
+            {filteredAndSortedTasks.length > 0 &&
               (() => {
-                const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
+                const allDates = filteredAndSortedTasks.flatMap((t) => [t.startDate, t.endDate]);
                 const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
                 const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
                 
@@ -1093,8 +1101,13 @@ function App() {
                 Export Tasks to CSV
               </button>
               <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                ({tasks.length} tasks, preserves manual ordering)
+                ({tasks.length} total tasks, preserves manual ordering)
               </span>
+              {filterText.trim() && (
+                <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                  Showing {filteredAndSortedTasks.length} filtered tasks in both the table and timeline
+                </span>
+              )}
             {/* </div> */}            
             <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", alignItems: "center" }}>
               <input
@@ -1108,7 +1121,7 @@ function App() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "phase" | "name" | "category" | "startDate" | "endDate" | "displayOrder")}
               >
-                <option value="displayOrder">Sort by ID</option>
+                <option value="displayOrder">Sort by Manual Order</option>
                 <option value="phase">Sort by Phase</option>
                 <option value="name">Sort by Name</option>
                 <option value="category">Sort by Category</option>
@@ -1123,7 +1136,7 @@ function App() {
               <thead>
                 <tr>
                   <th style={{ width: "30px" }}></th>
-                  <th style={{ width: "50px" }}>ID</th>
+                  <th style={{ width: "50px" }}>Order</th>
                   <th>Phase</th>
                   <th>Phase HEX</th>
                   <th>Category</th>
@@ -1138,7 +1151,7 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {getFilteredAndSortedTasks().map((t) => (
+                {filteredAndSortedTasks.map((t) => (
                   <tr
                     key={t.id}
                     draggable
@@ -1245,7 +1258,7 @@ function App() {
                 // Calculate visible period and filter tasks that overlap with it
                 const periodStart = currentWeek;
                 const periodEnd = addDays(currentWeek, weekSpan * 7 - 1);
-                const visibleTasks = getAllTasksSorted().filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
+                const visibleTasks = timelineTasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
 
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
@@ -1736,7 +1749,7 @@ function App() {
                 const periodEnd = useCustomMonthRange && customMonthEnd
                   ? customMonthEnd
                   : endOfMonth(addMonths(currentMonth, monthSpan - 1));
-                const visibleTasks = getAllTasksSorted().filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
+                const visibleTasks = timelineTasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
 
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
@@ -2227,8 +2240,7 @@ function App() {
               : endOfMonth(addMonths(currentMonth, monthSpan - 1));
           }
           
-          // Filter tasks visible in current timeline - use ALL tasks, not filtered by phase
-          const visibleTasks = tasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
+          const visibleTasks = timelineTasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
           
           // Get unique categories from visible tasks
           const visibleCategories = Array.from(new Set(visibleTasks.map(t => t.category).filter(Boolean)));
@@ -2240,7 +2252,7 @@ function App() {
               <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Category Key:</h4>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
                 {visibleCategories.map((category) => {
-                  const categoryTask = tasks.find((t) => t.category === category);
+                  const categoryTask = timelineTasks.find((t) => t.category === category);
                   const hexColor = categoryTask?.categoryHex ? `#${categoryTask.categoryHex}` : "var(--color-blue-500)";
                   return (
                     <div key={category} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>

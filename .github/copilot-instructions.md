@@ -49,6 +49,11 @@ When touching general code quality or lint-sensitive logic, also run:
 npm run lint
 ```
 
+Current caveat:
+
+- `npm run lint` scans `.history/` snapshot files and currently reports many unrelated errors outside the active app source.
+- Until lint scope is narrowed, use `npx eslint src/App.tsx` as the meaningful check for changes in the main app file.
+
 For browser verification, start the local app:
 
 ```bash

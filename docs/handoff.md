@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (skills and import follow-up)
+Last updated: 2026-06-15 (filter alignment and verification follow-up)
 
 ## Current Snapshot
 
@@ -36,11 +36,14 @@ Recent repo-level cleanup work has added project-local Codex skills and refreshe
 - `.codex/skills/fresh-look-review/`: project-agnostic independent review skill, cleaned up for reuse
 - `.github/copilot-instructions.md`: rewritten to match this repo's actual React/Vite workflow and guardrails
 
+There are now separate feature-planning notes for the proposed timeline enhancements at `docs/feature-weekend-toggle.md` and `docs/feature-layout-orientation-toggle.md`.
+
 ## Branch And Working Tree
 
 At the time of this handoff, there are uncommitted local changes.
 
 - `src/App.tsx` includes an import fallback fix so pasted rows still import when the dedicated `Task` column is blank but the task text exists in `Category` or `Sub-Task`.
+- `src/App.tsx` now keeps the timeline and category/phase legends aligned with the current table filter so the roadmap view matches the visible editing subset.
 - `.github/copilot-instructions.md` has been rewritten in a cleaner repository-instructions format.
 - `.codex/` contains the new Roadmap-specific skills and skill cleanup.
 
@@ -82,6 +85,11 @@ When lint-sensitive logic changes:
 npm run lint
 ```
 
+Current caveat:
+
+- `npm run lint` currently scans `.history/` snapshot files and reports many unrelated legacy errors.
+- Use `npx eslint src/App.tsx` as the meaningful targeted lint check for the active app file until lint scope is narrowed.
+
 Useful manual checks:
 
 - add a task manually and confirm it appears in the task table and timeline
@@ -92,12 +100,14 @@ Useful manual checks:
 
 ## Latest Change
 
-Latest local change, 2026-06-15:
+Latest local changes, 2026-06-15:
 
 - Restored a forgiving import behavior in `src/App.tsx`.
 - If an imported row does not provide a dedicated `Task` value, the importer now falls back to `Category` or `Sub-Task`.
 - If no rows produce importable tasks, the app now shows a direct alert instead of silently doing nothing.
-- This was added because imported rows were showing in the parser/editor table but not becoming actual tasks, leaving the task count at `0` and the timeline empty.
+- The timeline and legends now follow the same filtered task subset shown in the table, instead of continuing to render all tasks while the editor was filtered.
+- The task table UI now labels manual ordering more clearly and reflects filtered date-range/count context more accurately.
+- Added `docs/feature-weekend-toggle.md` and `docs/feature-layout-orientation-toggle.md` to track the weekend toggle and the broader horizontal/vertical layout plan separately.
 
 ## Key Guardrails
 
@@ -110,13 +120,9 @@ Latest local change, 2026-06-15:
 
 ## Recommended Next Task
 
-The next sensible step is to split the current local work into a clean bounded commit plan.
-
-Recommended order:
-
-1. Review the `.codex/skills/` changes together as one documentation/workflow commit.
-2. Keep the `src/App.tsx` import fix either in that same branch as a separate commit or in a follow-up branch if the user wants stricter separation.
-3. After committing, open a fresh chat for the next roadmap feature or UI change to keep context clean.
+1. Verify in the browser that filtering behaves as expected in both weekly and monthly timeline views.
+2. If that looks good, the next contained UI cleanup is to remove or gate the user-facing `Add Test Task` button so the production editing surface stays focused on real planning actions.
+3. After that, consider narrowing ESLint scope so `npm run lint` becomes a useful repo-level verification command again.
 
 ## New Chat Start
 
