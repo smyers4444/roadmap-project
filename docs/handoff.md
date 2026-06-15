@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (CSV week export implemented)
+Last updated: 2026-06-15 (CSV week export committed, timeline-click filter documented)
 
 ## Current Snapshot
 
@@ -41,6 +41,7 @@ There are now separate feature notes for:
 - completed weekend-toggle work at `docs/feature-weekend-toggle.md`
 - proposed layout-orientation work at `docs/feature-layout-orientation-toggle.md`
 - CSV week-number export work at `docs/feature-export-week-number.md`
+- proposed timeline-click filtering work at `docs/feature-timeline-click-filters-list.md`
 
 ## Branch And Working Tree
 
@@ -48,12 +49,12 @@ The latest completed commits are:
 
 - `57f0d89` `Add weekly weekend toggle`
 - `4d75c8f` `Update roadmap feature docs`
+- `11ef02f` `Export week number in CSV`
 
-At the time of this handoff, there are uncommitted implementation changes.
+At the time of this handoff, there are uncommitted documentation changes only.
 
-- `src/App.tsx` now exports a `Week` column in CSV output.
-- `README.md` now documents the exported `Week` field.
-- `docs/feature-export-week-number.md` has been updated from a proposal note into a current-status note for this slice.
+- `docs/feature-export-week-number.md` now points to the committed CSV export slice at `11ef02f`.
+- `docs/feature-timeline-click-filters-list.md` now documents the next proposed interaction feature.
 
 ## How to Run
 
@@ -113,9 +114,8 @@ Latest verification, 2026-06-15:
 
 Latest local changes, 2026-06-15:
 
-- Added CSV `Week` export in `src/App.tsx`.
-- Export now uses the stored `task.week` when present and falls back to a derived relative week number from `startDate` for manual tasks.
-- Updated `README.md` and `docs/feature-export-week-number.md` to reflect the new export behavior.
+- Updated `docs/feature-export-week-number.md` to reflect the committed export slice and current verification state.
+- Added `docs/feature-timeline-click-filters-list.md` for the next proposed timeline-to-table filtering feature.
 
 ## Key Guardrails
 
@@ -128,9 +128,9 @@ Latest local changes, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Verify CSV export output for both imported tasks that already have `Week` values and manually created tasks that do not.
-2. If the export values look right, decide whether to commit this CSV export slice or bundle it with any adjacent export cleanup.
-3. After that, return to the next contained UI cleanup such as removing or gating the user-facing `Add Test Task` button.
+1. Implement the timeline task-bar click interaction described in `docs/feature-timeline-click-filters-list.md`.
+2. Keep the task table, timeline, legends, and counts aligned under the selected-task filter in both weekly and monthly views.
+3. After that, do a quick manual CSV export sanity check and then return to the next contained UI cleanup such as removing or gating the user-facing `Add Test Task` button.
 
 ## New Chat Start
 

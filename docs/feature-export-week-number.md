@@ -2,13 +2,16 @@
 
 ## Status
 
-Implemented in the current working tree after commit `4d75c8f` (`Update roadmap feature docs`).
+Implemented in commit `11ef02f` (`Export week number in CSV`).
 
-Verification pending for this implementation slice:
+Verification completed for code quality on this implementation slice:
 
 - `npm run build`
 - `npx eslint src/App.tsx`
-- manual CSV export check for imported and manually created tasks
+
+Recommended manual follow-up:
+
+- CSV export check for imported and manually created tasks
 
 ## Shipped Behavior
 
