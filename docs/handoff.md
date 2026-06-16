@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (second calendar mockup saved and docs synced)
+Last updated: 2026-06-15 (browser-local persistence verified; calendar follow-up queued)
 
 ## Current Snapshot
 
@@ -23,10 +23,10 @@ The app combines:
 
 - an editable task table
 - a tab-separated spreadsheet import flow with preview/edit before import
-- a weekly or monthly timeline view
+- weekly and monthly timeline views plus a calendar view
 - drag-and-drop task ordering
 - CSV export of the current tasks
-- in-memory task state only; page refresh clears the current board
+- browser-local task persistence on the current device/browser
 
 The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`.
 
@@ -40,7 +40,7 @@ Recent repo-level cleanup work has added project-local Codex skills and refreshe
 There are now separate feature notes for:
 
 - completed weekend-toggle work at `docs/feature-weekend-toggle.md`
-- proposed calendar-view work at `docs/feature-calendar-view.md`
+- calendar-view planning and mockups at `docs/feature-calendar-view.md`
 - CSV week-number export work at `docs/feature-export-week-number.md`
 - proposed timeline-click filtering work at `docs/feature-timeline-click-filters-list.md`
 
@@ -57,11 +57,13 @@ Recent committed baseline before this feature:
 - `4d75c8f` `Update roadmap feature docs`
 - `11ef02f` `Export week number in CSV`
 
-Current feature state for timeline-click task filtering:
+Current implemented UI state:
 
-- Timeline task bars in both weekly and monthly view now support single-select filtering into the task table only.
+- Timeline task bars in both weekly and monthly view support single-select filtering into the task table only.
 - The timeline stays fully visible, with the selected bar highlighted and the other bars slightly de-emphasized.
 - Repeat-click clears the selection, and the task filter area exposes a visible clear action.
+- A new calendar view is available as a third view mode with month navigation, task chips, selection highlighting, and browser-local persistence messaging.
+- `Show weekends` now affects weekly view, calendar view, and monthly timeline rendering.
 
 ## How to Run
 
@@ -107,8 +109,11 @@ Useful manual checks:
 - add a task manually and confirm it appears in the task table and timeline
 - import tab-separated rows and confirm they become real tasks
 - confirm the task count updates after import
-- switch between weekly and monthly views
-- in weekly view, toggle `Show weekends` and confirm headers and bar positions compress to visible workdays without affecting monthly view
+- switch between weekly, monthly, and calendar views
+- refresh after adding or importing tasks and confirm the board reloads from browser-local storage
+- in weekly view, toggle `Show weekends` and confirm headers and bar positions compress to visible workdays
+- in monthly view, toggle `Show weekends` and confirm task bars compress horizontally while task dates stay unchanged
+- in calendar view, toggle `Show weekends` and confirm weekend columns hide/show
 - export tasks to CSV when tasks are present
 
 Latest verification, 2026-06-15:
@@ -117,17 +122,19 @@ Latest verification, 2026-06-15:
 - `npm run lint`: fails on existing `.history/` snapshot files outside the active change set
 - `npx eslint src/App.tsx`: passes
 - `git diff --check`: passes
+- browser/manual persistence verification: passed across add, edit, import, drag reorder, clear-all, and refresh, per user report
 - browser/manual timeline-click verification: passed, per user report
 - CSV export sanity check: export code still uses the full `tasks` array sorted by `displayOrder`, so timeline-click selection does not narrow the exported file
+- browser/manual calendar verification: passed, per user report across calendar render, weekend hiding, month picker overlay, and month-view weekend compression
 
 ## Latest Change
 
 Latest feature update, 2026-06-15:
 
-- Linked two saved calendar-view mockups into the new feature note.
-- Saved a second mockup that stays closer to the current app layout and session-only workflow.
-- Documented the current session-only limitation: tasks are not persisted across refresh.
-- Kept the calendar proposal scoped to a shareable visual view, not a persistence slice.
+- Implemented a read-only calendar view based on the v2 mockup direction.
+- Added calendar task chips with selection highlighting aligned to the task table filter behavior.
+- Fixed calendar weekend hiding, month picker overlay stacking, and month-view weekend compression.
+- Added browser-local task persistence with safe date hydration on reload.
 
 ## Key Guardrails
 
@@ -140,9 +147,10 @@ Latest feature update, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Decide whether to implement the calendar view next or keep it documented-only for now.
-2. If implementation starts, decide whether session persistence is a prerequisite for a shareable calendar workflow.
-3. If not, ship a read-only monthly calendar slice before considering editing or drag interactions.
+1. Extend calendar view so the user can choose a specific date span and show more than one month at a time.
+2. Adjust calendar task-chip labeling so continuation text appears only when a task carries into a new week, not for every non-start day.
+3. Keep spreadsheet import flexible and preserve CSV export based on the full task list in manual `displayOrder`.
+4. Keep broader calendar interactions such as drag/edit-in-calendar and cross-device sync out of scope until sharing expectations are clearer.
 
 ## New Chat Start
 

@@ -17,6 +17,7 @@ This repository contains Roadmap Project, a local planning board for building an
 - Styling lives primarily in `src/App.css` and `src/index.css`.
 - Timeline behavior supports weekly and monthly views.
 - Tasks can be added manually, edited in place, imported from tab-separated data, reordered, filtered, and exported to CSV.
+- Task data persists in browser-local storage on the current device/browser.
 - Date handling is done with `date-fns`.
 - No backend service is required. This is a client-side app run through the Vite dev server.
 - Project-specific skills live under `.codex/skills/`.

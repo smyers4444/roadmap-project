@@ -93,7 +93,7 @@
  */
 
 // React imports
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Third-party component for date selection
 import DatePicker from "react-datepicker";
@@ -125,11 +125,92 @@ interface Task {
   lineHeightAdjust?: number; // Optional extra wrapped lines for timeline height control
 }
 
+const TASKS_STORAGE_KEY = "roadmap-project.tasks.v1";
+
+interface StoredTask {
+  id: number;
+  phase?: string;
+  phaseHex?: string;
+  category?: string;
+  categoryHex?: string;
+  name: string;
+  subTask?: string;
+  week?: number;
+  owner?: string;
+  startDate: string;
+  endDate: string;
+  displayOrder: number;
+  lineHeightAdjust?: number;
+}
+
+const isValidDate = (date: Date) => !Number.isNaN(date.getTime());
+
+const hydrateStoredTask = (value: unknown): Task | null => {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const task = value as Partial<StoredTask>;
+
+  if (typeof task.id !== "number" || typeof task.name !== "string" || typeof task.displayOrder !== "number") {
+    return null;
+  }
+
+  const startDate = new Date(task.startDate ?? "");
+  const endDate = new Date(task.endDate ?? "");
+
+  if (!isValidDate(startDate) || !isValidDate(endDate)) {
+    return null;
+  }
+
+  return {
+    id: task.id,
+    phase: typeof task.phase === "string" ? task.phase : "",
+    phaseHex: typeof task.phaseHex === "string" ? task.phaseHex : "",
+    category: typeof task.category === "string" ? task.category : "",
+    categoryHex: typeof task.categoryHex === "string" ? task.categoryHex : "",
+    name: task.name,
+    subTask: typeof task.subTask === "string" ? task.subTask : "",
+    week: typeof task.week === "number" && !Number.isNaN(task.week) ? task.week : undefined,
+    owner: typeof task.owner === "string" ? task.owner : "",
+    startDate,
+    endDate,
+    displayOrder: task.displayOrder,
+    lineHeightAdjust: typeof task.lineHeightAdjust === "number" && !Number.isNaN(task.lineHeightAdjust)
+      ? task.lineHeightAdjust
+      : 0,
+  };
+};
+
+const loadStoredTasks = () => {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(TASKS_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .map((item) => hydrateStoredTask(item))
+      .filter((task): task is Task => task !== null);
+  } catch {
+    return [];
+  }
+};
+
 function App() {
   // ==================== STATE MANAGEMENT ====================
 
-  // Main task list starts empty
-  const [tasks, setTasks] = useState<Task[]>([]);
+  // Main task list is restored from browser-local storage when available
+  const [tasks, setTasks] = useState<Task[]>(() => loadStoredTasks());
 
   // Timeline view mode: "weeks" or "months"
   const [view, setView] = useState<"weeks" | "months" | "calendar">("weeks");
@@ -174,6 +255,14 @@ function App() {
   const [customMonthStart, setCustomMonthStart] = useState<Date | null>(null);
   const [customMonthEnd, setCustomMonthEnd] = useState<Date | null>(null);
   const showDevTaskButton = import.meta.env.DEV;
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    } catch {
+      // Ignore storage write failures so task editing still works in restricted browsers.
+    }
+  }, [tasks]);
 
   // ==================== TASK MANAGEMENT FUNCTIONS ====================
 
@@ -1262,7 +1351,7 @@ function App() {
                 </span>
               )}
               <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                Session only: refresh clears the board.
+                Saved in this browser only.
               </span>
             {/* </div> */}
             <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", alignItems: "center", flexWrap: "wrap" }}>
@@ -2508,7 +2597,7 @@ function App() {
                       </div>
                     ))}
                     <div className="calendar-footer-note">
-                      This board is not auto-saved. Refreshing the page will clear all tasks. Export your CSV if you need a copy.
+                      Tasks are saved in this browser only. Export CSV when you need a portable copy or backup.
                     </div>
                   </div>
                 );

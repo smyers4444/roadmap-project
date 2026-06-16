@@ -1,6 +1,6 @@
 # Roadmap Project
 
-Roadmap Project is a React + TypeScript planning board for building and reviewing project timelines. It combines an editable task table with a visual roadmap that can be viewed by week or by month.
+Roadmap Project is a React + TypeScript planning board for building and reviewing project timelines. It combines an editable task table with a visual roadmap that can be viewed by week, by month, or in a calendar grid.
 
 ## What It Does
 
@@ -8,13 +8,14 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 - Reorder tasks by dragging rows in the task table.
 - Filter and sort tasks directly in the editor, with the timeline and legends following the filtered task set.
 - Click a task bar in weekly or monthly view to isolate that task in the task table while keeping the full timeline visible, with the selected bar visually highlighted until cleared.
-- Switch between weekly and monthly timeline views.
+- Switch between weekly, monthly, and calendar views.
 - Toggle date labels versus week/month numbers.
+- Show or hide weekends in weekly, monthly, and calendar rendering.
 - Group tasks by phase, or collapse phase grouping into a single timeline.
 - Paste tab-separated task data from a spreadsheet, preview it, edit it, and import it.
 - Export the current task list to CSV.
 - Show category and phase legends for the visible timeline.
-- Keep tasks in memory for the current browser session only; refresh currently clears the board.
+- Persist tasks in browser-local storage on the current device and browser.
 
 ## Task Fields
 
@@ -49,6 +50,14 @@ Each task supports these fields:
 - Change how many months are visible.
 - Switch between a fixed month span and a custom date range.
 - Toggle between month labels and month numbers.
+- Show or hide weekends in the rendered monthly timeline without changing task dates.
+
+### Calendar View
+
+- Navigate backward or forward by month.
+- Show one month at a time in a read-only calendar grid.
+- Show or hide weekends in the calendar grid.
+- Click a calendar task chip to mirror timeline task selection behavior in the task table.
 
 ## Import and Export
 
@@ -74,8 +83,8 @@ The export action downloads the full current task list as a CSV file, including 
 
 Current limitation:
 
-- the app does not currently persist tasks across page refreshes
-- if you reload the page, you need to re-import or recreate the current task list
+- tasks persist only in the current browser on the current device
+- the app does not yet offer cross-device sync, shared storage, or file-backed autosave
 
 ## Getting Started
 
