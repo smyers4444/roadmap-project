@@ -240,10 +240,18 @@ button:hover {
   gap: 1rem;
 }
 
+.stacked-timeline--compact {
+  gap: 0.5rem;
+}
+
 .stacked-period-card {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.stacked-period-card--compact {
+  gap: 0.25rem;
 }
 
 .stacked-period-title {
@@ -458,6 +466,10 @@ button:hover {
   font-size: 0.875rem;
   color: var(--text-primary);
   box-sizing: border-box; /* Ensure padding is included in width */
+}
+
+.day-header--compact {
+  padding: 4px 8px;
 }
 
 .day-header:last-child {

@@ -151,6 +151,13 @@ interface TimelineUnit {
   title: string;
 }
 
+interface TimelineHeaderGroup {
+  key: string;
+  label: string;
+  title: string;
+  span: number;
+}
+
 const isValidDate = (date: Date) => !Number.isNaN(date.getTime());
 
 const hydrateStoredTask = (value: unknown): Task | null => {
@@ -751,7 +758,7 @@ function App() {
       title: format(day, "MMM dd, yyyy"),
     }));
 
-  const getOwnedWeekTimelineUnitsForMonth = (monthStart: Date): TimelineUnit[] => {
+  const getOwnedWeekDayUnitsForMonth = (monthStart: Date): TimelineUnit[] => {
     const normalizedMonthStart = normalizeDate(startOfMonth(monthStart));
     const normalizedMonthEnd = normalizeDate(endOfMonth(monthStart));
     const units: TimelineUnit[] = [];
@@ -766,24 +773,55 @@ function App() {
         continue;
       }
 
-      const visibleDays = getVisibleWeekDays(weekStart);
-      const firstVisibleDay = visibleDays[0] || weekStart;
-      const lastVisibleDay = visibleDays[visibleDays.length - 1] || addDays(weekStart, 6);
-      const sameMonth = firstVisibleDay.getMonth() === lastVisibleDay.getMonth()
-        && firstVisibleDay.getFullYear() === lastVisibleDay.getFullYear();
-
-      units.push({
-        key: `${monthStart.toISOString()}-${weekStart.toISOString()}`,
-        start: weekStart,
-        end: normalizeDate(addDays(weekStart, 6)),
-        label: sameMonth
-          ? `${format(firstVisibleDay, "MMM d")} - ${format(lastVisibleDay, "d")}`
-          : `${format(firstVisibleDay, "MMM d")} - ${format(lastVisibleDay, "MMM d")}`,
-        title: `${format(firstVisibleDay, "MMM dd, yyyy")} - ${format(lastVisibleDay, "MMM dd, yyyy")}`,
+      getVisibleWeekDays(weekStart).forEach((day) => {
+        units.push({
+          key: `${monthStart.toISOString()}-${day.toISOString()}`,
+          start: normalizeDate(day),
+          end: normalizeDate(day),
+          label: format(day, "EEE d"),
+          title: format(day, "MMM dd, yyyy"),
+        });
       });
     }
 
     return units;
+  };
+
+  const getWeekHeaderGroupsForUnits = (units: TimelineUnit[]): TimelineHeaderGroup[] => {
+    const groups: TimelineHeaderGroup[] = [];
+
+    units.forEach((unit) => {
+      const weekKey = startOfWeek(unit.start).toISOString();
+      const existingGroup = groups[groups.length - 1];
+
+      if (!existingGroup || existingGroup.key !== weekKey) {
+        groups.push({
+          key: weekKey,
+          label: "",
+          title: "",
+          span: 1,
+        });
+        return;
+      }
+
+      existingGroup.span += 1;
+    });
+
+    return groups.map((group) => {
+      const groupUnits = units.filter((unit) => startOfWeek(unit.start).toISOString() === group.key);
+      const firstUnit = groupUnits[0];
+      const lastUnit = groupUnits[groupUnits.length - 1];
+      const sameMonth = firstUnit.start.getMonth() === lastUnit.start.getMonth()
+        && firstUnit.start.getFullYear() === lastUnit.start.getFullYear();
+
+      return {
+        ...group,
+        label: sameMonth
+          ? `${format(firstUnit.start, "MMM d")} - ${format(lastUnit.start, "d")}`
+          : `${format(firstUnit.start, "MMM d")} - ${format(lastUnit.start, "MMM d")}`,
+        title: `${format(firstUnit.start, "MMM dd, yyyy")} - ${format(lastUnit.start, "MMM dd, yyyy")}`,
+      };
+    });
   };
 
   const getTaskPositionForUnits = (
@@ -1284,6 +1322,12 @@ function App() {
     periodEnd,
     visibleTasks,
     phaseRangeLabel,
+    compactSpacing = false,
+    compactHeaderPadding = false,
+    compactTaskSpacing = false,
+    headerGroups,
+    compactTaskHorizontalPadding = false,
+    showInnerUnitGridlines = true,
   }: {
     periodKey: string;
     title: string;
@@ -1292,6 +1336,12 @@ function App() {
     periodEnd: Date;
     visibleTasks: Task[];
     phaseRangeLabel: (phaseStart: Date, phaseEnd: Date) => string;
+    compactSpacing?: boolean;
+    compactHeaderPadding?: boolean;
+    compactTaskSpacing?: boolean;
+    headerGroups?: TimelineHeaderGroup[];
+    compactTaskHorizontalPadding?: boolean;
+    showInnerUnitGridlines?: boolean;
   }) => {
     if (units.length === 0) {
       return null;
@@ -1305,7 +1355,7 @@ function App() {
     const visiblePhaseTasks = phasesForBoard.length > 0 ? phasesForBoard : [""];
 
     return (
-      <div key={periodKey} className="stacked-period-card">
+      <div key={periodKey} className={`stacked-period-card${compactSpacing ? " stacked-period-card--compact" : ""}`}>
         <div className="stacked-period-title">{title}</div>
         <div
           className="stacked-period-board-scroll"
@@ -1324,18 +1374,32 @@ function App() {
                 gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
               }}
             >
-              {units.map((unit, index) => (
-                <div
-                  key={`${periodKey}-header-${unit.key}`}
-                  className="day-header"
-                  style={{
-                    borderRight: index < units.length - 1 ? "1px solid var(--border-dark)" : "none",
-                  }}
-                  title={unit.title}
-                >
-                  {unit.label}
-                </div>
-              ))}
+              {headerGroups
+                ? headerGroups.map((group, index) => (
+                  <div
+                    key={`${periodKey}-header-group-${group.key}`}
+                    className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
+                    style={{
+                      gridColumn: `span ${group.span}`,
+                      borderRight: index < headerGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
+                    }}
+                    title={group.title}
+                  >
+                    {group.label}
+                  </div>
+                ))
+                : units.map((unit, index) => (
+                  <div
+                    key={`${periodKey}-header-${unit.key}`}
+                    className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
+                    style={{
+                      borderRight: index < units.length - 1 ? "1px solid var(--border-dark)" : "none",
+                    }}
+                    title={unit.title}
+                  >
+                    {unit.label}
+                  </div>
+                ))}
             </div>
 
             {visiblePhaseTasks.map((phase) => {
@@ -1351,7 +1415,8 @@ function App() {
               phaseTasks.forEach((task) => {
                 const position = getPosition(task);
                 if (!position) return;
-                taskHeights.set(task.id, getTaskHeightForPeriod(task, position.width, true));
+                const baseHeight = getTaskHeightForPeriod(task, position.width, true);
+                taskHeights.set(task.id, compactTaskSpacing ? Math.max(24, baseHeight - 4) : baseHeight);
               });
 
               const sortedPhaseTasks = [...phaseTasks].sort((a, b) => {
@@ -1366,7 +1431,7 @@ function App() {
 
               const phaseTaskPositions = new Map<number, number>();
               const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
-              const phaseTopPadding = 8;
+              const phaseTopPadding = compactTaskSpacing ? 4 : 8;
 
               sortedPhaseTasks.forEach((task) => {
                 const position = getPosition(task);
@@ -1476,7 +1541,7 @@ function App() {
                     </div>
                   )}
 
-                  <div style={{ position: "relative", minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
+                  <div style={{ position: "relative", minHeight: `${Math.max(compactTaskSpacing ? 28 : 40, phaseTotalHeight + (compactTaskSpacing ? 2 : 0))}px` }}>
                     <div
                       style={{
                         width: "100%",
@@ -1484,7 +1549,7 @@ function App() {
                         display: "grid",
                         gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
                         backgroundColor: "var(--bg-primary)",
-                        minHeight: `${Math.max(40, phaseTotalHeight)}px`,
+                        minHeight: `${Math.max(compactTaskSpacing ? 28 : 40, phaseTotalHeight + (compactTaskSpacing ? 2 : 0))}px`,
                         borderBottom: "1px solid var(--border-medium)",
                       }}
                     >
@@ -1493,14 +1558,25 @@ function App() {
                         const isWithinPhase = !showPhaseLabels || !phaseBarPosition
                           ? true
                           : columnPercent >= phaseBarPosition.start && columnPercent < (phaseBarPosition.start + phaseBarPosition.width);
+                        const nextUnit = units[index + 1];
+                        const isWeekBoundary = nextUnit
+                          ? startOfWeek(units[index].start).getTime() !== startOfWeek(nextUnit.start).getTime()
+                          : false;
+                        const borderRight = index === units.length - 1
+                          ? "none"
+                          : showInnerUnitGridlines
+                            ? "1px solid var(--border-medium)"
+                            : isWeekBoundary
+                              ? "1px solid var(--border-medium)"
+                              : "none";
 
                         return (
                           <div
                             key={`${periodKey}-day-cell-${phase}-${index}`}
                             className="day-cell"
                             style={{
-                              ...(index === units.length - 1 ? { borderRight: "none" } : {}),
-                              ...(!isWithinPhase && index < units.length - 1 ? { borderRight: "1px solid var(--border-medium)" } : {}),
+                              borderRight,
+                              ...(!isWithinPhase && index < units.length - 1 && borderRight !== "none" ? { borderRight: "1px solid var(--border-medium)" } : {}),
                             }}
                           />
                         );
@@ -1568,25 +1644,30 @@ function App() {
                               top: `${top}px`,
                               backgroundColor: bgColor,
                               color: textColor,
+                              padding: compactTaskHorizontalPadding ? "2px 1px" : undefined,
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "space-between",
+                              justifyContent: compactTaskHorizontalPadding ? "center" : "space-between",
                               cursor: "pointer",
                               opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
                               transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
                               boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
                             }}
                           >
-                            {taskStartsBeforeView ? (
+                            {compactTaskHorizontalPadding && taskStartsBeforeView ? (
+                              <span style={{ position: "absolute", left: "2px", fontWeight: "bold", fontSize: "1em" }}>◀</span>
+                            ) : taskStartsBeforeView ? (
                               <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
                             ) : (
-                              <span style={{ width: "1.1em", marginLeft: "4px" }}></span>
+                              compactTaskHorizontalPadding ? null : <span style={{ width: "1.1em", marginLeft: "4px" }}></span>
                             )}
                             <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{task.name}</span>
-                            {taskEndsAfterView ? (
+                            {compactTaskHorizontalPadding && taskEndsAfterView ? (
+                              <span style={{ position: "absolute", right: "2px", fontWeight: "bold", fontSize: "1em" }}>▶</span>
+                            ) : taskEndsAfterView ? (
                               <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
                             ) : (
-                              <span style={{ width: "1.1em", marginRight: "4px" }}></span>
+                              compactTaskHorizontalPadding ? null : <span style={{ width: "1.1em", marginRight: "4px" }}></span>
                             )}
                           </div>
                         );
@@ -2688,6 +2769,8 @@ function App() {
                         const endWeekNum = Math.round((startOfWeek(phaseEnd).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
                         return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
                       },
+                      compactSpacing: true,
+                      compactTaskSpacing: true,
                     });
                   }
 
@@ -2719,6 +2802,8 @@ function App() {
                       const endWeekNum = Math.round((startOfWeek(phaseEnd).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
                       return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
                     },
+                    compactSpacing: true,
+                    compactTaskSpacing: true,
                   });
                 })}
               </div>
@@ -3223,13 +3308,19 @@ function App() {
                 );
               })()}
             {view === "months" && timelineLayout === "stacked" && (
-              <div className="stacked-timeline">
-                {monthColumns.map((month, index) => {
-                  const periodStart = normalizeDate(startOfMonth(month));
-                  const periodEnd = normalizeDate(endOfMonth(month));
+              <div className="stacked-timeline stacked-timeline--compact">
+                {monthColumns.map((month) => {
+                  const isWeekSplit = monthStackSplit === "week";
                   const units = monthStackSplit === "day"
                     ? getDayTimelineUnits(getVisibleMonthDays(month))
-                    : getOwnedWeekTimelineUnitsForMonth(month);
+                    : getOwnedWeekDayUnitsForMonth(month);
+                  const periodStart = isWeekSplit
+                    ? (units[0]?.start ?? normalizeDate(startOfMonth(month)))
+                    : normalizeDate(startOfMonth(month));
+                  const periodEnd = isWeekSplit
+                    ? (units[units.length - 1]?.end ?? normalizeDate(endOfMonth(month)))
+                    : normalizeDate(endOfMonth(month));
+                  const headerGroups = isWeekSplit ? getWeekHeaderGroupsForUnits(units) : undefined;
                   const periodTasks = timelineTasks.filter((task) => {
                     if (task.startDate > periodEnd || task.endDate < periodStart) {
                       return false;
@@ -3238,17 +3329,9 @@ function App() {
                     return getTaskPositionForUnits(task, units, periodStart, periodEnd) !== null;
                   });
 
-                  let monthNumber = index + 1;
-                  if (showMonthNumbers && tasks.length > 0) {
-                    const allDates = tasks.map((task) => task.startDate);
-                    const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
-                    const firstTaskMonth = startOfMonth(firstTaskDate);
-                    monthNumber = (month.getFullYear() - firstTaskMonth.getFullYear()) * 12 + (getMonth(month) - getMonth(firstTaskMonth)) + 1;
-                  }
-
                   return renderStackedTimelineBoard({
                     periodKey: `month-${month.toISOString()}`,
-                    title: showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMMM yyyy"),
+                    title: `${format(periodStart, "MMM d")} - ${format(periodEnd, "MMM d, yyyy")}`,
                     units,
                     periodStart,
                     periodEnd,
@@ -3267,6 +3350,12 @@ function App() {
                         + (getMonth(startOfMonth(phaseEnd)) - getMonth(firstTaskMonth)) + 1;
                       return startMonthNum === endMonthNum ? `Month ${startMonthNum}` : `Months ${startMonthNum}-${endMonthNum}`;
                     },
+                    compactSpacing: true,
+                    compactHeaderPadding: isWeekSplit,
+                    compactTaskSpacing: true,
+                    headerGroups,
+                    compactTaskHorizontalPadding: isWeekSplit,
+                    showInnerUnitGridlines: !isWeekSplit,
                   });
                 })}
               </div>

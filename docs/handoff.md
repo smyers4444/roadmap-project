@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (stacked month week split switched to single-owner weeks and build-verified)
+Last updated: 2026-06-16 (stacked month week-split day-accurate rendering applied and build-verified)
 
 ## Current Snapshot
 
@@ -67,6 +67,8 @@ Current implemented UI state:
 - Weekly and monthly timeline views now support both the original continuous horizontal board and a stacked layout mode that renders each visible week or month as its own board while still honoring `Hide Weekends`.
 - In stacked monthly layout, users can now switch between day columns and week-range columns inside each month board.
 - Stacked monthly `Split by Weeks` now assigns each visible week to exactly one month card instead of duplicating crossover weeks across adjacent months.
+- Stacked monthly cards now show the visible date range as the top label instead of just the month name, and stacked weekly/monthly cards both use tighter vertical spacing around titles, headers, and task rows.
+- In stacked monthly `Split by Weeks`, tasks now position against the actual owned days inside each displayed week span, so one-day tasks do not stretch across the full week bucket and cross-month tasks render through the owned visible week end.
 
 ## How to Run
 
@@ -120,10 +122,13 @@ Useful manual checks:
 - in calendar view with weekends hidden, confirm month changes still remain visible when the first of the month falls on a hidden weekend
 - in weekly view, toggle `Show weekends` and confirm headers and bar positions compress to visible workdays
 - in weekly view, switch between horizontal and stacked layout and confirm each visible week renders as its own board without changing task selection, drag ordering, or task-table alignment
+- in stacked weekly view, confirm the tighter spacing still leaves task labels readable and does not clip tall multi-line bars
 - in monthly view, toggle `Show weekends` and confirm task bars compress horizontally while task dates stay unchanged
 - in monthly view, switch between horizontal and stacked layout and confirm each visible month renders as its own board while still showing full-month coverage with weekend columns optionally hidden
 - in stacked monthly layout, switch between `Split by Days` and `Split by Weeks` and confirm task spans, phase bars, and selection highlighting remain aligned
 - in stacked monthly `Split by Weeks`, confirm crossover weeks appear only once, under the month that owns that week column, without duplicated bars or large leading blank areas
+- in stacked monthly `Split by Weeks`, confirm one-day tasks render at one-day width, narrow bars still keep readable text, and cross-month tasks render through the owned displayed week span instead of clipping at the raw month end
+- in stacked monthly view, confirm the top date-range label and tighter week-header/task spacing still look balanced across short and dense months
 - in calendar view, toggle `Show weekends` and confirm weekend columns hide/show
 - export tasks to CSV when tasks are present
 
@@ -158,6 +163,8 @@ Latest feature update, 2026-06-16:
 - Kept `Hide Weekends` active in stacked mode, so each full week or full month still renders as its own board while hidden weekend columns stay removed from the visible grid.
 - Preserved existing task bars, phase sections, timeline-click filtering, CSV export behavior, and browser-local persistence messaging.
 - Added a stacked-month split toggle so each month board can render with either day columns or week-range columns without changing the rest of the app layout.
+- Tightened stacked weekly/monthly spacing, reduced stacked month week-header padding, and changed stacked monthly titles to show the visible date range.
+- Changed stacked monthly `Split by Weeks` to keep week headers while positioning task bars by actual day, so one-day and cross-month tasks render correctly inside owned week spans.
 
 ## Key Guardrails
 
