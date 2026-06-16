@@ -220,21 +220,9 @@ Latest feature update, 2026-06-16:
 
 ## New Chat Start
 
-Start with:
+Read only these two files to orient:
 
-- `README.md`
 - `CLAUDE.md` (Claude Code) or `.github/copilot-instructions.md` (Copilot)
 - `docs/handoff.md`
-- `src/App.tsx`
 
-If the task is skill-related, also read:
-
-**Claude Code:**
-- `.claude/skills/roadmap-project/SKILL.md`
-- `.claude/skills/roadmap-wrap-up/SKILL.md`
-- `.claude/skills/fresh-look-review/SKILL.md`
-
-**Copilot:**
-- `.codex/skills/roadmap-project/SKILL.md`
-- `.codex/skills/roadmap-wrap-up/SKILL.md`
-- `.codex/skills/fresh-look-review/SKILL.md`
+Pull in `src/App.tsx`, `README.md`, or skill files only once the specific task is clear. Loading everything upfront wastes context before there is a concrete task to work on.
