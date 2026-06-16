@@ -234,6 +234,229 @@ button:hover {
   border: 1px solid var(--border-dark);
 }
 
+.stacked-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stacked-timeline--compact {
+  gap: 0.5rem;
+}
+
+.stacked-period-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stacked-period-card--compact {
+  gap: 0.25rem;
+}
+
+.stacked-period-title {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.stacked-period-board-scroll {
+  width: 100%;
+}
+
+.calendar-board {
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-dark);
+}
+
+.calendar-helper-text {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-medium);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-align: right;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-week-row {
+  position: relative;
+}
+
+.calendar-week-grid {
+  display: grid;
+}
+
+.calendar-grid-header {
+  background-color: var(--bg-header-dark);
+  border-bottom: 1px solid var(--border-dark);
+}
+
+.calendar-day-label {
+  padding: 10px 8px;
+  background-color: var(--bg-header-dark);
+  border-right: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.calendar-day-label:last-child {
+  border-right: none;
+}
+
+.calendar-day-cell {
+  min-height: 0;
+  padding: 10px 10px;
+  border-right: 1px solid var(--border-dark);
+  border-bottom: 1px solid var(--border-dark);
+  background-color: var(--bg-primary);
+}
+
+.calendar-day-cell--outside {
+  background-color: var(--bg-secondary);
+}
+
+.calendar-day-cell--month-start {
+  background-color: var(--bg-secondary);
+  box-shadow: inset 3px 0 0 var(--border-dark);
+}
+
+.calendar-day-number {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.calendar-day-number--month-start {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1.1;
+}
+
+.calendar-day-month {
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.calendar-day-date {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.calendar-day-cell--outside .calendar-day-number {
+  color: var(--text-muted);
+}
+
+.calendar-day-cell--outside .calendar-day-month,
+.calendar-day-cell--outside .calendar-day-date {
+  color: var(--text-muted);
+}
+
+.calendar-task-chip {
+  width: calc(100% - 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  margin: 0 10px;
+  padding: 5px 28px;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  box-shadow: none;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.calendar-task-chip:hover {
+  background-color: var(--bg-hover);
+}
+
+.calendar-task-chip--selected {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+.calendar-task-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.calendar-task-chip-label {
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-task-arrow {
+  font-size: 0.9rem;
+  font-weight: 700;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.calendar-task-arrow--start {
+  left: 26px;
+}
+
+.calendar-task-arrow--end {
+  right: 10px;
+}
+
+.calendar-task-more {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 2px 2px 0;
+}
+
+.calendar-footer-note {
+  padding: 10px 4px 0;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.month-date-picker-popper {
+  z-index: 2000 !important;
+}
+
+.month-date-picker-popper .react-datepicker {
+  z-index: 2000 !important;
+}
+
+.task-date-picker-popper {
+  z-index: 3000 !important;
+}
+
+.task-date-picker-popper .react-datepicker {
+  z-index: 3000 !important;
+}
+
 /* ========== BOARD HEADER (Month/Week Headers) ========== */
 .board-header {
   /* Grid layout applied via inline styles in JSX */
@@ -253,6 +476,10 @@ button:hover {
   box-sizing: border-box; /* Ensure padding is included in width */
 }
 
+.day-header--compact {
+  padding: 4px 8px;
+}
+
 .day-header:last-child {
   border-right: none;
 }
@@ -268,7 +495,8 @@ button:hover {
 .day-cell {
   border-right: 1px solid var(--border-medium);
   position: relative;
-  background-color: var(--bg-primary);
+  background-color: transparent;
+  z-index: 1;
   min-height: inherit;
 }
 
@@ -290,7 +518,7 @@ button:hover {
   font-size: 12pt;
   padding: 3px 5px;
   box-sizing: border-box;
-  z-index: 1;
+  z-index: 2;
   font-weight: 500;
   text-align: center;
   overflow: hidden;
@@ -304,7 +532,7 @@ button:hover {
 .task-bar:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  z-index: 2;
+  z-index: 3;
   cursor: pointer;
 }
 

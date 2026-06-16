@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(/.claude/skills/roadmap-wrap-up/**)",
+      "Skill(run)",
+      "Skill(run:*)"
+    ]
+  }
+}
