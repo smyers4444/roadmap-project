@@ -41,6 +41,7 @@ Each task supports these fields:
 - Navigate backward or forward by week.
 - Pick a starting date from the date picker.
 - Change how many weeks are visible.
+- Switch between a continuous horizontal board and vertically stacked full-week boards.
 - Show or hide weekends without changing the underlying task dates.
 - Toggle between date ranges and week numbers.
 
@@ -49,6 +50,8 @@ Each task supports these fields:
 - Navigate backward or forward by month.
 - Change how many months are visible.
 - Switch between a fixed month span and a custom date range.
+- Switch between a continuous horizontal board and vertically stacked full-month boards.
+- In stacked month layout, switch between day columns and week-range columns inside each month board.
 - Toggle between month labels and month numbers.
 - Show or hide weekends in the rendered monthly timeline without changing task dates.
 

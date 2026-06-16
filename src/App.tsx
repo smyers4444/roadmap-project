@@ -143,6 +143,14 @@ interface StoredTask {
   lineHeightAdjust?: number;
 }
 
+interface TimelineUnit {
+  key: string;
+  start: Date;
+  end: Date;
+  label: string;
+  title: string;
+}
+
 const isValidDate = (date: Date) => !Number.isNaN(date.getTime());
 
 const hydrateStoredTask = (value: unknown): Task | null => {
@@ -246,6 +254,8 @@ function App() {
   const [showWeekNumbers, setShowWeekNumbers] = useState(false);
   const [showMonthNumbers, setShowMonthNumbers] = useState(false);
   const [showWeekends, setShowWeekends] = useState(true);
+  const [timelineLayout, setTimelineLayout] = useState<"horizontal" | "stacked">("horizontal");
+  const [monthStackSplit, setMonthStackSplit] = useState<"day" | "week">("day");
   
   // Toggle for showing/hiding phase labels and colors
   const [showPhaseLabels, setShowPhaseLabels] = useState(true);
@@ -728,6 +738,94 @@ function App() {
   const getVisibleWeekDays = (weekStart: Date) =>
     Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)).filter((date) => showWeekends || !isWeekendDate(date));
 
+  const getVisibleMonthDays = (monthStart: Date) =>
+    eachDayOfInterval({ start: startOfMonth(monthStart), end: endOfMonth(monthStart) })
+      .filter((date) => showWeekends || !isWeekendDate(date));
+
+  const getDayTimelineUnits = (days: Date[]): TimelineUnit[] =>
+    days.map((day) => ({
+      key: day.toISOString(),
+      start: normalizeDate(day),
+      end: normalizeDate(day),
+      label: format(day, "EEE d"),
+      title: format(day, "MMM dd, yyyy"),
+    }));
+
+  const getOwnedWeekTimelineUnitsForMonth = (monthStart: Date): TimelineUnit[] => {
+    const normalizedMonthStart = normalizeDate(startOfMonth(monthStart));
+    const normalizedMonthEnd = normalizeDate(endOfMonth(monthStart));
+    const units: TimelineUnit[] = [];
+
+    for (
+      let cursor = startOfWeek(normalizedMonthStart);
+      normalizeDate(cursor).getTime() <= normalizedMonthEnd.getTime();
+      cursor = addDays(cursor, 7)
+    ) {
+      const weekStart = normalizeDate(cursor);
+      if (weekStart.getMonth() !== normalizedMonthStart.getMonth() || weekStart.getFullYear() !== normalizedMonthStart.getFullYear()) {
+        continue;
+      }
+
+      const visibleDays = getVisibleWeekDays(weekStart);
+      const firstVisibleDay = visibleDays[0] || weekStart;
+      const lastVisibleDay = visibleDays[visibleDays.length - 1] || addDays(weekStart, 6);
+      const sameMonth = firstVisibleDay.getMonth() === lastVisibleDay.getMonth()
+        && firstVisibleDay.getFullYear() === lastVisibleDay.getFullYear();
+
+      units.push({
+        key: `${monthStart.toISOString()}-${weekStart.toISOString()}`,
+        start: weekStart,
+        end: normalizeDate(addDays(weekStart, 6)),
+        label: sameMonth
+          ? `${format(firstVisibleDay, "MMM d")} - ${format(lastVisibleDay, "d")}`
+          : `${format(firstVisibleDay, "MMM d")} - ${format(lastVisibleDay, "MMM d")}`,
+        title: `${format(firstVisibleDay, "MMM dd, yyyy")} - ${format(lastVisibleDay, "MMM dd, yyyy")}`,
+      });
+    }
+
+    return units;
+  };
+
+  const getTaskPositionForUnits = (
+    task: Task,
+    units: TimelineUnit[],
+    periodStart: Date,
+    periodEnd: Date,
+  ) => {
+    const totalUnits = units.length;
+
+    if (totalUnits === 0) return null;
+
+    const taskStartInPeriod = normalizeDate(task.startDate > periodStart ? task.startDate : periodStart).getTime();
+    const taskEndInPeriod = normalizeDate(task.endDate < periodEnd ? task.endDate : periodEnd).getTime();
+
+    const startOffset = units.findIndex((unit) => unit.end.getTime() >= taskStartInPeriod);
+    let endOffset = -1;
+
+    for (let index = units.length - 1; index >= 0; index -= 1) {
+      if (units[index].start.getTime() <= taskEndInPeriod) {
+        endOffset = index;
+        break;
+      }
+    }
+
+    if (startOffset === -1 || endOffset === -1 || startOffset > endOffset) {
+      return null;
+    }
+
+    const start = (startOffset / totalUnits) * 100;
+    const width = ((endOffset - startOffset + 1) / totalUnits) * 100;
+
+    return { start, width, startIndex: startOffset, endIndex: endOffset };
+  };
+
+  const getTaskPositionForVisibleDays = (
+    task: Task,
+    visibleDays: Date[],
+    periodStart: Date,
+    periodEnd: Date,
+  ) => getTaskPositionForUnits(task, getDayTimelineUnits(visibleDays), periodStart, periodEnd);
+
   // ==================== COLUMN GENERATION ====================
 
   // Generate array of start dates for each week column
@@ -1140,6 +1238,370 @@ function App() {
     });
   };
 
+  const getTaskHeightForPeriod = (task: Task, widthPercent: number, addSafetyLine: boolean) => {
+    const actualWidth = (widthPercent / 100) * 1800;
+    const textWidth = actualWidth - 16;
+    const charsPerLine = Math.max(1, Math.floor(textWidth / 7.2));
+    const words = task.name.split(" ");
+    let lines = 1;
+    let currentLineLength = 0;
+
+    words.forEach((word) => {
+      const wordLength = word.length;
+      if (currentLineLength === 0) {
+        currentLineLength = wordLength;
+      } else if (currentLineLength + 1 + wordLength <= charsPerLine) {
+        currentLineLength += 1 + wordLength;
+      } else {
+        lines += 1;
+        currentLineLength = wordLength;
+      }
+    });
+
+    if (addSafetyLine && currentLineLength > charsPerLine * 0.85) {
+      lines += 1;
+    }
+
+    let height;
+    if (lines === 1) {
+      height = 36;
+    } else if (lines === 2) {
+      height = 50;
+    } else {
+      height = 50 + (lines - 2) * 16;
+    }
+
+    height += (task.lineHeightAdjust ?? 0) * 16;
+
+    return Math.max(28, height);
+  };
+
+  const renderStackedTimelineBoard = ({
+    periodKey,
+    title,
+    units,
+    periodStart,
+    periodEnd,
+    visibleTasks,
+    phaseRangeLabel,
+  }: {
+    periodKey: string;
+    title: string;
+    units: TimelineUnit[];
+    periodStart: Date;
+    periodEnd: Date;
+    visibleTasks: Task[];
+    phaseRangeLabel: (phaseStart: Date, phaseEnd: Date) => string;
+  }) => {
+    if (units.length === 0) {
+      return null;
+    }
+
+    const phasesForBoard = showPhaseLabels
+      ? [...new Set(visibleTasks.map((task) => task.phase).filter((phase): phase is string => Boolean(phase && phase.trim())))]
+      : [""];
+
+    const getPosition = (task: Task) => getTaskPositionForUnits(task, units, periodStart, periodEnd);
+    const visiblePhaseTasks = phasesForBoard.length > 0 ? phasesForBoard : [""];
+
+    return (
+      <div key={periodKey} className="stacked-period-card">
+        <div className="stacked-period-title">{title}</div>
+        <div
+          className="stacked-period-board-scroll"
+          style={{ overflowX: units.length > 12 ? "auto" : "visible" }}
+        >
+          <div
+            className="board"
+            style={{
+              minWidth: units.length > 12 ? `${Math.max(units.length * 52, 760)}px` : undefined,
+            }}
+          >
+            <div
+              className="board-header"
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
+              }}
+            >
+              {units.map((unit, index) => (
+                <div
+                  key={`${periodKey}-header-${unit.key}`}
+                  className="day-header"
+                  style={{
+                    borderRight: index < units.length - 1 ? "1px solid var(--border-dark)" : "none",
+                  }}
+                  title={unit.title}
+                >
+                  {unit.label}
+                </div>
+              ))}
+            </div>
+
+            {visiblePhaseTasks.map((phase) => {
+              const phaseTasks = showPhaseLabels
+                ? visibleTasks.filter((task) => task.phase === phase)
+                : visibleTasks;
+
+              if (phaseTasks.length === 0) {
+                return null;
+              }
+
+              const taskHeights = new Map<number, number>();
+              phaseTasks.forEach((task) => {
+                const position = getPosition(task);
+                if (!position) return;
+                taskHeights.set(task.id, getTaskHeightForPeriod(task, position.width, true));
+              });
+
+              const sortedPhaseTasks = [...phaseTasks].sort((a, b) => {
+                const aIsVacation = a.name.toLowerCase().includes("vacation") || a.phase?.toUpperCase() === "OOO";
+                const bIsVacation = b.name.toLowerCase().includes("vacation") || b.phase?.toUpperCase() === "OOO";
+
+                if (aIsVacation && !bIsVacation) return -1;
+                if (!aIsVacation && bIsVacation) return 1;
+
+                return (a.displayOrder || 0) - (b.displayOrder || 0);
+              });
+
+              const phaseTaskPositions = new Map<number, number>();
+              const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
+              const phaseTopPadding = 8;
+
+              sortedPhaseTasks.forEach((task) => {
+                const position = getPosition(task);
+                if (!position) return;
+
+                const taskHeight = taskHeights.get(task.id) || 30;
+                const horizontalPadding = 0.3;
+                const taskStartPos = position.start + horizontalPadding;
+                const taskEndPos = position.start + position.width - horizontalPadding;
+                let bestTop = phaseTopPadding;
+
+                for (const occupied of phaseOccupiedRanges) {
+                  const tolerance = 0.1;
+                  const horizontalOverlap = !(taskEndPos <= occupied.start + tolerance || taskStartPos >= occupied.end - tolerance);
+
+                  if (horizontalOverlap) {
+                    bestTop = Math.max(bestTop, occupied.bottom);
+                  }
+                }
+
+                phaseTaskPositions.set(task.id, bestTop);
+                phaseOccupiedRanges.push({
+                  start: taskStartPos,
+                  end: taskEndPos,
+                  top: bestTop,
+                  bottom: bestTop + taskHeight,
+                });
+              });
+
+              let phaseTotalHeight = 0;
+              phaseOccupiedRanges.forEach((range) => {
+                phaseTotalHeight = Math.max(phaseTotalHeight, range.bottom);
+              });
+
+              const phaseStart = normalizeDate(new Date(Math.min(...phaseTasks.map((task) => task.startDate.getTime()))));
+              const phaseEnd = normalizeDate(new Date(Math.max(...phaseTasks.map((task) => task.endDate.getTime()))));
+              const phaseBarPosition = getPosition({
+                ...phaseTasks[0],
+                startDate: phaseStart,
+                endDate: phaseEnd,
+              });
+
+              return (
+                <div key={`${periodKey}-phase-${phase || "all"}`} style={{ position: "relative" }}>
+                  {showPhaseLabels && phaseBarPosition && (
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
+                        minHeight: "34px",
+                        position: "relative",
+                        borderTop: "2px solid var(--border-medium)",
+                        overflow: "hidden",
+                        backgroundColor: "var(--bg-primary)",
+                      }}
+                    >
+                      {units.map((_, index) => {
+                        const columnPercent = (index / units.length) * 100;
+                        const isWithinPhase = columnPercent >= phaseBarPosition.start
+                          && columnPercent < (phaseBarPosition.start + phaseBarPosition.width);
+
+                        return (
+                          <div
+                            key={`${periodKey}-phase-grid-${phase}-${index}`}
+                            style={{
+                              position: "relative",
+                              borderRight: !isWithinPhase && index < units.length - 1
+                                ? "1px solid var(--border-medium)"
+                                : "none",
+                            }}
+                          />
+                        );
+                      })}
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: `${phaseBarPosition.start}%`,
+                          width: `${phaseBarPosition.width}%`,
+                          top: 0,
+                          height: "100%",
+                          backgroundColor: "var(--color-gray-900)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          color: "var(--color-white)",
+                          fontWeight: 600,
+                          fontSize: "1rem",
+                          letterSpacing: "0.05em",
+                          boxSizing: "border-box",
+                          zIndex: 1,
+                          paddingLeft: "4px",
+                          paddingRight: "4px",
+                        }}
+                      >
+                        {phaseStart < periodStart ? (
+                          <span style={{ marginRight: "8px", fontWeight: "bold", fontSize: "1.1em", paddingLeft: "5px" }}>◀</span>
+                        ) : (
+                          <span style={{ width: "1.1em", marginRight: "8px" }}></span>
+                        )}
+                        <span style={{ flex: 1, textAlign: "center" }}>{phaseRangeLabel(phaseStart, phaseEnd)}: {phase}</span>
+                        {phaseEnd > periodEnd ? (
+                          <span style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "1.1em", paddingRight: "5px" }}>▶</span>
+                        ) : (
+                          <span style={{ width: "1.1em", marginLeft: "8px" }}></span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ position: "relative", minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        position: "relative",
+                        display: "grid",
+                        gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
+                        backgroundColor: "var(--bg-primary)",
+                        minHeight: `${Math.max(40, phaseTotalHeight)}px`,
+                        borderBottom: "1px solid var(--border-medium)",
+                      }}
+                    >
+                      {units.map((_, index) => {
+                        const columnPercent = (index / units.length) * 100;
+                        const isWithinPhase = !showPhaseLabels || !phaseBarPosition
+                          ? true
+                          : columnPercent >= phaseBarPosition.start && columnPercent < (phaseBarPosition.start + phaseBarPosition.width);
+
+                        return (
+                          <div
+                            key={`${periodKey}-day-cell-${phase}-${index}`}
+                            className="day-cell"
+                            style={{
+                              ...(index === units.length - 1 ? { borderRight: "none" } : {}),
+                              ...(!isWithinPhase && index < units.length - 1 ? { borderRight: "1px solid var(--border-medium)" } : {}),
+                            }}
+                          />
+                        );
+                      })}
+
+                      {phaseTasks
+                        .filter((task) => task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO")
+                        .map((task) => {
+                          const position = getPosition(task);
+                          if (!position) return null;
+
+                          return (
+                            <div
+                              key={`${periodKey}-vacation-bg-${task.id}`}
+                              style={{
+                                position: "absolute",
+                                left: `${position.start}%`,
+                                width: `${position.width}%`,
+                                top: 0,
+                                height: "100%",
+                                backgroundColor: "#DDD6D0",
+                                zIndex: 0,
+                                opacity: 0.7,
+                              }}
+                            />
+                          );
+                        })}
+
+                      {phaseTasks.map((task) => {
+                        const position = getPosition(task);
+                        if (!position) return null;
+
+                        const top = phaseTaskPositions.get(task.id) || 0;
+                        const horizontalPadding = 0.3;
+                        const isVacationTask = task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO";
+                        const bgColor = isVacationTask ? "#645b56" : (task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)");
+                        const textColor = isVacationTask ? getTextColor("645b56") : getTextColor(task.categoryHex);
+                        const taskStartsBeforeView = task.startDate < periodStart;
+                        const taskEndsAfterView = task.endDate > periodEnd;
+
+                        return (
+                          <div
+                            key={`${periodKey}-task-${task.id}`}
+                            className="task-bar"
+                            draggable
+                            aria-pressed={selectedTimelineTaskId === task.id}
+                            onDragStart={() => handleDragStart(task.id)}
+                            onDragOver={handleDragOver}
+                            onDrop={() => handleDrop(task.id)}
+                            onDragEnd={handleDragEnd}
+                            onClick={() => toggleTimelineTaskSelection(task.id)}
+                            title={[
+                              `Task: ${task.name}`,
+                              task.subTask ? `Sub-Task: ${task.subTask}` : "",
+                              task.phase ? `Phase: ${task.phase}` : "",
+                              task.category ? `Category: ${task.category}` : "",
+                              task.owner ? `Owner: ${task.owner}` : "",
+                              `Start: ${format(task.startDate, "MMM dd, yyyy")}`,
+                              `End: ${format(task.endDate, "MMM dd, yyyy")}`,
+                              `ID: ${task.displayOrder}`,
+                            ].filter(Boolean).join("\n")}
+                            style={{
+                              left: `calc(${position.start}% + ${horizontalPadding}%)`,
+                              width: `calc(${position.width}% - ${horizontalPadding * 2}%)`,
+                              top: `${top}px`,
+                              backgroundColor: bgColor,
+                              color: textColor,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: "pointer",
+                              opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
+                              transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
+                              boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
+                            }}
+                          >
+                            {taskStartsBeforeView ? (
+                              <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
+                            ) : (
+                              <span style={{ width: "1.1em", marginLeft: "4px" }}></span>
+                            )}
+                            <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{task.name}</span>
+                            {taskEndsAfterView ? (
+                              <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
+                            ) : (
+                              <span style={{ width: "1.1em", marginRight: "4px" }}></span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ==================== RENDER ====================
 
   return (
@@ -1175,6 +1637,9 @@ function App() {
               style={{ width: "60px", padding: "8px" }}
             />
             <span>Weeks</span>
+            <button onClick={() => setTimelineLayout(timelineLayout === "horizontal" ? "stacked" : "horizontal")}>
+              {timelineLayout === "horizontal" ? "Use Stacked Layout" : "Use Horizontal Layout"}
+            </button>
             <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
             <button onClick={() => setShowWeekNumbers(!showWeekNumbers)}>{showWeekNumbers ? "Show Dates" : "Show Week Numbers"}</button>
             <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
@@ -1259,6 +1724,14 @@ function App() {
                   }
                 />
               </>
+            )}
+            <button onClick={() => setTimelineLayout(timelineLayout === "horizontal" ? "stacked" : "horizontal")}>
+              {timelineLayout === "horizontal" ? "Use Stacked Layout" : "Use Horizontal Layout"}
+            </button>
+            {timelineLayout === "stacked" && (
+              <button onClick={() => setMonthStackSplit(monthStackSplit === "day" ? "week" : "day")}>
+                {monthStackSplit === "day" ? "Split by Weeks" : "Split by Days"}
+              </button>
             )}
             <button onClick={() => setShowMonthNumbers(!showMonthNumbers)}>{showMonthNumbers ? "Show Dates" : "Show Month Numbers"}</button>
             <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
@@ -1671,7 +2144,7 @@ function App() {
               - Horizontal positioning uses percentage-based layout for responsiveness
               - Vertical positioning uses absolute positioning with collision detection
             */}
-            {view === "weeks" &&
+            {view === "weeks" && timelineLayout === "horizontal" &&
               (() => {
                 // Calculate visible period and filter tasks that overlap with it
                 const periodStart = currentWeek;
@@ -2181,7 +2654,76 @@ function App() {
               - Same "reverse Tetris" packing algorithm for vertical positioning
               - Arrows indicate when phases/tasks extend beyond visible timeline
             */}
-            {view === "months" &&
+            {view === "weeks" && timelineLayout === "stacked" && (
+              <div className="stacked-timeline">
+                {weekColumns.map((week, index) => {
+                  const visibleDays = visibleWeekColumns[index];
+                  const periodStart = normalizeDate(week);
+                  const periodEnd = normalizeDate(addDays(week, 6));
+                  const periodTasks = timelineTasks.filter((task) => {
+                    if (task.startDate > periodEnd || task.endDate < periodStart) {
+                      return false;
+                    }
+
+                    return getTaskPositionForVisibleDays(task, visibleDays, periodStart, periodEnd) !== null;
+                  });
+
+                  if (periodTasks.length === 0) {
+                    return renderStackedTimelineBoard({
+                      periodKey: `week-${week.toISOString()}`,
+                      title: showWeekNumbers ? `Week ${index + 1}` : `${format(periodStart, "MMM dd")} - ${format(periodEnd, "MMM dd, yyyy")}`,
+                      units: getDayTimelineUnits(visibleDays),
+                      periodStart,
+                      periodEnd,
+                      visibleTasks: [],
+                      phaseRangeLabel: (phaseStart, phaseEnd) => {
+                        if (tasks.length === 0) {
+                          return `${format(phaseStart, "MMM dd")} - ${format(phaseEnd, "MMM dd")}`;
+                        }
+
+                        const allDates = tasks.map((task) => task.startDate);
+                        const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
+                        const firstTaskWeek = startOfWeek(firstTaskDate);
+                        const startWeekNum = Math.round((startOfWeek(phaseStart).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+                        const endWeekNum = Math.round((startOfWeek(phaseEnd).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+                        return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
+                      },
+                    });
+                  }
+
+                  let weekNumber = index + 1;
+                  if (showWeekNumbers && tasks.length > 0) {
+                    const allDates = tasks.map((task) => task.startDate);
+                    const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
+                    const firstTaskWeek = startOfWeek(firstTaskDate);
+                    const weeksDiff = Math.round((week.getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000));
+                    weekNumber = weeksDiff + 1;
+                  }
+
+                  return renderStackedTimelineBoard({
+                    periodKey: `week-${week.toISOString()}`,
+                    title: showWeekNumbers ? `Week ${weekNumber}` : `${format(periodStart, "MMM dd")} - ${format(periodEnd, "MMM dd, yyyy")}`,
+                    units: getDayTimelineUnits(visibleDays),
+                    periodStart,
+                    periodEnd,
+                    visibleTasks: periodTasks,
+                    phaseRangeLabel: (phaseStart, phaseEnd) => {
+                      if (tasks.length === 0) {
+                        return `${format(phaseStart, "MMM dd")} - ${format(phaseEnd, "MMM dd")}`;
+                      }
+
+                      const allDates = tasks.map((task) => task.startDate);
+                      const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
+                      const firstTaskWeek = startOfWeek(firstTaskDate);
+                      const startWeekNum = Math.round((startOfWeek(phaseStart).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+                      const endWeekNum = Math.round((startOfWeek(phaseEnd).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+                      return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
+                    },
+                  });
+                })}
+              </div>
+            )}
+            {view === "months" && timelineLayout === "horizontal" &&
               (() => {
                 // Calculate visible period and filter tasks that overlap with it
                 const periodStart = useCustomMonthRange && customMonthStart 
@@ -2680,6 +3222,55 @@ function App() {
                   </div>
                 );
               })()}
+            {view === "months" && timelineLayout === "stacked" && (
+              <div className="stacked-timeline">
+                {monthColumns.map((month, index) => {
+                  const periodStart = normalizeDate(startOfMonth(month));
+                  const periodEnd = normalizeDate(endOfMonth(month));
+                  const units = monthStackSplit === "day"
+                    ? getDayTimelineUnits(getVisibleMonthDays(month))
+                    : getOwnedWeekTimelineUnitsForMonth(month);
+                  const periodTasks = timelineTasks.filter((task) => {
+                    if (task.startDate > periodEnd || task.endDate < periodStart) {
+                      return false;
+                    }
+
+                    return getTaskPositionForUnits(task, units, periodStart, periodEnd) !== null;
+                  });
+
+                  let monthNumber = index + 1;
+                  if (showMonthNumbers && tasks.length > 0) {
+                    const allDates = tasks.map((task) => task.startDate);
+                    const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
+                    const firstTaskMonth = startOfMonth(firstTaskDate);
+                    monthNumber = (month.getFullYear() - firstTaskMonth.getFullYear()) * 12 + (getMonth(month) - getMonth(firstTaskMonth)) + 1;
+                  }
+
+                  return renderStackedTimelineBoard({
+                    periodKey: `month-${month.toISOString()}`,
+                    title: showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMMM yyyy"),
+                    units,
+                    periodStart,
+                    periodEnd,
+                    visibleTasks: periodTasks,
+                    phaseRangeLabel: (phaseStart, phaseEnd) => {
+                      if (tasks.length === 0) {
+                        return format(phaseStart, "MMM yyyy");
+                      }
+
+                      const allDates = tasks.map((task) => task.startDate);
+                      const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
+                      const firstTaskMonth = startOfMonth(firstTaskDate);
+                      const startMonthNum = (startOfMonth(phaseStart).getFullYear() - firstTaskMonth.getFullYear()) * 12
+                        + (getMonth(startOfMonth(phaseStart)) - getMonth(firstTaskMonth)) + 1;
+                      const endMonthNum = (startOfMonth(phaseEnd).getFullYear() - firstTaskMonth.getFullYear()) * 12
+                        + (getMonth(startOfMonth(phaseEnd)) - getMonth(firstTaskMonth)) + 1;
+                      return startMonthNum === endMonthNum ? `Month ${startMonthNum}` : `Months ${startMonthNum}-${endMonthNum}`;
+                    },
+                  });
+                })}
+              </div>
+            )}
             {view === "calendar" &&
               (() => {
                 const visibleCalendarDays = (week: Date[]) => week.filter((day) => showWeekends || !isWeekendDate(day));
