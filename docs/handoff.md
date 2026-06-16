@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (stacked month cleanup, task date-picker layering, structured priority-task coloring, and day-border layering fix applied, build-verified)
+Last updated: 2026-06-16 (weekend-gap divider added to stacked monthly Split-by-Days and stacked weekly views, build-verified, browser-verified)
 
 ## Current Snapshot
 
@@ -82,6 +82,7 @@ Current implemented UI state:
 - Day borders remain visible above special priority overlays after the layered callout styling change.
 - In stacked monthly `Split by Weeks`, compact task bars now use the same inline arrow flow as the regular task bars again, rather than special absolute-positioned arrow handling.
 - Shared stacked task bars no longer reserve arrow-width placeholders on both sides; label padding now only appears on the side where a continuation arrow is actually shown.
+- In stacked monthly `Split by Days` and stacked weekly views, the day-header border and background gridline between Friday and Monday (when weekends are hidden) now renders at 4px instead of 1px, visually marking the collapsed weekend gap.
 - In stacked monthly `Split by Weeks`, a visible week span that collapses to one owned day now shows a single date label instead of repeating the same start/end date range.
 
 ## How to Run
@@ -146,6 +147,7 @@ Useful manual checks:
 - in stacked monthly `Split by Weeks`, confirm continuation arrows and labels behave the same way as the regular inline task bars instead of collapsing into slivers or overlapping text
 - confirm stacked task bars without continuation arrows no longer reserve empty left/right arrow space, while bars with continuation arrows still keep a small label gap on only that side
 - confirm stacked monthly week headers that contain only one visible owned day render as a single date label, for example `Aug 31`, instead of `Aug 31 - 31`
+- in stacked monthly `Split by Days` or stacked weekly view with weekends hidden, confirm the Friday-to-Monday boundary renders with a visibly thicker border (4px) than normal day-to-day borders (1px), while all other day boundaries stay thin
 - filter the task list down to one or a few rows, open a task start/end date picker, and confirm the calendar popup stays above the timeline section
 - confirm tasks tagged with `Vacation` or `Holiday` in `phase` or `category` still sort to the top and use their `categoryHex` color instead of task-name matching
 - confirm day borders remain visible when a `Vacation` or `Holiday` task spans across multiple days
@@ -153,7 +155,7 @@ Useful manual checks:
 - in calendar view, toggle `Show weekends` and confirm weekend columns hide/show
 - export tasks to CSV when tasks are present
 
-Latest verification, 2026-06-16:
+Latest verification, 2026-06-16 (weekend-gap divider):
 
 - `npm run build`: passes
 - `npm run lint`: fails on existing `.history/` snapshot files outside the active change set
@@ -163,10 +165,16 @@ Latest verification, 2026-06-16:
 - browser/manual timeline-click verification: passed, per user report
 - CSV export sanity check: export code still uses the full `tasks` array sorted by `displayOrder`, so timeline-click selection does not narrow the exported file
 - browser/manual calendar verification: passed, per user report across calendar render, multi-month/date-range controls, week-spanning bars, spacing/alignment polish, weekend hiding, hidden-weekend month transitions, and month-view weekend compression
-- stacked layout verification: build-verified only; browser/manual weekly/monthly stacked layout checks still pending
-- stacked monthly split verification: build-verified only; browser/manual day-vs-week split checks still pending
+- stacked layout and split verification: build-verified and browser-verified (user confirmed weekend-gap divider looks good)
+- weekend-gap divider: 4px border at Fri→Mon boundary when weekends hidden, confirmed visually by user
 
 ## Latest Change
+
+Latest feature update, 2026-06-16 (weekend-gap divider):
+
+- In stacked monthly `Split by Days` and stacked weekly views with weekends hidden, the day-header border and background gridline between Friday and the following Monday now renders at 4px instead of 1px.
+- The thicker border is driven by a calendar-day-gap check (`differenceInCalendarDays > 1` between consecutive visible units), so it appears automatically wherever a weekend was collapsed and nowhere else.
+- No change to continuous (non-stacked) monthly or weekly views, which have no per-day gridlines.
 
 Latest feature update, 2026-06-15:
 

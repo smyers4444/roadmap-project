@@ -100,7 +100,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 // Date utility functions from date-fns library
-import { startOfWeek, addDays, format, startOfMonth, endOfMonth, addMonths, getMonth, endOfWeek, eachDayOfInterval } from "date-fns";
+import { startOfWeek, addDays, format, startOfMonth, endOfMonth, addMonths, getMonth, endOfWeek, eachDayOfInterval, differenceInCalendarDays } from "date-fns";
 
 // Custom styles for the application
 import "./App.css";
@@ -1399,18 +1399,27 @@ function App() {
                     {group.label}
                   </div>
                 ))
-                : units.map((unit, index) => (
-                  <div
-                    key={`${periodKey}-header-${unit.key}`}
-                    className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
-                    style={{
-                      borderRight: index < units.length - 1 ? "1px solid var(--border-dark)" : "none",
-                    }}
-                    title={unit.title}
-                  >
-                    {unit.label}
-                  </div>
-                ))}
+                : units.map((unit, index) => {
+                  const nextUnit = units[index + 1];
+                  const isWeekendGap = nextUnit ? differenceInCalendarDays(nextUnit.start, unit.start) > 1 : false;
+
+                  return (
+                    <div
+                      key={`${periodKey}-header-${unit.key}`}
+                      className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
+                      style={{
+                        borderRight: index === units.length - 1
+                          ? "none"
+                          : isWeekendGap
+                            ? "4px solid var(--border-dark)"
+                            : "1px solid var(--border-dark)",
+                      }}
+                      title={unit.title}
+                    >
+                      {unit.label}
+                    </div>
+                  );
+                })}
             </div>
 
             {visiblePhaseTasks.map((phase) => {
@@ -1573,13 +1582,18 @@ function App() {
                         const isWeekBoundary = nextUnit
                           ? startOfWeek(units[index].start).getTime() !== startOfWeek(nextUnit.start).getTime()
                           : false;
+                        const isWeekendGap = nextUnit
+                          ? differenceInCalendarDays(nextUnit.start, units[index].start) > 1
+                          : false;
                         const borderRight = index === units.length - 1
                           ? "none"
-                          : showInnerUnitGridlines
-                            ? "1px solid var(--border-medium)"
-                            : isWeekBoundary
+                          : isWeekendGap
+                            ? "4px solid var(--border-dark)"
+                            : showInnerUnitGridlines
                               ? "1px solid var(--border-medium)"
-                              : "none";
+                              : isWeekBoundary
+                                ? "1px solid var(--border-medium)"
+                                : "none";
 
                         return (
                           <div
@@ -1587,7 +1601,7 @@ function App() {
                             className="day-cell"
                             style={{
                               borderRight,
-                              ...(!isWithinPhase && index < units.length - 1 && borderRight !== "none" ? { borderRight: "1px solid var(--border-medium)" } : {}),
+                              ...(!isWithinPhase && index < units.length - 1 && borderRight !== "none" && !isWeekendGap ? { borderRight: "1px solid var(--border-medium)" } : {}),
                             }}
                           />
                         );
