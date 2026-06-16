@@ -357,6 +357,14 @@ button:hover {
   font-size: 1rem;
 }
 
+.month-date-picker-popper {
+  z-index: 2000 !important;
+}
+
+.month-date-picker-popper .react-datepicker {
+  z-index: 2000 !important;
+}
+
 /* ========== BOARD HEADER (Month/Week Headers) ========== */
 .board-header {
   /* Grid layout applied via inline styles in JSX */

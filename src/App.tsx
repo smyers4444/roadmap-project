@@ -1041,6 +1041,8 @@ function App() {
                   selectsRange={true}
                   startDate={customMonthStart || undefined}
                   endDate={customMonthEnd || undefined}
+                  popperPlacement="bottom-start"
+                  popperClassName="month-date-picker-popper"
                   onChange={(dates) => {
                     const [start, end] = dates;
                     setCustomMonthStart(start);
@@ -1059,7 +1061,6 @@ function App() {
                 />
               </>
             )}
-            
             <button onClick={() => setShowMonthNumbers(!showMonthNumbers)}>{showMonthNumbers ? "Show Dates" : "Show Month Numbers"}</button>
             <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
             <button
