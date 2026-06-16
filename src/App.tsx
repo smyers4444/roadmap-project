@@ -655,6 +655,14 @@ function App() {
     }
     return Array.from({ length: monthSpan }, (_, i) => addMonths(currentMonth, i));
   })();
+  const monthlyPeriodStart = useCustomMonthRange && customMonthStart
+    ? customMonthStart
+    : startOfMonth(currentMonth);
+  const monthlyPeriodEnd = useCustomMonthRange && customMonthEnd
+    ? customMonthEnd
+    : endOfMonth(addMonths(currentMonth, monthSpan - 1));
+  const visibleMonthlyDays = eachDayOfInterval({ start: normalizeDate(monthlyPeriodStart), end: normalizeDate(monthlyPeriodEnd) })
+    .filter((date) => showWeekends || !isWeekendDate(date));
 
   // ==================== FILTERING AND SORTING ====================
 
@@ -857,31 +865,28 @@ function App() {
    * @returns Object with start (left position %) and width (%)
    */
   const getMonthTaskPosition = (task: Task) => {
-    // Use custom date range if enabled, otherwise use currentMonth + monthSpan
-    const periodStart = useCustomMonthRange && customMonthStart 
-      ? customMonthStart
-      : startOfMonth(currentMonth);
-    const periodEnd = useCustomMonthRange && customMonthEnd
-      ? customMonthEnd
-      : endOfMonth(addMonths(currentMonth, monthSpan - 1));
+    const totalDays = visibleMonthlyDays.length;
+    if (totalDays === 0) return null;
 
-    // Normalize all dates to midnight to avoid DST issues
-    const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const periodStart = normalizeDate(monthlyPeriodStart);
+    const periodEnd = normalizeDate(monthlyPeriodEnd);
+    const taskStartInPeriod = normalizeDate(task.startDate > periodStart ? task.startDate : periodStart);
+    const taskEndInPeriod = normalizeDate(task.endDate < periodEnd ? task.endDate : periodEnd);
 
-    // Calculate where task starts and ends within the visible period
-    const taskStartInPeriod = task.startDate > periodStart ? normalizeDate(task.startDate) : normalizeDate(periodStart);
-    const taskEndInPeriod = task.endDate < periodEnd ? normalizeDate(task.endDate) : normalizeDate(periodEnd);
+    const startOffset = visibleMonthlyDays.findIndex((date) => normalizeDate(date).getTime() >= taskStartInPeriod.getTime());
+    let endOffset = -1;
+    for (let index = visibleMonthlyDays.length - 1; index >= 0; index -= 1) {
+      if (normalizeDate(visibleMonthlyDays[index]).getTime() <= taskEndInPeriod.getTime()) {
+        endOffset = index;
+        break;
+      }
+    }
 
-    const normalizedPeriodStart = normalizeDate(periodStart);
-    const normalizedPeriodEnd = normalizeDate(periodEnd);
+    if (startOffset === -1 || endOffset === -1 || startOffset > endOffset) {
+      return null;
+    }
 
-    // Use Math.round to handle any floating point issues from DST
-    const startOffset = Math.round((taskStartInPeriod.getTime() - normalizedPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
-    const endOffset = Math.round((taskEndInPeriod.getTime() - normalizedPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
-
-    const totalDays = Math.round((normalizedPeriodEnd.getTime() - normalizedPeriodStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const start = (startOffset / totalDays) * 100;
-    // Add 1 to include the end day (endDate is inclusive)
     const width = ((endOffset - startOffset + 1) / totalDays) * 100;
 
     return { start, width };
@@ -1062,6 +1067,7 @@ function App() {
               </>
             )}
             <button onClick={() => setShowMonthNumbers(!showMonthNumbers)}>{showMonthNumbers ? "Show Dates" : "Show Month Numbers"}</button>
+            <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
             <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
             <button
               onClick={() => {
@@ -1936,14 +1942,22 @@ function App() {
                 const periodEnd = useCustomMonthRange && customMonthEnd
                   ? customMonthEnd
                   : endOfMonth(addMonths(currentMonth, monthSpan - 1));
-                const visibleTasks = timelineTasks.filter((task) => task.startDate <= periodEnd && task.endDate >= periodStart);
+                const visibleTasks = timelineTasks.filter((task) => {
+                  if (task.startDate > periodEnd || task.endDate < periodStart) {
+                    return false;
+                  }
+
+                  return getMonthTaskPosition(task) !== null;
+                });
 
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
                 const taskHeights = new Map<number, number>();
                 const debugInfo = new Map<number, string>();
                 visibleTasks.forEach((task) => {
-                  const { width } = getMonthTaskPosition(task);
+                  const position = getMonthTaskPosition(task);
+                  if (!position) return;
+                  const { width } = position;
                   const actualWidth = (width / 100) * 1800; // Approximate pixel width
                   const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
                   const charsPerLine = Math.max(1, Math.floor(textWidth / 7.2)); // Consolas 13px ≈ 7.2px per char
@@ -2013,7 +2027,9 @@ function App() {
 
                 // For each task, find the first available vertical position
                 sortedTasks.forEach((task) => {
-                  const { start, width } = getMonthTaskPosition(task);
+                  const position = getMonthTaskPosition(task);
+                  if (!position) return;
+                  const { start, width } = position;
                   const taskHeight = taskHeights.get(task.id) || 30;
                   const horizontalPadding = 0.3; // Small gap between adjacent tasks
                   const taskStart = start + horizontalPadding;
@@ -2104,11 +2120,13 @@ function App() {
                       const phaseTask = phaseTasks[0];
 
                       // Calculate phase header position based on earliest and latest task dates
-                      const { start, width } = getMonthTaskPosition({
+                      const phasePosition = getMonthTaskPosition({
                         ...phaseTask,
                         startDate: phaseStart,
                         endDate: phaseEnd,
                       });
+                      if (!phasePosition) return null;
+                      const { start, width } = phasePosition;
 
                       // ========== PHASE TASK POSITIONING ==========
                       // Apply same packing algorithm within this phase
@@ -2130,7 +2148,9 @@ function App() {
                       });
 
                       sortedPhaseTasks.forEach((task) => {
-                        const { start: taskStart, width: taskWidth } = getMonthTaskPosition(task);
+                        const position = getMonthTaskPosition(task);
+                        if (!position) return;
+                        const { start: taskStart, width: taskWidth } = position;
                         const taskHeight = taskHeights.get(task.id) || 30;
                         const horizontalPadding = 0.3;
                         const taskStartPos = taskStart + horizontalPadding;
@@ -2318,7 +2338,9 @@ function App() {
                               {phaseTasks
                                 .filter((task) => task.name.toLowerCase().includes("vacation") || task.phase?.toUpperCase() === "OOO")
                                 .map((task) => {
-                                  const { start, width } = getMonthTaskPosition(task);
+                                  const position = getMonthTaskPosition(task);
+                                  if (!position) return null;
+                                  const { start, width } = position;
                                   return (
                                     <div
                                       key={`vacation-bg-${task.id}`}
@@ -2338,7 +2360,9 @@ function App() {
 
                               {/* Individual task bars with calculated positions */}
                               {phaseTasks.map((task) => {
-                                const { start, width } = getMonthTaskPosition(task);
+                                const position = getMonthTaskPosition(task);
+                                if (!position) return null;
+                                const { start, width } = position;
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
