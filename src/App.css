@@ -449,6 +449,14 @@ button:hover {
   z-index: 2000 !important;
 }
 
+.task-date-picker-popper {
+  z-index: 3000 !important;
+}
+
+.task-date-picker-popper .react-datepicker {
+  z-index: 3000 !important;
+}
+
 /* ========== BOARD HEADER (Month/Week Headers) ========== */
 .board-header {
   /* Grid layout applied via inline styles in JSX */

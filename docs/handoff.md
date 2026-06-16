@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (stacked month week-split day-accurate rendering applied and build-verified)
+Last updated: 2026-06-16 (stacked month cleanup plus task date-picker layering fix applied, build-verified)
 
 ## Current Snapshot
 
@@ -27,6 +27,7 @@ The app combines:
 - drag-and-drop task ordering
 - CSV export of the current tasks
 - browser-local task persistence on the current device/browser
+- task-table date pickers that now render above the timeline instead of underneath timeline task bars when the task list is filtered
 
 The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`.
 
@@ -69,6 +70,10 @@ Current implemented UI state:
 - Stacked monthly `Split by Weeks` now assigns each visible week to exactly one month card instead of duplicating crossover weeks across adjacent months.
 - Stacked monthly cards now show the visible date range as the top label instead of just the month name, and stacked weekly/monthly cards both use tighter vertical spacing around titles, headers, and task rows.
 - In stacked monthly `Split by Weeks`, tasks now position against the actual owned days inside each displayed week span, so one-day tasks do not stretch across the full week bucket and cross-month tasks render through the owned visible week end.
+- In stacked monthly `Split by Weeks`, overlapping boundary weeks now keep the current month's visible in-month workdays even when the calendar week starts in the prior month, so early-month weekday-only tasks still render with `Hide Weekends`.
+- In stacked monthly `Split by Weeks`, compact task bars now use the same inline arrow flow as the regular task bars again, rather than special absolute-positioned arrow handling.
+- Shared stacked task bars no longer reserve arrow-width placeholders on both sides; label padding now only appears on the side where a continuation arrow is actually shown.
+- In stacked monthly `Split by Weeks`, a visible week span that collapses to one owned day now shows a single date label instead of repeating the same start/end date range.
 
 ## How to Run
 
@@ -128,6 +133,11 @@ Useful manual checks:
 - in stacked monthly layout, switch between `Split by Days` and `Split by Weeks` and confirm task spans, phase bars, and selection highlighting remain aligned
 - in stacked monthly `Split by Weeks`, confirm crossover weeks appear only once, under the month that owns that week column, without duplicated bars or large leading blank areas
 - in stacked monthly `Split by Weeks`, confirm one-day tasks render at one-day width, narrow bars still keep readable text, and cross-month tasks render through the owned displayed week span instead of clipping at the raw month end
+- in stacked monthly `Split by Weeks` with `Hide Weekends`, add a Friday-only task in the first partial week of a month and confirm it remains visible
+- in stacked monthly `Split by Weeks`, confirm continuation arrows and labels behave the same way as the regular inline task bars instead of collapsing into slivers or overlapping text
+- confirm stacked task bars without continuation arrows no longer reserve empty left/right arrow space, while bars with continuation arrows still keep a small label gap on only that side
+- confirm stacked monthly week headers that contain only one visible owned day render as a single date label, for example `Aug 31`, instead of `Aug 31 - 31`
+- filter the task list down to one or a few rows, open a task start/end date picker, and confirm the calendar popup stays above the timeline section
 - in stacked monthly view, confirm the top date-range label and tighter week-header/task spacing still look balanced across short and dense months
 - in calendar view, toggle `Show weekends` and confirm weekend columns hide/show
 - export tasks to CSV when tasks are present
@@ -165,6 +175,11 @@ Latest feature update, 2026-06-16:
 - Added a stacked-month split toggle so each month board can render with either day columns or week-range columns without changing the rest of the app layout.
 - Tightened stacked weekly/monthly spacing, reduced stacked month week-header padding, and changed stacked monthly titles to show the visible date range.
 - Changed stacked monthly `Split by Weeks` to keep week headers while positioning task bars by actual day, so one-day and cross-month tasks render correctly inside owned week spans.
+- Fixed stacked monthly `Split by Weeks` so boundary weeks contribute the current month's visible in-month days even when the week starts in the previous month, which restores Friday-only early-month tasks while `Hide Weekends` is active.
+- Reverted the experimental compact stacked-month arrow/padding/label hacks and restored the normal inline arrow flow so continuation indicators consume the bar width naturally again.
+- Removed shared stacked-bar arrow placeholder spans so only real continuation arrows introduce side-specific label padding.
+- Cleaned up stacked monthly week-header formatting so single-day owned spans show a single date instead of a redundant one-day range.
+- Assigned the task-table start/end date pickers their own high-z-index popper class so the calendar popup renders above filtered timeline content.
 
 ## Key Guardrails
 
@@ -177,7 +192,7 @@ Latest feature update, 2026-06-16:
 
 ## Recommended Next Task
 
-1. Manually verify stacked weekly and stacked monthly layout behavior in the browser, especially weekend hiding, task selection highlighting, long-month horizontal overflow, and the stacked month day/week split toggle.
+1. Manually verify stacked weekly and stacked monthly layout behavior in the browser, especially weekend hiding, task selection highlighting, long-month horizontal overflow, the stacked month day/week split toggle, and first-partial-week weekday-only tasks.
 2. If stacked layout feels right, decide whether the layout toggle and month split toggle should remain plain buttons or become more explicit segmented controls.
 3. Keep spreadsheet import flexible and preserve CSV export based on the full task list in manual `displayOrder`.
 4. Keep broader calendar interactions such as drag/edit-in-calendar and cross-device sync out of scope until sharing expectations are clearer.

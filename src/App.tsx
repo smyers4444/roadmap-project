@@ -769,11 +769,12 @@ function App() {
       cursor = addDays(cursor, 7)
     ) {
       const weekStart = normalizeDate(cursor);
-      if (weekStart.getMonth() !== normalizedMonthStart.getMonth() || weekStart.getFullYear() !== normalizedMonthStart.getFullYear()) {
-        continue;
-      }
+      const ownedVisibleDays = getVisibleWeekDays(weekStart).filter((day) => {
+        const normalizedDay = normalizeDate(day).getTime();
+        return normalizedDay >= normalizedMonthStart.getTime() && normalizedDay <= normalizedMonthEnd.getTime();
+      });
 
-      getVisibleWeekDays(weekStart).forEach((day) => {
+      ownedVisibleDays.forEach((day) => {
         units.push({
           key: `${monthStart.toISOString()}-${day.toISOString()}`,
           start: normalizeDate(day),
@@ -811,15 +812,20 @@ function App() {
       const groupUnits = units.filter((unit) => startOfWeek(unit.start).toISOString() === group.key);
       const firstUnit = groupUnits[0];
       const lastUnit = groupUnits[groupUnits.length - 1];
+      const isSingleDay = firstUnit.start.getTime() === lastUnit.start.getTime();
       const sameMonth = firstUnit.start.getMonth() === lastUnit.start.getMonth()
         && firstUnit.start.getFullYear() === lastUnit.start.getFullYear();
 
       return {
         ...group,
-        label: sameMonth
-          ? `${format(firstUnit.start, "MMM d")} - ${format(lastUnit.start, "d")}`
-          : `${format(firstUnit.start, "MMM d")} - ${format(lastUnit.start, "MMM d")}`,
-        title: `${format(firstUnit.start, "MMM dd, yyyy")} - ${format(lastUnit.start, "MMM dd, yyyy")}`,
+        label: isSingleDay
+          ? format(firstUnit.start, "MMM d")
+          : sameMonth
+            ? `${format(firstUnit.start, "MMM d")} - ${format(lastUnit.start, "d")}`
+            : `${format(firstUnit.start, "MMM d")} - ${format(lastUnit.start, "MMM d")}`,
+        title: isSingleDay
+          ? format(firstUnit.start, "MMM dd, yyyy")
+          : `${format(firstUnit.start, "MMM dd, yyyy")} - ${format(lastUnit.start, "MMM dd, yyyy")}`,
       };
     });
   };
@@ -1326,7 +1332,6 @@ function App() {
     compactHeaderPadding = false,
     compactTaskSpacing = false,
     headerGroups,
-    compactTaskHorizontalPadding = false,
     showInnerUnitGridlines = true,
   }: {
     periodKey: string;
@@ -1340,7 +1345,6 @@ function App() {
     compactHeaderPadding?: boolean;
     compactTaskSpacing?: boolean;
     headerGroups?: TimelineHeaderGroup[];
-    compactTaskHorizontalPadding?: boolean;
     showInnerUnitGridlines?: boolean;
   }) => {
     if (units.length === 0) {
@@ -1616,6 +1620,8 @@ function App() {
                         const textColor = isVacationTask ? getTextColor("645b56") : getTextColor(task.categoryHex);
                         const taskStartsBeforeView = task.startDate < periodStart;
                         const taskEndsAfterView = task.endDate > periodEnd;
+                        const labelPaddingLeft = taskStartsBeforeView ? "6px" : "0";
+                        const labelPaddingRight = taskEndsAfterView ? "6px" : "0";
 
                         return (
                           <div
@@ -1644,31 +1650,34 @@ function App() {
                               top: `${top}px`,
                               backgroundColor: bgColor,
                               color: textColor,
-                              padding: compactTaskHorizontalPadding ? "2px 1px" : undefined,
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: compactTaskHorizontalPadding ? "center" : "space-between",
                               cursor: "pointer",
                               opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
                               transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
                               boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
                             }}
                           >
-                            {compactTaskHorizontalPadding && taskStartsBeforeView ? (
-                              <span style={{ position: "absolute", left: "2px", fontWeight: "bold", fontSize: "1em" }}>◀</span>
-                            ) : taskStartsBeforeView ? (
+                            {taskStartsBeforeView ? (
                               <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
-                            ) : (
-                              compactTaskHorizontalPadding ? null : <span style={{ width: "1.1em", marginLeft: "4px" }}></span>
-                            )}
-                            <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{task.name}</span>
-                            {compactTaskHorizontalPadding && taskEndsAfterView ? (
-                              <span style={{ position: "absolute", right: "2px", fontWeight: "bold", fontSize: "1em" }}>▶</span>
-                            ) : taskEndsAfterView ? (
+                            ) : null}
+                            <span
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                                textAlign: "center",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "normal",
+                                paddingLeft: labelPaddingLeft,
+                                paddingRight: labelPaddingRight,
+                              }}
+                            >
+                              {task.name}
+                            </span>
+                            {taskEndsAfterView ? (
                               <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
-                            ) : (
-                              compactTaskHorizontalPadding ? null : <span style={{ width: "1.1em", marginRight: "4px" }}></span>
-                            )}
+                            ) : null}
                           </div>
                         );
                       })}
@@ -2185,10 +2194,16 @@ function App() {
                         selected={t.startDate}
                         onChange={(date) => updateTask(t.id, "startDate", date || new Date())}
                         dateFormat="yyyy-MM-dd"
+                        popperClassName="task-date-picker-popper"
                       />
                     </td>
                     <td>
-                      <DatePicker selected={t.endDate} onChange={(date) => updateTask(t.id, "endDate", date || new Date())} dateFormat="yyyy-MM-dd" />
+                      <DatePicker
+                        selected={t.endDate}
+                        onChange={(date) => updateTask(t.id, "endDate", date || new Date())}
+                        dateFormat="yyyy-MM-dd"
+                        popperClassName="task-date-picker-popper"
+                      />
                     </td>
                     <td>
                       <button onClick={() => removeTask(t.id)}>Remove</button>
@@ -3354,7 +3369,6 @@ function App() {
                     compactHeaderPadding: isWeekSplit,
                     compactTaskSpacing: true,
                     headerGroups,
-                    compactTaskHorizontalPadding: isWeekSplit,
                     showInnerUnitGridlines: !isWeekSplit,
                   });
                 })}
