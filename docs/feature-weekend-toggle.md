@@ -44,9 +44,9 @@ The shipped slice added:
 
 ## Follow-On Impact
 
-This work completed the visible-day cleanup needed before broader weekly layout changes.
+This work completed the visible-day cleanup needed before broader calendar-style day rendering changes.
 
-That makes [feature-layout-orientation-toggle.md](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap%20Project/docs/feature-layout-orientation-toggle.md:1) safer to implement later, because weekly rendering no longer assumes every week always shows seven visible days.
+That makes [feature-calendar-view.md](/Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap%20Project/docs/feature-calendar-view.md:1) safer to implement later, because rendered-day math no longer assumes every weekly slice always shows seven visible days.
 
 ## Next Related Docs
 

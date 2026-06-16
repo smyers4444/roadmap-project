@@ -14,6 +14,7 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 - Paste tab-separated task data from a spreadsheet, preview it, edit it, and import it.
 - Export the current task list to CSV.
 - Show category and phase legends for the visible timeline.
+- Keep tasks in memory for the current browser session only; refresh currently clears the board.
 
 ## Task Fields
 
@@ -70,6 +71,11 @@ Recognized columns include:
 When tasks with the same phase, category, and name are imported together, the app groups them and merges their date range.
 
 The export action downloads the full current task list as a CSV file, including a `Week` column. Export preserves manual `Display Order`, uses the task's stored `Week` value when present, and otherwise derives a relative week number from the task start date so manual tasks still export cleanly.
+
+Current limitation:
+
+- the app does not currently persist tasks across page refreshes
+- if you reload the page, you need to re-import or recreate the current task list
 
 ## Getting Started
 

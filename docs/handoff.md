@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (timeline-click selection plus export/button cleanup)
+Last updated: 2026-06-15 (second calendar mockup saved and docs synced)
 
 ## Current Snapshot
 
@@ -26,6 +26,7 @@ The app combines:
 - a weekly or monthly timeline view
 - drag-and-drop task ordering
 - CSV export of the current tasks
+- in-memory task state only; page refresh clears the current board
 
 The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`.
 
@@ -39,9 +40,14 @@ Recent repo-level cleanup work has added project-local Codex skills and refreshe
 There are now separate feature notes for:
 
 - completed weekend-toggle work at `docs/feature-weekend-toggle.md`
-- proposed layout-orientation work at `docs/feature-layout-orientation-toggle.md`
+- proposed calendar-view work at `docs/feature-calendar-view.md`
 - CSV week-number export work at `docs/feature-export-week-number.md`
 - proposed timeline-click filtering work at `docs/feature-timeline-click-filters-list.md`
+
+Calendar-view mockup asset:
+
+- `docs/mockups/calendar-view-mockup.png`
+- `docs/mockups/calendar-view-mockup-v2.png`
 
 ## Branch And Working Tree
 
@@ -118,11 +124,10 @@ Latest verification, 2026-06-15:
 
 Latest feature update, 2026-06-15:
 
-- Updated single-select timeline-click filtering in `src/App.tsx` so selection narrows only the task table.
-- Kept the timeline fully visible and added stronger selected-bar emphasis.
-- Confirmed CSV export still runs against the full task list in manual order.
-- Gated the user-facing `Add Test Task` button to dev mode only.
-- Updated `README.md`, `docs/feature-timeline-click-filters-list.md`, and this handoff note to reflect the revised interaction.
+- Linked two saved calendar-view mockups into the new feature note.
+- Saved a second mockup that stays closer to the current app layout and session-only workflow.
+- Documented the current session-only limitation: tasks are not persisted across refresh.
+- Kept the calendar proposal scoped to a shareable visual view, not a persistence slice.
 
 ## Key Guardrails
 
@@ -135,9 +140,9 @@ Latest feature update, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Do a browser pass on the current branch to verify filtered-list drag ordering still feels correct after timeline selection.
-2. Then decide whether broader timeline interactions such as phase/category clicks are still desirable or unnecessary.
-3. If the timeline interaction model is stabilizing, capture it in a small feature note before the next UI slice.
+1. Decide whether to implement the calendar view next or keep it documented-only for now.
+2. If implementation starts, decide whether session persistence is a prerequisite for a shareable calendar workflow.
+3. If not, ship a read-only monthly calendar slice before considering editing or drag interactions.
 
 ## New Chat Start
 
