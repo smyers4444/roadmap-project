@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (stacked month cleanup plus task date-picker layering fix applied, build-verified)
+Last updated: 2026-06-16 (stacked month cleanup, task date-picker layering, structured priority-task coloring, and day-border layering fix applied, build-verified)
 
 ## Current Snapshot
 
@@ -71,6 +71,8 @@ Current implemented UI state:
 - Stacked monthly cards now show the visible date range as the top label instead of just the month name, and stacked weekly/monthly cards both use tighter vertical spacing around titles, headers, and task rows.
 - In stacked monthly `Split by Weeks`, tasks now position against the actual owned days inside each displayed week span, so one-day tasks do not stretch across the full week bucket and cross-month tasks render through the owned visible week end.
 - In stacked monthly `Split by Weeks`, overlapping boundary weeks now keep the current month's visible in-month workdays even when the calendar week starts in the prior month, so early-month weekday-only tasks still render with `Hide Weekends`.
+- Special priority sorting and highlighting now use task `phase` or `category` values such as `Vacation`, `Holiday`, or `OOO`, and task bar colors stay driven by `categoryHex` instead of task name wording.
+- Day borders remain visible above special priority overlays after the layered callout styling change.
 - In stacked monthly `Split by Weeks`, compact task bars now use the same inline arrow flow as the regular task bars again, rather than special absolute-positioned arrow handling.
 - Shared stacked task bars no longer reserve arrow-width placeholders on both sides; label padding now only appears on the side where a continuation arrow is actually shown.
 - In stacked monthly `Split by Weeks`, a visible week span that collapses to one owned day now shows a single date label instead of repeating the same start/end date range.
@@ -138,6 +140,8 @@ Useful manual checks:
 - confirm stacked task bars without continuation arrows no longer reserve empty left/right arrow space, while bars with continuation arrows still keep a small label gap on only that side
 - confirm stacked monthly week headers that contain only one visible owned day render as a single date label, for example `Aug 31`, instead of `Aug 31 - 31`
 - filter the task list down to one or a few rows, open a task start/end date picker, and confirm the calendar popup stays above the timeline section
+- confirm tasks tagged with `Vacation` or `Holiday` in `phase` or `category` still sort to the top and use their `categoryHex` color instead of task-name matching
+- confirm day borders remain visible when a `Vacation` or `Holiday` task spans across multiple days
 - in stacked monthly view, confirm the top date-range label and tighter week-header/task spacing still look balanced across short and dense months
 - in calendar view, toggle `Show weekends` and confirm weekend columns hide/show
 - export tasks to CSV when tasks are present
@@ -180,6 +184,8 @@ Latest feature update, 2026-06-16:
 - Removed shared stacked-bar arrow placeholder spans so only real continuation arrows introduce side-specific label padding.
 - Cleaned up stacked monthly week-header formatting so single-day owned spans show a single date instead of a redundant one-day range.
 - Assigned the task-table start/end date pickers their own high-z-index popper class so the calendar popup renders above filtered timeline content.
+- Switched special-task detection away from task-name matching and onto `phase`/`category` values, while keeping visible colors tied to `categoryHex`.
+- Raised the day grid border layer so `Vacation` and `Holiday` callouts no longer hide the visible day separators.
 
 ## Key Guardrails
 

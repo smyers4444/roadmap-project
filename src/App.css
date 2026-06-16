@@ -495,7 +495,8 @@ button:hover {
 .day-cell {
   border-right: 1px solid var(--border-medium);
   position: relative;
-  background-color: var(--bg-primary);
+  background-color: transparent;
+  z-index: 1;
   min-height: inherit;
 }
 
@@ -517,7 +518,7 @@ button:hover {
   font-size: 12pt;
   padding: 3px 5px;
   box-sizing: border-box;
-  z-index: 1;
+  z-index: 2;
   font-weight: 500;
   text-align: center;
   overflow: hidden;
@@ -531,7 +532,7 @@ button:hover {
 .task-bar:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  z-index: 2;
+  z-index: 3;
   cursor: pointer;
 }
 
