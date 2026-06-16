@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-15 (browser-local persistence verified; calendar follow-up queued)
+Last updated: 2026-06-15 (calendar polish follow-up implemented and manually verified)
 
 ## Current Snapshot
 
@@ -62,7 +62,7 @@ Current implemented UI state:
 - Timeline task bars in both weekly and monthly view support single-select filtering into the task table only.
 - The timeline stays fully visible, with the selected bar highlighted and the other bars slightly de-emphasized.
 - Repeat-click clears the selection, and the task filter area exposes a visible clear action.
-- A new calendar view is available as a third view mode with month navigation, task chips, selection highlighting, and browser-local persistence messaging.
+- A new calendar view is available as a third view mode with month-span or exact-date-range controls, week-spanning task bars, selection highlighting, a clearer month-start callout, and browser-local persistence messaging placed outside the calendar board for cleaner screenshots.
 - `Show weekends` now affects weekly view, calendar view, and monthly timeline rendering.
 
 ## How to Run
@@ -111,6 +111,10 @@ Useful manual checks:
 - confirm the task count updates after import
 - switch between weekly, monthly, and calendar views
 - refresh after adding or importing tasks and confirm the board reloads from browser-local storage
+- in calendar view, switch between month-span mode and exact date-range mode and confirm the visible grid updates correctly
+- in calendar view, show more than one month at once and confirm the date labels stay readable across month boundaries
+- in calendar view, confirm week-spanning task bars stay aligned inside each visible week row, keep centered labels, and only show continuation arrows when the task extends beyond that week segment
+- in calendar view with weekends hidden, confirm month changes still remain visible when the first of the month falls on a hidden weekend
 - in weekly view, toggle `Show weekends` and confirm headers and bar positions compress to visible workdays
 - in monthly view, toggle `Show weekends` and confirm task bars compress horizontally while task dates stay unchanged
 - in calendar view, toggle `Show weekends` and confirm weekend columns hide/show
@@ -125,16 +129,19 @@ Latest verification, 2026-06-15:
 - browser/manual persistence verification: passed across add, edit, import, drag reorder, clear-all, and refresh, per user report
 - browser/manual timeline-click verification: passed, per user report
 - CSV export sanity check: export code still uses the full `tasks` array sorted by `displayOrder`, so timeline-click selection does not narrow the exported file
-- browser/manual calendar verification: passed, per user report across calendar render, weekend hiding, month picker overlay, and month-view weekend compression
+- browser/manual calendar verification: passed, per user report across calendar render, multi-month/date-range controls, week-spanning bars, spacing/alignment polish, weekend hiding, hidden-weekend month transitions, and month-view weekend compression
 
 ## Latest Change
 
 Latest feature update, 2026-06-15:
 
 - Implemented a read-only calendar view based on the v2 mockup direction.
-- Added calendar task chips with selection highlighting aligned to the task table filter behavior.
+- Added calendar week-segment task bars with selection highlighting aligned to the task table filter behavior.
 - Fixed calendar weekend hiding, month picker overlay stacking, and month-view weekend compression.
 - Added browser-local task persistence with safe date hydration on reload.
+- Extended calendar view with multi-month span controls and exact date-range selection.
+- Reworked calendar task layout so labels stay centered regardless of continuation arrows, spacing is screenshot-friendly, and the browser-local persistence note sits outside the rounded calendar board.
+- Added a month-start callout treatment that still marks the new month when weekends are hidden and the first lands off-grid.
 
 ## Key Guardrails
 
@@ -147,8 +154,8 @@ Latest feature update, 2026-06-15:
 
 ## Recommended Next Task
 
-1. Extend calendar view so the user can choose a specific date span and show more than one month at a time.
-2. Adjust calendar task-chip labeling so continuation text appears only when a task carries into a new week, not for every non-start day.
+1. Decide whether the next slice should be persistence follow-through beyond browser-local storage or additional screenshot/share polish such as print framing and export-friendly presentation.
+2. If persistence moves forward, keep the current browser-local behavior explicit until cross-session or portable storage is actually implemented.
 3. Keep spreadsheet import flexible and preserve CSV export based on the full task list in manual `displayOrder`.
 4. Keep broader calendar interactions such as drag/edit-in-calendar and cross-device sync out of scope until sharing expectations are clearer.
 

@@ -54,10 +54,13 @@ Each task supports these fields:
 
 ### Calendar View
 
-- Navigate backward or forward by month.
-- Show one month at a time in a read-only calendar grid.
+- Navigate backward or forward by the visible calendar span.
+- Show one or more months at a time in a read-only calendar grid.
+- Switch between a month-span view and a specific date range.
 - Show or hide weekends in the calendar grid.
-- Click a calendar task chip to mirror timeline task selection behavior in the task table.
+- Click a calendar task bar to mirror timeline task selection behavior in the task table.
+- Calendar tasks render as week-spanning bars instead of repeated per-day chips.
+- Long tasks continue across week boundaries with centered labels and edge arrows only when the task extends beyond the visible week segment.
 
 ## Import and Export
 

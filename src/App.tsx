@@ -100,7 +100,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 // Date utility functions from date-fns library
-import { startOfWeek, addDays, format, startOfMonth, endOfMonth, addMonths, getMonth, endOfWeek, eachDayOfInterval, isSameMonth } from "date-fns";
+import { startOfWeek, addDays, format, startOfMonth, endOfMonth, addMonths, getMonth, endOfWeek, eachDayOfInterval } from "date-fns";
 
 // Custom styles for the application
 import "./App.css";
@@ -254,6 +254,10 @@ function App() {
   const [useCustomMonthRange, setUseCustomMonthRange] = useState(false);
   const [customMonthStart, setCustomMonthStart] = useState<Date | null>(null);
   const [customMonthEnd, setCustomMonthEnd] = useState<Date | null>(null);
+  const [calendarMonthSpan, setCalendarMonthSpan] = useState(2);
+  const [useCustomCalendarRange, setUseCustomCalendarRange] = useState(false);
+  const [customCalendarStart, setCustomCalendarStart] = useState<Date | null>(null);
+  const [customCalendarEnd, setCustomCalendarEnd] = useState<Date | null>(null);
   const showDevTaskButton = import.meta.env.DEV;
 
   useEffect(() => {
@@ -844,10 +848,14 @@ function App() {
   const selectedTimelineTask = selectedTimelineTaskId === null
     ? null
     : tasks.find((task) => task.id === selectedTimelineTaskId) ?? null;
-  const calendarMonthStart = startOfMonth(currentMonth);
-  const calendarMonthEnd = endOfMonth(currentMonth);
-  const calendarGridStart = startOfWeek(calendarMonthStart);
-  const calendarGridEnd = endOfWeek(calendarMonthEnd);
+  const calendarPeriodStart = useCustomCalendarRange && customCalendarStart
+    ? customCalendarStart
+    : startOfMonth(currentMonth);
+  const calendarPeriodEnd = useCustomCalendarRange && customCalendarEnd
+    ? customCalendarEnd
+    : endOfMonth(addMonths(currentMonth, calendarMonthSpan - 1));
+  const calendarGridStart = startOfWeek(calendarPeriodStart);
+  const calendarGridEnd = endOfWeek(calendarPeriodEnd);
   const calendarDays = eachDayOfInterval({ start: calendarGridStart, end: calendarGridEnd });
   const calendarWeeks = Array.from({ length: Math.ceil(calendarDays.length / 7) }, (_, index) => calendarDays.slice(index * 7, index * 7 + 7));
   const phases = [...new Set(timelineTasks.map((t) => t.phase).filter((c) => c && c.trim()))];
@@ -1023,16 +1031,113 @@ function App() {
     return `rgb(${blend(r)}, ${blend(g)}, ${blend(b)})`;
   };
 
-  const isTaskVisibleOnDay = (task: Task, day: Date) => {
-    const normalizedDay = normalizeDate(day).getTime();
-    const normalizedStart = normalizeDate(task.startDate).getTime();
-    const normalizedEnd = normalizeDate(task.endDate).getTime();
-    return normalizedStart <= normalizedDay && normalizedEnd >= normalizedDay;
-  };
-
   const getCalendarChipLabel = (task: Task, day: Date) => {
     const isStartDay = normalizeDate(task.startDate).getTime() === normalizeDate(day).getTime();
-    return isStartDay ? task.name : `${task.name} (cont.)`;
+    if (isStartDay) {
+      return task.name;
+    }
+
+    const taskStartsThisWeek = startOfWeek(task.startDate).getTime() === startOfWeek(day).getTime();
+    return taskStartsThisWeek ? task.name : `${task.name} (cont.)`;
+  };
+
+  const isCalendarDayInRange = (day: Date) => {
+    const normalizedDay = normalizeDate(day).getTime();
+    return normalizedDay >= normalizeDate(calendarPeriodStart).getTime()
+      && normalizedDay <= normalizeDate(calendarPeriodEnd).getTime();
+  };
+
+  const getCalendarDayLabel = (day: Date) => {
+    const normalizedDay = normalizeDate(day).getTime();
+    const normalizedStart = normalizeDate(calendarPeriodStart).getTime();
+    return day.getDate() === 1 || normalizedDay === normalizedStart ? format(day, "MMM d") : format(day, "d");
+  };
+
+  const getPreviousVisibleCalendarDay = (day: Date) => {
+    const gridStartTime = normalizeDate(calendarGridStart).getTime();
+    let candidate = addDays(day, -1);
+
+    while (normalizeDate(candidate).getTime() >= gridStartTime) {
+      if (showWeekends || !isWeekendDate(candidate)) {
+        return candidate;
+      }
+      candidate = addDays(candidate, -1);
+    }
+
+    return null;
+  };
+
+  const isCalendarMonthStartDay = (day: Date) => {
+    const normalizedDay = normalizeDate(day).getTime();
+    const normalizedStart = normalizeDate(calendarPeriodStart).getTime();
+    if (day.getDate() === 1 || normalizedDay === normalizedStart) {
+      return true;
+    }
+
+    const previousVisibleDay = getPreviousVisibleCalendarDay(day);
+    if (!previousVisibleDay) {
+      return false;
+    }
+
+    return previousVisibleDay.getMonth() !== day.getMonth()
+      || previousVisibleDay.getFullYear() !== day.getFullYear();
+  };
+
+  const getCalendarWeekTaskSegments = (week: Date[]) => {
+    const visibleDays = week.filter((day) => showWeekends || !isWeekendDate(day));
+    const normalizedVisibleDays = visibleDays.map((day) => normalizeDate(day).getTime());
+
+    const segments = timelineTasks
+      .map((task) => {
+        const normalizedStart = normalizeDate(task.startDate).getTime();
+        const normalizedEnd = normalizeDate(task.endDate).getTime();
+
+        const startIndex = normalizedVisibleDays.findIndex((dayTime) => dayTime >= normalizedStart);
+        let endIndex = -1;
+
+        for (let index = normalizedVisibleDays.length - 1; index >= 0; index -= 1) {
+          if (normalizedVisibleDays[index] <= normalizedEnd) {
+            endIndex = index;
+            break;
+          }
+        }
+
+        if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
+          return null;
+        }
+
+        return {
+          task,
+          startIndex,
+          endIndex,
+        };
+      })
+      .filter((segment): segment is { task: Task; startIndex: number; endIndex: number } => segment !== null)
+      .sort((a, b) => (a.task.displayOrder || 0) - (b.task.displayOrder || 0));
+
+    const occupiedLanes: Array<Array<{ startIndex: number; endIndex: number }>> = [];
+
+    return segments.map((segment) => {
+      let lane = 0;
+
+      while (true) {
+        const laneSegments = occupiedLanes[lane] || [];
+        const overlapsExisting = laneSegments.some(
+          (existing) => !(segment.endIndex < existing.startIndex || segment.startIndex > existing.endIndex)
+        );
+
+        if (!overlapsExisting) {
+          laneSegments.push({ startIndex: segment.startIndex, endIndex: segment.endIndex });
+          occupiedLanes[lane] = laneSegments;
+          return {
+            ...segment,
+            lane,
+          };
+        }
+
+        lane += 1;
+      }
+    });
   };
 
   // ==================== RENDER ====================
@@ -1173,19 +1278,73 @@ function App() {
         )}
         {view === "calendar" && (
           <div className="month-nav">
-            <button onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>Previous</button>
-            <DatePicker
-              selected={currentMonth}
-              onChange={(date) => setCurrentMonth(startOfMonth(date || new Date()))}
-              dateFormat="MMM yyyy"
-              showMonthYearPicker
-              customInput={
-                <button style={{ padding: "8px 12px", cursor: "pointer" }}>
-                  {format(currentMonth, "MMM yyyy")}
-                </button>
+            <button onClick={() => {
+              setUseCustomCalendarRange(!useCustomCalendarRange);
+              if (useCustomCalendarRange) {
+                setCustomCalendarStart(null);
+                setCustomCalendarEnd(null);
+              } else if (tasks.length > 0) {
+                const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
+                const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
+                const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
+                setCustomCalendarStart(minDate);
+                setCustomCalendarEnd(maxDate);
+              } else {
+                setCustomCalendarStart(new Date());
+                setCustomCalendarEnd(addMonths(new Date(), 1));
               }
-            />
-            <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>Next</button>
+            }}>
+              {useCustomCalendarRange ? "Use Month Span" : "Use Date Range"}
+            </button>
+            {!useCustomCalendarRange && (
+              <>
+                <button onClick={() => setCurrentMonth(addMonths(currentMonth, -calendarMonthSpan))}>Previous</button>
+                <DatePicker
+                  selected={currentMonth}
+                  onChange={(date) => setCurrentMonth(startOfMonth(date || new Date()))}
+                  dateFormat="MMM yyyy"
+                  showMonthYearPicker
+                  customInput={
+                    <button style={{ padding: "8px 12px", cursor: "pointer" }}>
+                      {format(startOfMonth(currentMonth), "MMM yyyy")} - {format(endOfMonth(addMonths(currentMonth, calendarMonthSpan - 1)), "MMM yyyy")}
+                    </button>
+                  }
+                />
+                <button onClick={() => setCurrentMonth(addMonths(currentMonth, calendarMonthSpan))}>Next</button>
+                <input
+                  type="number"
+                  value={calendarMonthSpan}
+                  onChange={(e) => setCalendarMonthSpan(Math.max(1, Number(e.target.value)))}
+                  min="1"
+                  style={{ width: "60px", padding: "8px" }}
+                />
+                <span>Months</span>
+              </>
+            )}
+            {useCustomCalendarRange && (
+              <DatePicker
+                selectsRange={true}
+                startDate={customCalendarStart || undefined}
+                endDate={customCalendarEnd || undefined}
+                popperPlacement="bottom-start"
+                popperClassName="month-date-picker-popper"
+                onChange={(dates) => {
+                  const [start, end] = dates;
+                  setCustomCalendarStart(start);
+                  setCustomCalendarEnd(end);
+                }}
+                dateFormat="MMM dd, yyyy"
+                customInput={
+                  <button style={{ padding: "8px 12px", cursor: "pointer" }}>
+                    {customCalendarStart && customCalendarEnd
+                      ? `${format(customCalendarStart, "MMM dd")} - ${format(customCalendarEnd, "MMM dd, yyyy")}`
+                      : customCalendarStart
+                        ? `${format(customCalendarStart, "MMM dd, yyyy")} - ...`
+                        : "Select date range"}
+                  </button>
+                }
+              />
+            )}
             <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
             <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
             <button
@@ -2523,12 +2682,10 @@ function App() {
               })()}
             {view === "calendar" &&
               (() => {
-                const visibleTasks = timelineTasks.filter((task) => task.startDate <= calendarGridEnd && task.endDate >= calendarGridStart);
                 const visibleCalendarDays = (week: Date[]) => week.filter((day) => showWeekends || !isWeekendDate(day));
 
                 return (
                   <div className="calendar-board">
-                    <div className="calendar-helper-text">Calendar view shows tasks on each day they overlap.</div>
                     <div
                       className="calendar-grid calendar-grid-header"
                       style={{ gridTemplateColumns: `repeat(${showWeekends ? 7 : 5}, minmax(0, 1fr))` }}
@@ -2542,66 +2699,106 @@ function App() {
                       ))}
                     </div>
                     {calendarWeeks.map((week, weekIndex) => (
-                      <div
-                        key={`calendar-week-${weekIndex}`}
-                        className="calendar-grid"
-                        style={{ gridTemplateColumns: `repeat(${showWeekends ? 7 : 5}, minmax(0, 1fr))` }}
-                      >
-                        {visibleCalendarDays(week).map((day, index, days) => {
-                          const tasksForDay = visibleTasks.filter((task) => isTaskVisibleOnDay(task, day));
+                      (() => {
+                        const visibleDays = visibleCalendarDays(week);
+                        const weekTaskSegments = getCalendarWeekTaskSegments(week);
+                        const laneCount = weekTaskSegments.length > 0
+                          ? Math.max(...weekTaskSegments.map((segment) => segment.lane)) + 1
+                          : 0;
+                        const gridTemplateRows = laneCount > 0
+                          ? `36px repeat(${laneCount}, 36px) 6px`
+                          : "56px";
 
-                          return (
-                            <div
-                              key={day.toISOString()}
-                              className={`calendar-day-cell${isSameMonth(day, currentMonth) ? "" : " calendar-day-cell--outside"}`}
-                              style={index === days.length - 1 ? { borderRight: "none" } : undefined}
-                            >
-                              <div className="calendar-day-number">{format(day, "d")}</div>
-                              <div className="calendar-day-tasks">
-                                {tasksForDay.map((task) => {
-                                  const colorHex = task.categoryHex || task.phaseHex;
-                                  const colorValue = colorHex ? `#${colorHex}` : "var(--accent-primary)";
-                                  const isSelected = selectedTimelineTaskId === task.id;
+                        return (
+                          <div
+                            key={`calendar-week-${weekIndex}`}
+                            className="calendar-week-row calendar-week-grid"
+                            style={{
+                              gridTemplateColumns: `repeat(${visibleDays.length}, minmax(0, 1fr))`,
+                              gridTemplateRows,
+                            }}
+                          >
+                            {visibleDays.map((day, index) => (
+                              (() => {
+                                const isMonthStart = isCalendarMonthStartDay(day);
 
-                                  return (
-                                    <button
-                                      key={`${task.id}-${day.toISOString()}`}
-                                      type="button"
-                                      className={`calendar-task-chip${isSelected ? " calendar-task-chip--selected" : ""}`}
-                                      aria-pressed={isSelected}
-                                      onClick={() => toggleTimelineTaskSelection(task.id)}
-                                      title={[
-                                        `Task: ${task.name}`,
-                                        task.phase ? `Phase: ${task.phase}` : "",
-                                        task.category ? `Category: ${task.category}` : "",
-                                        task.owner ? `Owner: ${task.owner}` : "",
-                                        `Start: ${format(task.startDate, "MMM dd, yyyy")}`,
-                                        `End: ${format(task.endDate, "MMM dd, yyyy")}`,
-                                      ].filter(Boolean).join("\n")}
-                                      style={{
-                                        backgroundColor: blendHexWithWhite(colorHex),
-                                        borderColor: colorValue,
-                                        color: "var(--text-primary)",
-                                        opacity: selectedTimelineTaskId !== null && !isSelected ? 0.78 : 1,
-                                      }}
-                                    >
-                                      <span className="calendar-task-chip-dot" style={{ backgroundColor: colorValue }}></span>
-                                      <span className="calendar-task-chip-label">{getCalendarChipLabel(task, day)}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                                return (
+                                  <div
+                                    key={day.toISOString()}
+                                    className={`calendar-day-cell${isCalendarDayInRange(day) ? "" : " calendar-day-cell--outside"}${isMonthStart ? " calendar-day-cell--month-start" : ""}`}
+                                    style={{
+                                      gridColumn: `${index + 1}`,
+                                      gridRow: `1 / ${laneCount + 3}`,
+                                    }}
+                                  >
+                                    {isMonthStart ? (
+                                      <div className="calendar-day-number calendar-day-number--month-start">
+                                        <span className="calendar-day-month">{format(day, "MMM")}</span>
+                                        <span className="calendar-day-date">{format(day, "d")}</span>
+                                      </div>
+                                    ) : (
+                                      <div className="calendar-day-number">{getCalendarDayLabel(day)}</div>
+                                    )}
+                                  </div>
+                                );
+                              })()
+                            ))}
+                            {weekTaskSegments.map(({ task, startIndex, endIndex, lane }) => {
+                              const colorHex = task.categoryHex || task.phaseHex;
+                              const colorValue = colorHex ? `#${colorHex}` : "var(--accent-primary)";
+                              const isSelected = selectedTimelineTaskId === task.id;
+                              const segmentStartDay = visibleDays[startIndex];
+                              const taskStartsBeforeSegment = normalizeDate(task.startDate).getTime() < normalizeDate(segmentStartDay).getTime();
+                              const taskEndsAfterSegment = normalizeDate(task.endDate).getTime() > normalizeDate(visibleDays[endIndex]).getTime();
+
+                              return (
+                                <button
+                                  key={`${task.id}-week-${weekIndex}`}
+                                  type="button"
+                                  className={`calendar-task-chip${isSelected ? " calendar-task-chip--selected" : ""}`}
+                                  aria-pressed={isSelected}
+                                  onClick={() => toggleTimelineTaskSelection(task.id)}
+                                  title={[
+                                    `Task: ${task.name}`,
+                                    task.phase ? `Phase: ${task.phase}` : "",
+                                    task.category ? `Category: ${task.category}` : "",
+                                    task.owner ? `Owner: ${task.owner}` : "",
+                                    `Start: ${format(task.startDate, "MMM dd, yyyy")}`,
+                                    `End: ${format(task.endDate, "MMM dd, yyyy")}`,
+                                  ].filter(Boolean).join("\n")}
+                                  style={{
+                                    gridColumn: `${startIndex + 1} / ${endIndex + 2}`,
+                                    gridRow: `${lane + 2}`,
+                                    alignSelf: "center",
+                                    backgroundColor: blendHexWithWhite(colorHex),
+                                    borderColor: colorValue,
+                                    color: "var(--text-primary)",
+                                    opacity: selectedTimelineTaskId !== null && !isSelected ? 0.78 : 1,
+                                  }}
+                                >
+                                  <span className="calendar-task-chip-dot" style={{ backgroundColor: colorValue }}></span>
+                                  {taskStartsBeforeSegment && (
+                                    <span className="calendar-task-arrow calendar-task-arrow--start">◀</span>
+                                  )}
+                                  <span className="calendar-task-chip-label">{getCalendarChipLabel(task, segmentStartDay)}</span>
+                                  {taskEndsAfterSegment && (
+                                    <span className="calendar-task-arrow calendar-task-arrow--end">▶</span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()
                     ))}
-                    <div className="calendar-footer-note">
-                      Tasks are saved in this browser only. Export CSV when you need a portable copy or backup.
-                    </div>
                   </div>
                 );
               })()}
+            {view === "calendar" && (
+              <div className="calendar-footer-note">
+                Tasks are saved in this browser only. Export CSV when you need a portable copy or backup.
+              </div>
+            )}
           </div>
         )}
 
@@ -2612,27 +2809,24 @@ function App() {
           // Get unique categories from visible tasks
           const visibleCategories = Array.from(new Set(visibleLegendTasks.map(t => t.category).filter(Boolean)));
           if (visibleCategories.length === 0) return null;
-          
+
           return (
             <div style={{ marginTop: "1rem", padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
               <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Category Key:</h4>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
                 {visibleCategories.map((category) => {
-                  const categoryTask = timelineTasks.find((t) => t.category === category);
-                  const hexColor = categoryTask?.categoryHex ? `#${categoryTask.categoryHex}` : "var(--color-blue-500)";
+                  const taskWithCategory = visibleLegendTasks.find(t => t.category === category);
+                  const color = taskWithCategory?.categoryHex ? `#${taskWithCategory.categoryHex}` : 'var(--task-bg-fallback)';
                   return (
-                    <div key={category} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                      <div
-                        style={{
-                          width: "24px",
-                          height: "24px",
-                          backgroundColor: hexColor,
-                          borderRadius: "4px",
-                          border: "2px solid var(--border-overlay-light)",
-                          flexShrink: 0,
-                        }}
-                      ></div>
-                      <span style={{ color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 500, lineHeight: "24px" }}>{category}</span>
+                    <div key={category} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{
+                        width: "20px",
+                        height: "20px",
+                        backgroundColor: color,
+                        borderRadius: "3px",
+                        border: "1px solid var(--border-medium)"
+                      }} />
+                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem" }}>{category}</span>
                     </div>
                   );
                 })}
@@ -2646,23 +2840,21 @@ function App() {
           <div style={{ marginTop: "1rem", padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
             <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Phase Key:</h4>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
-              {visibleLegendPhases.map((phase) => {
-                return (
-                  <div key={phase} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                    <div
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        backgroundColor: "var(--color-gray-900)",
-                        borderRadius: "4px",
-                        border: "2px solid var(--border-overlay-light)",
-                        flexShrink: 0,
-                      }}
-                    ></div>
-                    <span style={{ color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 500, lineHeight: "24px" }}>{phase}</span>
-                  </div>
-                );
-              })}
+              {visibleLegendPhases.map((phase) => (
+                <div key={phase} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      backgroundColor: "var(--color-gray-900)",
+                      borderRadius: "4px",
+                      border: "2px solid var(--border-overlay-light)",
+                      flexShrink: 0,
+                    }}
+                  ></div>
+                  <span style={{ color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 500, lineHeight: "24px" }}>{phase}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
