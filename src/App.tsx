@@ -288,7 +288,6 @@ function App() {
   const [useCustomCalendarRange] = useState(false);
   const [customCalendarStart] = useState<Date | null>(null);
   const [customCalendarEnd] = useState<Date | null>(null);
-  const showDevTaskButton = import.meta.env.DEV;
 
   // v2 layout shell state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
@@ -456,7 +455,9 @@ function App() {
       {
         id: newId,
         phase: "Test Phase",
+        phaseHex: "007acc",
         category: "Test Category",
+        categoryHex: "007acc",
         name: "Test Task",
         startDate: new Date(),
         endDate: addDays(new Date(), 7),
@@ -3393,9 +3394,6 @@ function App() {
             )}
             <button className="v2-panel-add" onClick={(e) => { e.stopPropagation(); addTask(); }}>+ Add task</button>
             <button className="v2-panel-export" onClick={(e) => { e.stopPropagation(); exportTasks(); }}>Export CSV</button>
-            {showDevTaskButton && (
-              <button style={{ fontSize: "11px" }} onClick={(e) => { e.stopPropagation(); addTestTask(); }}>Dev task</button>
-            )}
             <button
               className={`v2-btn v2-btn-ghost v2-btn-icon${showColorsPanel ? " v2-btn-active" : ""}`}
               onClick={(e) => { e.stopPropagation(); setShowColorsPanel((p) => !p); }}
@@ -3563,7 +3561,8 @@ function App() {
               <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setTaskSettingsDisplayExpanded(p => !p)}>
                 <span>Display</span><span style={{ fontSize: "14px" }}>{taskSettingsDisplayExpanded ? "▾" : "▸"}</span>
               </div>
-              {taskSettingsDisplayExpanded && <div className="v2-toggle-row">
+              {taskSettingsDisplayExpanded && <>
+              <div className="v2-toggle-row">
                 <span className="v2-toggle-label">Show hex columns</span>
                 <input
                   type="checkbox"
@@ -3571,7 +3570,17 @@ function App() {
                   onChange={(e) => setShowHexColumns(e.target.checked)}
                   style={{ cursor: "pointer", width: "14px", height: "14px" }}
                 />
-              </div>}
+              </div>
+              {import.meta.env.DEV && (
+                <button
+                  className="v2-btn-sm"
+                  style={{ width: "100%", marginTop: "6px" }}
+                  onClick={() => { addTestTask(); setShowColorsPanel(false); }}
+                >
+                  Add test task
+                </button>
+              )}
+              </>}
             </div>
 
             <hr className="v2-divider" />
