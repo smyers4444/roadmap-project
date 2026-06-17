@@ -2110,13 +2110,6 @@ function App() {
                 />
               </div>
               <div className="v2-toggle-row">
-                <span className="v2-toggle-label">Show hex columns</span>
-                <div
-                  className={`v2-toggle${showHexColumns ? " on" : ""}`}
-                  onClick={() => setShowHexColumns((p) => !p)}
-                />
-              </div>
-              <div className="v2-toggle-row">
                 <span className="v2-toggle-label">Relative timeline (Week 1, 2, ...)</span>
                 <div
                   className={`v2-toggle${useRelativeTimeline ? " on" : ""}`}
@@ -3405,6 +3398,14 @@ function App() {
                 )}
               </span>
             )}
+            <button
+              className="v2-toggle"
+              style={{ marginLeft: "8px", width: "20px", height: "12px" }}
+              title={showHexColumns ? "Hide hex columns" : "Show hex columns"}
+              onClick={(e) => { e.stopPropagation(); setShowHexColumns((p) => !p); }}
+              aria-pressed={showHexColumns}
+            />
+            <span style={{ fontSize: "11px", color: "#888", marginLeft: "4px" }}>Hex</span>
             <button className="v2-panel-add" onClick={(e) => { e.stopPropagation(); addTask(); }}>+ Add task</button>
             <button className="v2-panel-export" onClick={(e) => { e.stopPropagation(); exportTasks(); }}>Export CSV</button>
             {showDevTaskButton && (
