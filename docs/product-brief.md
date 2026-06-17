@@ -324,10 +324,11 @@ User-reported issues and refinements for screenshot workflow and general usabili
 | # | Item | Type | Priority | Notes |
 |---|------|------|----------|-------|
 | DF1 | Change view defaults | Config | Medium | Current: weekly/horizontal. Desired: monthly/stacked with weekends OFF and compact rows ON. Better matches most common screenshot workflow. |
+| DF2 | Range Mode default: Fit to data | Config | Medium | Current: rolling span. Desired: "Fit to data" (auto-spans earliest → latest task). More intuitive for one-off imports. |
 
 ### Summary
 
-**Quick wins (low effort):** LY1 (white bg), LY2 (100% width), HD1 (icon), TP1 (lines), TP4 (buttons), TL1/TL2 (phase header removal), DF1 (defaults)
+**Quick wins (low effort):** LY1 (white bg), LY2 (100% width), HD1 (icon), TP1 (lines), TP4 (buttons), TL1/TL2 (phase header removal), DF1/DF2 (defaults)
 
 **Medium lift:** TP2 (column widths), TP3 (increment buttons), TP5 (settings reorganization), ST1 (settings IA), ST2 (dropdown)
 
