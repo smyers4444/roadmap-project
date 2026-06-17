@@ -103,14 +103,19 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 
 ## Next Steps
 
-1. **Phase 6 — Settings-reorg cluster** (Haiku): TP2, TP3, TP5, ST1, ST2. Verify state wiring; pull back to Sonnet if state management breaks on JSX moves.
-   - **TP2** — Expand "Line Padding" column visibility in task table
-   - **TP3** — Add +/−0.25 increment buttons for Line Padding input
-   - **TP5** — Move "Show hex columns" toggle from timeline → task panel settings
-   - **ST1** — Move color palette UI from timeline settings → task panel
-   - **ST2** — Convert range mode radios to dropdown (after DF2 lands)
-2. **Scope LY3/TL4** (Sonnet) — "Stacked" header tab overlap, week-number labels in monthly view header.
-3. **Defer TL3/TL5** until day-column width and day-header label decisions are made.
+**Recommended order (each item = separate commit):**
+
+1. **TP2** — Expand "Line Padding" column visibility in task table (CSS column width adjustment)
+2. **TP3** — Add +/−0.25 increment buttons for Line Padding input (UI + state wiring)
+3. **TP5** — Move "Show hex columns" toggle from timeline → task panel settings (JSX move; watch state)
+4. **ST1** — Move color palette UI from timeline settings → task panel (JSX move; watch state)
+5. **ST2** — Convert range mode radios to dropdown (UI refactor; DF2 dependency already landed)
+
+**If state wiring breaks on TP5/ST1 JSX moves:** flag for Sonnet and defer that item.
+
+**After settings-reorg cluster:**
+- **Scope LY3/TL4** (Sonnet) — "Stacked" header tab overlap, week-number labels in monthly view header.
+- **Defer TL3/TL5** until day-column width and day-header label decisions are made.
 
 ## New Chat Start
 
