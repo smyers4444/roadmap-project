@@ -93,7 +93,7 @@
  */
 
 // React imports
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 // Third-party component for date selection
 import DatePicker from "react-datepicker";
@@ -243,7 +243,7 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>(() => loadStoredTasks());
 
   // Timeline view mode: "weeks" or "months"
-  const [view, setView] = useState<"weeks" | "months" | "calendar">("weeks");
+  const [view, setView] = useState<"weeks" | "months" | "calendar">("months");
 
   // Current week/month being displayed in the timeline
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date()));
@@ -272,8 +272,8 @@ function App() {
   // Toggle between showing week numbers or dates in weekly view
   const [showWeekNumbers, setShowWeekNumbers] = useState(false);
   const [showMonthNumbers, setShowMonthNumbers] = useState(false);
-  const [showWeekends, setShowWeekends] = useState(true);
-  const [timelineLayout, setTimelineLayout] = useState<"horizontal" | "stacked">("horizontal");
+  const [showWeekends, setShowWeekends] = useState(false);
+  const [timelineLayout, setTimelineLayout] = useState<"horizontal" | "stacked">("stacked");
   const [monthStackSplit, setMonthStackSplit] = useState<"day" | "week">("day");
   
   // Toggle for showing/hiding phase labels and colors
@@ -292,11 +292,12 @@ function App() {
 
   // v2 layout shell state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showColorsPanel, setShowColorsPanel] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [compactTaskSpacing, setCompactTaskSpacing] = useState(true);
-  const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("rolling");
+  const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("fit");
 
   // N4: Relative timeline mode (Week 1 / Month 1 instead of dates)
   const [useRelativeTimeline, setUseRelativeTimeline] = useState(false);
@@ -306,10 +307,16 @@ function App() {
     "FF6B6B", "4ECDC4", "45B7D1", "FFA07A", "98D8C8", "F7DC6F", "BB8FCE", "85C1E2",
   ]); // Palette of hex codes without # prefix
   const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({}); // category name -> palette index
+  const [phaseHexMap, setPhaseHexMap] = useState<Record<string, string>>({}); // phase name -> hex color
+  const [categoryHexMap, setCategoryHexMap] = useState<Record<string, string>>({}); // category name -> hex color
   const [showHexColumns, setShowHexColumns] = useState(true);
 
   // L1: Presentation mode (hide all controls)
   const [presentationMode, setPresentationMode] = useState(false);
+
+  // Compute unique phases and categories from tasks
+  const phases = Array.from(new Set(tasks.map((t) => t.phase).filter(Boolean))) as string[];
+  const categories = Array.from(new Set(tasks.map((t) => t.category).filter(Boolean))) as string[];
 
   useEffect(() => {
     try {
@@ -851,6 +858,13 @@ function App() {
     return Math.round((targetWeek.getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
   };
 
+  const getRelativeWeekNumberFromAnchor = (date: Date, anchorDate: Date) => {
+    const anchorWeek = startOfWeek(anchorDate);
+    const targetWeek = startOfWeek(date);
+
+    return Math.round((targetWeek.getTime() - anchorWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  };
+
   const getRelativeMonthNumber = (date: Date, taskList: Task[]) => {
     if (taskList.length === 0) return 1;
 
@@ -861,6 +875,16 @@ function App() {
     return (targetMonth.getFullYear() - firstTaskMonth.getFullYear()) * 12
       + (getMonth(targetMonth) - getMonth(firstTaskMonth))
       + 1;
+  };
+
+  const formatCompactMonthRange = (start: Date, end: Date) => {
+    const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
+
+    if (sameMonth) {
+      return `${format(start, "MMM d")} – ${end.getDate()}`;
+    }
+
+    return `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
   };
 
   const getWeeklyPeriodEnd = () => addDays(currentWeek, weekSpan * 7 - 1);
@@ -954,6 +978,39 @@ function App() {
         title: isSingleDay
           ? format(firstUnit.start, "MMM dd, yyyy")
           : `${format(firstUnit.start, "MMM dd, yyyy")} - ${format(lastUnit.start, "MMM dd, yyyy")}`,
+      };
+    });
+  };
+
+  const getWeekHeaderGroupsForDays = (days: Date[]): TimelineHeaderGroup[] => {
+    const groups: TimelineHeaderGroup[] = [];
+
+    days.forEach((day) => {
+      const weekKey = startOfWeek(day).toISOString();
+      const existingGroup = groups[groups.length - 1];
+
+      if (!existingGroup || existingGroup.key !== weekKey) {
+        groups.push({
+          key: weekKey,
+          label: "",
+          title: "",
+          span: 1,
+        });
+        return;
+      }
+
+      existingGroup.span += 1;
+    });
+
+    return groups.map((group, index) => {
+      const groupDays = days.filter((day) => startOfWeek(day).toISOString() === group.key);
+      const firstDay = groupDays[0];
+      const lastDay = groupDays[groupDays.length - 1];
+
+      return {
+        ...group,
+        label: `Week ${index + 1}`,
+        title: `${format(firstDay, "MMM dd, yyyy")} - ${format(lastDay, "MMM dd, yyyy")}`,
       };
     });
   };
@@ -1609,7 +1666,7 @@ function App() {
     showInnerUnitGridlines = true,
   }: {
     periodKey: string;
-    title: string;
+    title: ReactNode;
     units: TimelineUnit[];
     periodStart: Date;
     periodEnd: Date;
@@ -1654,10 +1711,12 @@ function App() {
                     style={{
                       gridColumn: `span ${group.span}`,
                       borderRight: index < headerGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
+                      fontWeight: 500,
+                      color: "var(--text-secondary)",
                     }}
                     title={group.title}
                   >
-                    {group.label}
+                    ({group.label})
                   </div>
                 ))
                 : units.map((unit, index) => {
@@ -1875,7 +1934,7 @@ function App() {
 
   // ==================== RENDER ====================
 
-  const activeTab = timelineLayout === "stacked" ? "stacked" : view === "weeks" ? "weekly" : "monthly";
+  const activeTab = view === "weeks" ? "weekly" : "monthly";
 
   return (
     <div className="app" style={{ paddingTop: presentationMode ? "40px" : "0" }}>
@@ -1887,24 +1946,15 @@ function App() {
           <div className="v2-view-tabs">
             <button
               className={`v2-tab${activeTab === "weekly" ? " active" : ""}`}
-              onClick={() => { setView("weeks"); setTimelineLayout("horizontal"); }}
+              onClick={() => setView("weeks")}
             >
               Weekly
             </button>
             <button
               className={`v2-tab${activeTab === "monthly" ? " active" : ""}`}
-              onClick={() => { setView("months"); setTimelineLayout("horizontal"); }}
+              onClick={() => setView("months")}
             >
               Monthly
-            </button>
-            <button
-              className={`v2-tab${activeTab === "stacked" ? " active" : ""}`}
-              onClick={() => {
-                setTimelineLayout("stacked");
-                if (view === "calendar") setView("months");
-              }}
-            >
-              Stacked
             </button>
           </div>
           <div className="v2-header-actions">
@@ -1912,23 +1962,31 @@ function App() {
               className="v2-btn v2-btn-ghost"
               onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
             >
-              ⬇ Import
+              Import
             </button>
             <button
-              className={`v2-btn v2-btn-ghost${showSettingsPanel ? " v2-btn-active" : ""}`}
+              className={`v2-btn v2-btn-ghost v2-btn-icon${showSettingsPanel ? " v2-btn-active" : ""}`}
               onClick={() => setShowSettingsPanel((p) => !p)}
+              title="Settings"
             >
-              ⚙
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
             </button>
             <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
               Export CSV
             </button>
             <button
-              className="v2-btn v2-btn-ghost"
+              className="v2-btn v2-btn-ghost v2-btn-icon"
               onClick={() => setPresentationMode(true)}
               title="Presentation mode (Ctrl+P)"
             >
-              🎬
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
             </button>
           </div>
         </header>
@@ -1965,49 +2023,42 @@ function App() {
             {/* Range mode (N1) */}
             <div className="v2-settings-section">
               <div className="v2-settings-heading">Range mode</div>
-              <label className="v2-radio-label">
-                <input
-                  type="radio"
-                  name="rangemode"
-                  checked={rangeMode === "fit"}
-                  onChange={() => {
+              <select
+                value={rangeMode}
+                onChange={(e) => {
+                  const newMode = e.target.value as typeof rangeMode;
+                  if (newMode === "fit") {
                     setRangeMode("fit");
                     if (view === "weeks") {
                       const bounds = getTaskDateBounds(tasks);
                       if (!bounds) {
                         return;
                       }
-
                       setCurrentWeek(startOfWeek(bounds.start));
                       setWeekSpan(Math.max(1, Math.ceil((bounds.end.getTime() - startOfWeek(bounds.start).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1));
                     }
-                  }}
-                />
-                {" "}Fit to data
-              </label>
-              <label className="v2-radio-label">
-                <input
-                  type="radio"
-                  name="rangemode"
-                  checked={rangeMode === "range"}
-                  onChange={() => setRangeMode("range")}
-                />
-                {" "}Specific date range
-              </label>
-              <label className="v2-radio-label">
-                <input
-                  type="radio"
-                  name="rangemode"
-                  checked={rangeMode === "rolling"}
-                  onChange={() => {
+                  } else if (newMode === "rolling") {
                     setRangeMode("rolling");
                     setUseCustomMonthRange(false);
                     setCustomMonthStart(null);
                     setCustomMonthEnd(null);
-                  }}
-                />
-                {" "}Rolling span
-              </label>
+                  } else {
+                    setRangeMode(newMode);
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  padding: "6px 8px",
+                  fontSize: "11px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                <option value="fit">Fit to data</option>
+                <option value="range">Specific date range</option>
+                <option value="rolling">Rolling span</option>
+              </select>
               {rangeMode === "range" && view !== "weeks" && (
                 <div style={{ marginTop: "6px" }}>
                   <DatePicker
@@ -2110,13 +2161,6 @@ function App() {
                 />
               </div>
               <div className="v2-toggle-row">
-                <span className="v2-toggle-label">Show hex columns</span>
-                <div
-                  className={`v2-toggle${showHexColumns ? " on" : ""}`}
-                  onClick={() => setShowHexColumns((p) => !p)}
-                />
-              </div>
-              <div className="v2-toggle-row">
                 <span className="v2-toggle-label">Relative timeline (Week 1, 2, ...)</span>
                 <div
                   className={`v2-toggle${useRelativeTimeline ? " on" : ""}`}
@@ -2174,67 +2218,6 @@ function App() {
                     Phase
                   </button>
                 </div>
-              </div>
-            </div>
-
-            <hr className="v2-divider" />
-
-            {/* C2: Palette */}
-            <div className="v2-settings-section">
-              <div className="v2-settings-heading">Color Palette</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "10px" }}>
-                {colorPalette.map((hex, idx) => (
-                  <div
-                    key={idx}
-                    title={hex}
-                    style={{
-                      width: "100%",
-                      aspectRatio: "1",
-                      backgroundColor: `#${hex}`,
-                      borderRadius: "4px",
-                      border: "1px solid #ddd",
-                      cursor: "default",
-                    }}
-                  />
-                ))}
-              </div>
-              <div style={{ fontSize: "11px", color: "#666", lineHeight: "1.4" }}>
-                <strong>Categories mapped:</strong>
-                <br />
-                {Object.entries(categoryColorMap).length > 0 ? (
-                  <div style={{ marginTop: "8px" }}>
-                    {Object.entries(categoryColorMap).map(([cat, idx]) => {
-                      const paletteIdx = parseInt(idx, 10);
-                      return (
-                        <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                          <span style={{ fontSize: "11px", flex: 1 }}>{cat}</span>
-                          <select
-                            value={paletteIdx}
-                            onChange={(e) => {
-                              const newIdx = parseInt(e.target.value, 10);
-                              setCategoryColorMap({ ...categoryColorMap, [cat]: String(newIdx) });
-                            }}
-                            style={{
-                              padding: "2px 4px",
-                              fontSize: "10px",
-                              border: "1px solid #ddd",
-                              borderRadius: "3px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            {colorPalette.map((_, i) => (
-                              <option key={i} value={i}>
-                                {i + 1}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <em style={{ color: "#999", fontSize: "11px" }}>No categories yet</em>
-                )}
               </div>
             </div>
 
@@ -2922,10 +2905,11 @@ function App() {
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
                 const taskHeights = new Map<number, number>();
-                const debugInfo = new Map<number, string>();
-                visibleTasks.forEach((task) => {
-                  const position = getMonthTaskPosition(task);
-                  if (!position) return;
+                  const debugInfo = new Map<number, string>();
+                  const weekHeaderGroups = getWeekHeaderGroupsForDays(visibleMonthlyDays);
+                  visibleTasks.forEach((task) => {
+                    const position = getMonthTaskPosition(task);
+                    if (!position) return;
                   const { width } = position;
                   const actualWidth = (width / 100) * 1800; // Approximate pixel width
                   const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
@@ -2979,27 +2963,55 @@ function App() {
                     <div 
                       className="board-header"
                       style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
+                        display: "flex",
+                        flexDirection: "column",
                       }}
                     >
-                      {monthColumns.map((month, index) => {
-                        // Calculate month number relative to first task or just use index
-                        const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
-                        
-                        return (
-                          <div 
-                            key={index} 
-                            className="day-header"
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
+                        }}
+                      >
+                        {monthColumns.map((month, index) => {
+                          const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
+
+                          return (
+                          <div
+                              key={`month-${month.toISOString()}`}
+                              className="day-header day-header--compact"
                             style={{
-                              borderRight: index < monthColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
+                                borderRight: index < monthColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
+                                fontSize: "0.8rem",
+                              }}
+                              title={`${format(month, "MMM dd, yyyy")} – ${format(endOfMonth(month), "MMM dd, yyyy")}`}
+                            >
+                              {showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMM yyyy")}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: `repeat(${weekHeaderGroups.length}, 1fr)`,
+                        }}
+                      >
+                        {weekHeaderGroups.map((group, index) => (
+                          <div
+                            key={`month-week-${group.key}`}
+                            className="day-header day-header--compact"
+                            style={{
+                              borderRight: index < weekHeaderGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
+                              fontSize: "0.75rem",
+                              color: "var(--text-secondary)",
                             }}
-                            title={`${format(month, "MMM dd, yyyy")} – ${format(endOfMonth(month), "MMM dd, yyyy")}`}
+                            title={group.title}
                           >
-                            {showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMM yyyy")}
+                            {group.label}
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
 
                     {/* ========== PHASE SECTIONS ========== */}
@@ -3174,6 +3186,7 @@ function App() {
                     ? (units[units.length - 1]?.end ?? normalizeDate(endOfMonth(month)))
                     : normalizeDate(endOfMonth(month));
                   const headerGroups = isWeekSplit ? getWeekHeaderGroupsForUnits(units) : undefined;
+                  const monthRangeStart = monthColumns[0] ?? currentMonth;
                   const periodTasks = timelineTasks.filter((task) => {
                     if (task.startDate > periodEnd || task.endDate < periodStart) {
                       return false;
@@ -3184,9 +3197,24 @@ function App() {
 
                   return renderStackedTimelineBoard({
                     periodKey: `month-${month.toISOString()}`,
-                    title: showMonthNumbers
-                      ? `Month ${getRelativeMonthNumber(month, tasks)}`
-                      : `${format(periodStart, "MMM d")} - ${format(periodEnd, "MMM d, yyyy")}`,
+                    title: (
+                      <>
+                        <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>
+                          {showMonthNumbers
+                            ? `Month ${getRelativeMonthNumber(month, tasks)}`
+                            : `${formatCompactMonthRange(periodStart, periodEnd)}, ${format(periodEnd, "yyyy")}`}
+                        </span>
+                        <span
+                          style={{
+                            marginLeft: "12px",
+                            fontWeight: 400,
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          weeks {getRelativeWeekNumberFromAnchor(periodStart, monthRangeStart)} – {getRelativeWeekNumberFromAnchor(periodEnd, monthRangeStart)}
+                        </span>
+                      </>
+                    ),
                     units,
                     periodStart,
                     periodEnd,
@@ -3341,16 +3369,16 @@ function App() {
 
           return (
             <div style={{ padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
-              <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>{getColorKeyLabel()}</h4>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
+              <h4 style={{ margin: "0 0 10px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>{getColorKeyLabel()}</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", columnGap: "12px", rowGap: "8px" }}>
                 {visibleColorValues.map((value) => {
                   const taskWithValue = visibleLegendTasks.find((task) => getColorKeyValue(task) === value);
                   const colorHex = getTaskBarColorHex(taskWithValue || visibleLegendTasks[0]);
                   const color = colorHex ? `#${colorHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                   return (
-                    <div key={value} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: "20px", height: "20px", backgroundColor: color, borderRadius: "3px", border: "1px solid var(--border-medium)" }} />
-                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem" }}>{value}</span>
+                    <div key={value} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                      <div style={{ width: "20px", height: "20px", minWidth: "20px", minHeight: "20px", flexShrink: 0, backgroundColor: color, borderRadius: "3px", border: "1px solid var(--border-medium)" }} />
+                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem", lineHeight: "1.2" }}>{value}</span>
                     </div>
                   );
                 })}
@@ -3410,6 +3438,16 @@ function App() {
             {showDevTaskButton && (
               <button style={{ fontSize: "11px" }} onClick={(e) => { e.stopPropagation(); addTestTask(); }}>Dev task</button>
             )}
+            <button
+              className={`v2-btn v2-btn-ghost v2-btn-icon${showColorsPanel ? " v2-btn-active" : ""}`}
+              onClick={(e) => { e.stopPropagation(); setShowColorsPanel((p) => !p); }}
+              title="Task view settings"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
           </div>
           <div style={{ overflowX: "auto", overflowY: "auto", flex: 1 }}>
             <table className="v2-task-table">
@@ -3426,7 +3464,7 @@ function App() {
                       { key: "name" as const, label: "Task", width: "auto" },
                       { key: "startDate" as const, label: "Start", width: "68px" },
                       { key: "endDate" as const, label: "End", width: "68px" },
-                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "50px" },
+                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "100px" },
                     ] as Array<{ key: typeof sortBy; label: string; width: string }>
                   ).map((col) => (
                     <th
@@ -3444,7 +3482,7 @@ function App() {
                       )}
                     </th>
                   ))}
-                  <th style={{ width: "84px" }}>Actions</th>
+                  <th style={{ width: "110px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -3495,34 +3533,53 @@ function App() {
                         popperClassName="task-date-picker-popper"
                       />
                     </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={t.lineHeightAdjust ?? 0}
-                        onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
-                        style={{ width: "48px" }}
-                      />
-                    </td>
-                    <td>
-                      <div style={{ display: "flex", gap: "2px", justifyContent: "flex-end" }}>
+                    <td className="v2-task-table-line-pad-cell">
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                         <button
+                          className="v2-task-row-action"
+                          title="Decrease by 0.25"
+                          onClick={() => updateTask(t.id, "lineHeightAdjust", Math.max(0, (t.lineHeightAdjust ?? 0) - 0.25))}
+                          style={{ padding: "2px 4px", fontSize: "11px" }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          value={t.lineHeightAdjust ?? 0}
+                          onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
+                          step={0.25}
+                          style={{ width: "40px", textAlign: "center" }}
+                        />
+                        <button
+                          className="v2-task-row-action"
+                          title="Increase by 0.25"
+                          onClick={() => updateTask(t.id, "lineHeightAdjust", (t.lineHeightAdjust ?? 0) + 0.25)}
+                          style={{ padding: "2px 4px", fontSize: "11px" }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+                    <td className="v2-task-table-actions-cell">
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        <button
+                          className="v2-task-row-action"
                           title="Edit"
                           onClick={() => openTaskEditor(t.id)}
-                          style={{ fontSize: "11px", padding: "0 4px" }}
                         >
                           ✎
                         </button>
                         <button
+                          className="v2-task-row-action"
                           title="Duplicate"
                           onClick={() => duplicateTask(t)}
-                          style={{ fontSize: "11px", padding: "0 4px" }}
                         >
                           ⧉
                         </button>
                         <button
+                          className="v2-task-row-action delete"
                           title="Remove"
                           onClick={() => removeTask(t.id)}
-                          style={{ color: "#c0392b", fontSize: "11px", padding: "0 4px" }}
                         >
                           ✕
                         </button>
@@ -3538,6 +3595,81 @@ function App() {
             <span style={{ marginLeft: "10px" }}>Saved in this browser only.</span>
           </div>
         </div>
+      )}
+
+      {!presentationMode && showColorsPanel && (
+        <>
+          <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
+          <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, maxWidth: "500px", width: "90%" }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #ddd", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 600 }}>Task View Settings</h3>
+              <button className="v2-btn v2-btn-ghost v2-btn-icon" onClick={() => setShowColorsPanel(false)} style={{ padding: "4px" }}>✕</button>
+            </div>
+            <div style={{ padding: "12px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", fontSize: "11px" }}>
+              <div>
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Display</h4>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", marginBottom: "8px" }}>
+                  <input
+                    type="checkbox"
+                    checked={showHexColumns}
+                    onChange={(e) => setShowHexColumns(e.target.checked)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <span>Show hex columns</span>
+                </label>
+              </div>
+
+              <div>
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Phases</h4>
+                {phases.length === 0 ? (
+                  <em style={{ color: "#999" }}>No phases</em>
+                ) : (
+                  phases.map((phase) => (
+                    <div key={phase} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <span style={{ flex: 1, minWidth: 0 }}>{phase}</span>
+                      <input
+                        type="text"
+                        value={phaseHexMap[phase] || ""}
+                        onChange={(e) => {
+                          const newHex = e.target.value;
+                          setPhaseHexMap({ ...phaseHexMap, [phase]: newHex });
+                          tasks.filter(t => t.phase === phase).forEach(t => updateTask(t.id, "phaseHex", newHex));
+                        }}
+                        placeholder="#000000"
+                        maxLength={7}
+                        style={{ width: "70px", padding: "3px 4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+              <div>
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Categories</h4>
+                {categories.length === 0 ? (
+                  <em style={{ color: "#999" }}>No categories</em>
+                ) : (
+                  categories.map((cat) => (
+                    <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <span style={{ flex: 1, minWidth: 0 }}>{cat}</span>
+                      <input
+                        type="text"
+                        value={categoryHexMap[cat] || ""}
+                        onChange={(e) => {
+                          const newHex = e.target.value;
+                          setCategoryHexMap({ ...categoryHexMap, [cat]: newHex });
+                          tasks.filter(t => t.category === cat).forEach(t => updateTask(t.id, "categoryHex", newHex));
+                        }}
+                        placeholder="#000000"
+                        maxLength={7}
+                        style={{ width: "70px", padding: "3px 4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
       </div>
 
