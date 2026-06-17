@@ -246,13 +246,10 @@ function App() {
   // Filtering and sorting state
   const [filterText, setFilterText] = useState(""); // Text search filter
   const [selectedTimelineTaskId, setSelectedTimelineTaskId] = useState<number | null>(null); // Timeline click selection filter
-  const [sortBy, setSortBy] = useState<"phase" | "name" | "category" | "startDate" | "endDate" | "displayOrder">("displayOrder");
+  const [sortBy, setSortBy] = useState<"phase" | "phaseHex" | "name" | "category" | "categoryHex" | "startDate" | "endDate" | "displayOrder" | "lineHeightAdjust">("displayOrder");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // UI visibility toggles
-  const [showTaskList, setShowTaskList] = useState(true);
-  const [showImportSection, setShowImportSection] = useState(false);
-  const [showTimeline, setShowTimeline] = useState(true);
+  // UI visibility toggles (kept for potential future use; v2 hides these panels by default)
 
   // Drag and drop state for reordering tasks
   const [draggedTask, setDraggedTask] = useState<number | null>(null);
@@ -271,11 +268,19 @@ function App() {
   const [useCustomMonthRange, setUseCustomMonthRange] = useState(false);
   const [customMonthStart, setCustomMonthStart] = useState<Date | null>(null);
   const [customMonthEnd, setCustomMonthEnd] = useState<Date | null>(null);
-  const [calendarMonthSpan, setCalendarMonthSpan] = useState(2);
-  const [useCustomCalendarRange, setUseCustomCalendarRange] = useState(false);
-  const [customCalendarStart, setCustomCalendarStart] = useState<Date | null>(null);
-  const [customCalendarEnd, setCustomCalendarEnd] = useState<Date | null>(null);
+  const [calendarMonthSpan] = useState(2);
+  const [useCustomCalendarRange] = useState(false);
+  const [customCalendarStart] = useState<Date | null>(null);
+  const [customCalendarEnd] = useState<Date | null>(null);
   const showDevTaskButton = import.meta.env.DEV;
+
+  // v2 layout shell state
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showTaskPanel, setShowTaskPanel] = useState(false);
+  const [compactTaskSpacing, setCompactTaskSpacing] = useState(true);
+  const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("rolling");
+  const [showHexColumns, setShowHexColumns] = useState(true);
 
   useEffect(() => {
     try {
@@ -593,46 +598,7 @@ function App() {
       }
     });
 
-    // ========== GROUP TASKS ==========
-    // Group tasks with same phase, category, and name
-    // Combine into single task with earliest start and latest end date
-    // Concatenate sub-tasks and owners
-    const groupedTasksMap = new Map<string, Task>();
-
-    newTasks.forEach((task) => {
-      const groupKey = `${task.phase}|${task.category}|${task.name}`;
-
-      if (groupedTasksMap.has(groupKey)) {
-        // Task group already exists, merge this task into it
-        const existingTask = groupedTasksMap.get(groupKey)!;
-
-        // Update start date to earliest
-        if (task.startDate < existingTask.startDate) {
-          existingTask.startDate = task.startDate;
-        }
-
-        // Update end date to latest
-        if (task.endDate > existingTask.endDate) {
-          existingTask.endDate = task.endDate;
-        }
-
-        // Combine sub-tasks (if different)
-        if (task.subTask && task.subTask !== existingTask.subTask) {
-          existingTask.subTask = existingTask.subTask ? `${existingTask.subTask}; ${task.subTask}` : task.subTask;
-        }
-
-        // Combine owners (if different)
-        if (task.owner && task.owner !== existingTask.owner) {
-          existingTask.owner = existingTask.owner ? `${existingTask.owner}; ${task.owner}` : task.owner;
-        }
-      } else {
-        // First task in this group
-        groupedTasksMap.set(groupKey, { ...task });
-      }
-    });
-
-    // Convert grouped tasks back to array
-    const finalTasks = Array.from(groupedTasksMap.values());
+    const finalTasks = newTasks;
 
     // Add grouped tasks to the main list and navigate to show them
     if (finalTasks.length > 0) {
@@ -876,8 +842,6 @@ function App() {
   const weekColumns = Array.from({ length: weekSpan }, (_, i) => addDays(currentWeek, i * 7));
   const visibleWeekColumns = weekColumns.map((weekStart) => getVisibleWeekDays(weekStart));
   const visibleWeeklyDays = visibleWeekColumns.flat();
-  const weeklyRangeStart = visibleWeeklyDays[0] || currentWeek;
-  const weeklyRangeEnd = visibleWeeklyDays[visibleWeeklyDays.length - 1] || getWeeklyPeriodEnd();
 
   // Generate array of start dates for each month column
   // Use custom date range if enabled, otherwise use currentMonth + monthSpan
@@ -964,6 +928,15 @@ function App() {
           break;
         case "displayOrder":
           comparison = (a.displayOrder || 0) - (b.displayOrder || 0);
+          break;
+        case "phaseHex":
+          comparison = (a.phaseHex || "").localeCompare(b.phaseHex || "");
+          break;
+        case "categoryHex":
+          comparison = (a.categoryHex || "").localeCompare(b.categoryHex || "");
+          break;
+        case "lineHeightAdjust":
+          comparison = (a.lineHeightAdjust ?? 0) - (b.lineHeightAdjust ?? 0);
           break;
       }
 
@@ -1635,7 +1608,7 @@ function App() {
 
                         const top = phaseTaskPositions.get(task.id) || 0;
                         const horizontalPadding = 0.3;
-                        const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
+                        const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                         const textColor = getTextColor(task.categoryHex);
                         const taskStartsBeforeView = task.startDate < periodStart;
                         const taskEndsAfterView = task.endDate > periodEnd;
@@ -1713,540 +1686,388 @@ function App() {
 
   // ==================== RENDER ====================
 
+  const activeTab = timelineLayout === "stacked" ? "stacked" : view === "weeks" ? "weekly" : "monthly";
+
   return (
-    <div className="app">
-      <h1>Weekly Planning Board</h1>
+    <div className="app" style={{ position: "relative" }}>
 
-      {/* View selector and navigation controls */}
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1.5rem" }}>
-        <select value={view} onChange={(e) => setView(e.target.value as "weeks" | "months" | "calendar")}>
-          <option value="weeks">Weeks</option>
-          <option value="months">Months</option>
-          <option value="calendar">Calendar</option>
-        </select>
-        {view === "weeks" && (
-          <div className="week-nav">
-            <button onClick={prevWeek}>Previous</button>
-            <DatePicker
-              selected={currentWeek}
-              onChange={(date) => setCurrentWeek(startOfWeek(date || new Date()))}
-              dateFormat="MMM dd, yyyy"
-              customInput={
-                <button style={{ padding: "8px 12px", cursor: "pointer" }}>
-                  {format(weeklyRangeStart, "MMM dd")} - {format(weeklyRangeEnd, "MMM dd, yyyy")}
-                </button>
-              }
-            />
-            <button onClick={nextWeek}>Next</button>
-            <input
-              type="number"
-              value={weekSpan}
-              onChange={(e) => setWeekSpan(Math.max(1, Number(e.target.value)))}
-              min="1"
-              style={{ width: "60px", padding: "8px" }}
-            />
-            <span>Weeks</span>
-            <button onClick={() => setTimelineLayout(timelineLayout === "horizontal" ? "stacked" : "horizontal")}>
-              {timelineLayout === "horizontal" ? "Use Stacked Layout" : "Use Horizontal Layout"}
-            </button>
-            <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
-            <button onClick={() => setShowWeekNumbers(!showWeekNumbers)}>{showWeekNumbers ? "Show Dates" : "Show Week Numbers"}</button>
-            <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
-            <button
-              onClick={() => {
-                if (window.confirm(`Are you sure you want to clear all ${tasks.length} tasks? This cannot be undone.`)) {
-                  setTasks([]);
-                  setSelectedTimelineTaskId(null);
-                }
-              }}
-              style={{ backgroundColor: "var(--color-red-600)", color: "var(--color-white)" }}
-            >
-              Clear All Tasks
-            </button>
-          </div>
-        )}
-        {view === "months" && (
-          <div className="month-nav">
-            <button onClick={() => {
-              setUseCustomMonthRange(!useCustomMonthRange);
-              if (useCustomMonthRange) {
-                // Reset to default mode
-                setCustomMonthStart(null);
-                setCustomMonthEnd(null);
-              } else {
-                // Initialize with earliest and latest task dates
-                if (tasks.length > 0) {
-                  const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
-                  const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-                  const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
-                  setCustomMonthStart(minDate);
-                  setCustomMonthEnd(maxDate);
-                } else {
-                  setCustomMonthStart(new Date());
-                  setCustomMonthEnd(new Date());
-                }
-              }
-            }}>
-              {useCustomMonthRange ? "Use Month Span" : "Use Date Range"}
-            </button>
-            
-            {!useCustomMonthRange && (
-              <>
-                <button onClick={prevMonth}>Previous</button>
-                <span>
-                  {format(currentMonth, "MMM yyyy")} - {format(addMonths(currentMonth, monthSpan - 1), "MMM yyyy")}
-                </span>
-                <button onClick={nextMonth}>Next</button>
+      {/* ─── v2 HEADER ─── */}
+      <header className="v2-header">
+        <span className="v2-logo">Roadmap</span>
+        <div className="v2-view-tabs">
+          <button
+            className={`v2-tab${activeTab === "weekly" ? " active" : ""}`}
+            onClick={() => { setView("weeks"); setTimelineLayout("horizontal"); }}
+          >
+            Weekly
+          </button>
+          <button
+            className={`v2-tab${activeTab === "monthly" ? " active" : ""}`}
+            onClick={() => { setView("months"); setTimelineLayout("horizontal"); }}
+          >
+            Monthly
+          </button>
+          <button
+            className={`v2-tab${activeTab === "stacked" ? " active" : ""}`}
+            onClick={() => {
+              setTimelineLayout("stacked");
+              if (view === "calendar") setView("months");
+            }}
+          >
+            Stacked
+          </button>
+        </div>
+        <div className="v2-header-actions">
+          <button
+            className="v2-btn v2-btn-ghost"
+            onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
+          >
+            ⬇ Import
+          </button>
+          <button
+            className={`v2-btn v2-btn-ghost${showSettingsPanel ? " v2-btn-active" : ""}`}
+            onClick={() => setShowSettingsPanel((p) => !p)}
+          >
+            ⚙
+          </button>
+          <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
+            Export CSV
+          </button>
+        </div>
+      </header>
+
+      {/* ─── SETTINGS PANEL ─── */}
+      {showSettingsPanel && (
+        <>
+          <div className="v2-settings-backdrop" onClick={() => setShowSettingsPanel(false)} />
+          <div className="v2-settings-panel">
+
+            {/* Range mode (N1) */}
+            <div className="v2-settings-section">
+              <div className="v2-settings-heading">Range mode</div>
+              <label className="v2-radio-label">
                 <input
-                  type="number"
-                  value={monthSpan}
-                  onChange={(e) => setMonthSpan(Math.max(1, Number(e.target.value)))}
-                  min="1"
-                  style={{ width: "60px", padding: "8px" }}
-                />
-                <span>Months</span>
-              </>
-            )}
-            
-            {useCustomMonthRange && (
-              <>
-                <DatePicker
-                  selectsRange={true}
-                  startDate={customMonthStart || undefined}
-                  endDate={customMonthEnd || undefined}
-                  popperPlacement="bottom-start"
-                  popperClassName="month-date-picker-popper"
-                  onChange={(dates) => {
-                    const [start, end] = dates;
-                    setCustomMonthStart(start);
-                    setCustomMonthEnd(end);
+                  type="radio"
+                  name="rangemode"
+                  checked={rangeMode === "fit"}
+                  onChange={() => {
+                    setRangeMode("fit");
+                    if (tasks.length > 0) {
+                      const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
+                      const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
+                      const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
+                      if (view === "weeks") {
+                        setCurrentWeek(startOfWeek(minDate));
+                        setWeekSpan(Math.max(1, Math.ceil((maxDate.getTime() - startOfWeek(minDate).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1));
+                      } else {
+                        setUseCustomMonthRange(true);
+                        setCustomMonthStart(minDate);
+                        setCustomMonthEnd(maxDate);
+                      }
+                    }
                   }}
-                  dateFormat="MMM dd, yyyy"
-                  customInput={
-                    <button style={{ padding: "8px 12px", cursor: "pointer" }}>
-                      {customMonthStart && customMonthEnd 
-                        ? `${format(customMonthStart, "MMM dd")} - ${format(customMonthEnd, "MMM dd, yyyy")}`
-                        : customMonthStart
-                        ? `${format(customMonthStart, "MMM dd, yyyy")} - ...`
-                        : "Select date range"}
-                    </button>
-                  }
                 />
-              </>
-            )}
-            <button onClick={() => setTimelineLayout(timelineLayout === "horizontal" ? "stacked" : "horizontal")}>
-              {timelineLayout === "horizontal" ? "Use Stacked Layout" : "Use Horizontal Layout"}
-            </button>
-            {timelineLayout === "stacked" && (
-              <button onClick={() => setMonthStackSplit(monthStackSplit === "day" ? "week" : "day")}>
-                {monthStackSplit === "day" ? "Split by Weeks" : "Split by Days"}
-              </button>
-            )}
-            <button onClick={() => setShowMonthNumbers(!showMonthNumbers)}>{showMonthNumbers ? "Show Dates" : "Show Month Numbers"}</button>
-            <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
-            <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
-            <button
-              onClick={() => {
-                if (window.confirm(`Are you sure you want to clear all ${tasks.length} tasks? This cannot be undone.`)) {
-                  setTasks([]);
-                  setSelectedTimelineTaskId(null);
-                }
-              }}
-              style={{ backgroundColor: "var(--color-red-600)", color: "var(--color-white)" }}
-            >
-              Clear All Tasks
-            </button>
-          </div>
-        )}
-        {view === "calendar" && (
-          <div className="month-nav">
-            <button onClick={() => {
-              setUseCustomCalendarRange(!useCustomCalendarRange);
-              if (useCustomCalendarRange) {
-                setCustomCalendarStart(null);
-                setCustomCalendarEnd(null);
-              } else if (tasks.length > 0) {
-                const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
-                const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-                const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
-                setCustomCalendarStart(minDate);
-                setCustomCalendarEnd(maxDate);
-              } else {
-                setCustomCalendarStart(new Date());
-                setCustomCalendarEnd(addMonths(new Date(), 1));
-              }
-            }}>
-              {useCustomCalendarRange ? "Use Month Span" : "Use Date Range"}
-            </button>
-            {!useCustomCalendarRange && (
-              <>
-                <button onClick={() => setCurrentMonth(addMonths(currentMonth, -calendarMonthSpan))}>Previous</button>
-                <DatePicker
-                  selected={currentMonth}
-                  onChange={(date) => setCurrentMonth(startOfMonth(date || new Date()))}
-                  dateFormat="MMM yyyy"
-                  showMonthYearPicker
-                  customInput={
-                    <button style={{ padding: "8px 12px", cursor: "pointer" }}>
-                      {format(startOfMonth(currentMonth), "MMM yyyy")} - {format(endOfMonth(addMonths(currentMonth, calendarMonthSpan - 1)), "MMM yyyy")}
-                    </button>
-                  }
-                />
-                <button onClick={() => setCurrentMonth(addMonths(currentMonth, calendarMonthSpan))}>Next</button>
+                {" "}Fit to data
+              </label>
+              <label className="v2-radio-label">
                 <input
-                  type="number"
-                  value={calendarMonthSpan}
-                  onChange={(e) => setCalendarMonthSpan(Math.max(1, Number(e.target.value)))}
-                  min="1"
-                  style={{ width: "60px", padding: "8px" }}
+                  type="radio"
+                  name="rangemode"
+                  checked={rangeMode === "range"}
+                  onChange={() => {
+                    setRangeMode("range");
+                    if (view !== "weeks") {
+                      setUseCustomMonthRange(true);
+                      if (!customMonthStart && tasks.length > 0) {
+                        const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
+                        setCustomMonthStart(new Date(Math.min(...allDates.map((d) => d.getTime()))));
+                        setCustomMonthEnd(new Date(Math.max(...allDates.map((d) => d.getTime()))));
+                      }
+                    }
+                  }}
                 />
-                <span>Months</span>
-              </>
-            )}
-            {useCustomCalendarRange && (
-              <DatePicker
-                selectsRange={true}
-                startDate={customCalendarStart || undefined}
-                endDate={customCalendarEnd || undefined}
-                popperPlacement="bottom-start"
-                popperClassName="month-date-picker-popper"
-                onChange={(dates) => {
-                  const [start, end] = dates;
-                  setCustomCalendarStart(start);
-                  setCustomCalendarEnd(end);
-                }}
-                dateFormat="MMM dd, yyyy"
-                customInput={
-                  <button style={{ padding: "8px 12px", cursor: "pointer" }}>
-                    {customCalendarStart && customCalendarEnd
-                      ? `${format(customCalendarStart, "MMM dd")} - ${format(customCalendarEnd, "MMM dd, yyyy")}`
-                      : customCalendarStart
-                        ? `${format(customCalendarStart, "MMM dd, yyyy")} - ...`
-                        : "Select date range"}
-                  </button>
-                }
-              />
-            )}
-            <button onClick={() => setShowWeekends(!showWeekends)}>{showWeekends ? "Hide Weekends" : "Show Weekends"}</button>
-            <button onClick={() => setShowPhaseLabels(!showPhaseLabels)}>{showPhaseLabels ? "Hide Phases" : "Show Phases"}</button>
-            <button
-              onClick={() => {
-                if (window.confirm(`Are you sure you want to clear all ${tasks.length} tasks? This cannot be undone.`)) {
-                  setTasks([]);
-                  setSelectedTimelineTaskId(null);
-                }
-              }}
-              style={{ backgroundColor: "var(--color-red-600)", color: "var(--color-white)" }}
-            >
-              Clear All Tasks
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="section-container">
-        <div
-          style={{
-            padding: "0.75rem",
-            backgroundColor: "var(--bg-secondary)",
-            borderBottom: showTaskList ? "1px solid var(--border-light)" : "none",
-            margin: showTaskList ? "-1.5rem -1.5rem 1rem -1.5rem" : "-1.5rem",
-          }}
-        >
-          <h3 style={{ margin: 0, cursor: "pointer", userSelect: "none", fontSize: "1rem" }} onClick={() => setShowTaskList(!showTaskList)}>
-            {showTaskList ? "▼" : "▶"} Tasks ({filteredAndSortedTasks.length})
-            {filteredAndSortedTasks.length > 0 &&
-              (() => {
-                const allDates = filteredAndSortedTasks.flatMap((t) => [t.startDate, t.endDate]);
-                const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-                const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
-                
-                // Calculate duration based on current view
-                let duration = "";
-                if (view === "weeks") {
-                  const weeksDiff = Math.round((maxDate.getTime() - minDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-                  const totalWeeks = weeksDiff + 1; // Include both start and end weeks
-                  duration = totalWeeks === 1 ? "1 week" : `${totalWeeks} weeks`;
-                } else {
-                  const monthsDiff = (maxDate.getFullYear() - minDate.getFullYear()) * 12 + (maxDate.getMonth() - minDate.getMonth());
-                  const totalMonths = monthsDiff + 1; // Include both start and end months
-                  duration = totalMonths === 1 ? "1 month" : `${totalMonths} months`;
-                }
-                
-                return (
-                  <span style={{ fontWeight: "normal", color: "var(--text-muted)", marginLeft: "8px" }}>
-                    ({format(minDate, "MMM dd, yyyy")} – {format(maxDate, "MMM dd, yyyy")}, {duration})
-                  </span>
-                );
-              })()}
-          </h3>
-        </div>
-        {showTaskList && (
-          <>
-            {/* Import Tasks Section */}
-            {/* <div style={{ marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid var(--debug-color2)" }}> */}
-            <div style={{ marginBottom: "1.5rem" }}>
-              <div
-                style={{
-                  padding: "0.75rem",
-                  backgroundColor: "var(--bg-secondary)",
-                  borderBottom: showImportSection ? "1px solid var(-border-light)" : "none",
-                  margin: showImportSection ? "0 0 1rem 0" : "0",
-                  borderRadius: "4px",
-                }}
-              >
-                <h3 style={{ margin: 0, cursor: "pointer", userSelect: "none", fontSize: "1rem" }} onClick={() => setShowImportSection(!showImportSection)}>
-                  {showImportSection ? "▼" : "▶"} Import Tasks from Table
-                </h3>
-              </div>
-              {showImportSection && (
-                <>
-                  <p>Paste tab-separated data below. First row should be headers.</p>
-                  <textarea
-                    value={importText}
-                    onChange={(e) => setImportText(e.target.value)}
-                    placeholder="Phase&#9;Phase Hex&#9;Category&#9;Category HEX&#9;Task&#9;Sub-Task&#9;Owner&#9;Date Start&#9;Date End&#10;Foundation & Discovery&#9;D40E8C&#9;Project Initiation&#9;D30C55&#9;Project Kickoff & Setup&#9;&#9;&#9;1/4/2026&#9;1/17/2026"
-                    rows={6}
-                    style={{ width: "100%", fontFamily: "monospace" }}
-                  />
-                  <div style={{ marginTop: "10px" }}>
-                    <button onClick={parseImportData} style={{ marginRight: "10px" }}>
-                      Parse Data
-                    </button>
-                    {showImportTable && (
-                      <>
-                        <button onClick={importTasks} style={{ marginRight: "10px" }}>
-                          Import Tasks
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowImportTable(false);
-                            setImportData([]);
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  {showImportTable && importData.length > 0 && (
-                    <div style={{ marginTop: "20px" }}>
-                      <h4>Review and Edit Data</h4>
-                      <div className="table-container">
-                        <table>
-                          <thead>
-                            <tr>
-                              {Object.keys(importData[0]).map((header) => (
-                                <th key={header}>{header}</th>
-                              ))}
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {importData.map((row, rowIndex) => (
-                              <tr key={rowIndex}>
-                                {Object.keys(row).map((header) => (
-                                  <td key={header}>
-                                    <input
-                                      type="text"
-                                      value={row[header]}
-                                      onChange={(e) => updateImportData(rowIndex, header, e.target.value)}
-                                      style={{ width: "100%" }}
-                                    />
-                                  </td>
-                                ))}
-                                <td>
-                                  <button onClick={() => removeImportRow(rowIndex)}>Remove</button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <button onClick={addImportRow} style={{ marginTop: "10px" }}>
-                          Add Row
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <button onClick={addTask}>Add Task</button>
-            {showDevTaskButton && (
-              <button onClick={addTestTask} style={{ marginLeft: "10px" }}>
-                Add Test Task
-              </button>
-            )}
-            {/* Export Tasks Button */}
-            {/* <div style={{ marginBottom: "1rem" }}> */}
-              <button onClick={exportTasks} style={{ backgroundColor: "var(--success-color)", color: "black" }}>
-                Export Tasks to CSV
-              </button>
-              <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                ({tasks.length} total tasks, exports all tasks in manual order)
-              </span>
-              {(filterText.trim() || selectedTimelineTask) && (
-                <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                  Showing {filteredAndSortedTasks.length} task-list result{filteredAndSortedTasks.length === 1 ? "" : "s"}
-                </span>
-              )}
-              <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                Saved in this browser only.
-              </span>
-            {/* </div> */}
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-              <input
-                type="text"
-                placeholder="Filter tasks..."
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "phase" | "name" | "category" | "startDate" | "endDate" | "displayOrder")}
-              >
-                <option value="displayOrder">Sort by Manual Order</option>
-                <option value="phase">Sort by Phase</option>
-                <option value="name">Sort by Name</option>
-                <option value="category">Sort by Category</option>
-                <option value="startDate">Sort by Start Date</option>
-                <option value="endDate">Sort by End Date</option>
-              </select>
-              <button onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")} style={{ padding: "8px 12px" }}>
-                {sortOrder === "asc" ? "↑" : "↓"}
-              </button>
-              {selectedTimelineTask && (
-                <>
-                  <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                    Timeline selection: <strong>{selectedTimelineTask.name}</strong>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTimelineTaskId(null)}
-                    style={{ padding: "8px 12px" }}
-                  >
-                    Clear Timeline Selection
-                  </button>
-                </>
-              )}
-            </div>
-            <table className="task-table">
-              <thead>
-                <tr>
-                  <th style={{ width: "30px" }}></th>
-                  <th style={{ width: "50px" }}>Order</th>
-                  <th>Phase</th>
-                  <th>Phase HEX</th>
-                  <th>Category</th>
-                  <th>Category HEX</th>
-                  <th>Task</th>
-                  <th>Sub-Task</th>
-                  <th>Owner</th>
-                  <th>Line Padding</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAndSortedTasks.map((t) => (
-                  <tr
-                    key={t.id}
-                    draggable
-                    onDragStart={() => handleDragStart(t.id)}
-                    onDragOver={handleDragOver}
-                    onDrop={() => handleDrop(t.id)}
-                    onDragEnd={handleDragEnd}
-                    style={{
-                      opacity: draggedTask === t.id ? 0.5 : 1,
-                      cursor: "move",
-                      transition: "opacity 0.2s",
+                {" "}Specific date range
+              </label>
+              <label className="v2-radio-label">
+                <input
+                  type="radio"
+                  name="rangemode"
+                  checked={rangeMode === "rolling"}
+                  onChange={() => {
+                    setRangeMode("rolling");
+                    setUseCustomMonthRange(false);
+                    setCustomMonthStart(null);
+                    setCustomMonthEnd(null);
+                  }}
+                />
+                {" "}Rolling span
+              </label>
+              {rangeMode === "range" && view !== "weeks" && (
+                <div style={{ marginTop: "6px" }}>
+                  <DatePicker
+                    selectsRange={true}
+                    startDate={customMonthStart || undefined}
+                    endDate={customMonthEnd || undefined}
+                    popperPlacement="bottom-start"
+                    popperClassName="month-date-picker-popper"
+                    onChange={(dates) => {
+                      const [start, end] = dates;
+                      setCustomMonthStart(start);
+                      setCustomMonthEnd(end);
                     }}
-                  >
-                    <td style={{ cursor: "grab", textAlign: "center", fontSize: "1.2rem", color: "var(--text-muted)" }} title="Drag to reorder">
-                      ⋮⋮
-                    </td>
-                    <td style={{ textAlign: "center", fontWeight: "bold", color: "var(--text-muted)" }}>{t.displayOrder}</td>
-                    <td>
-                      <input type="text" value={t.phase || ""} onChange={(e) => updateTask(t.id, "phase", e.target.value)} />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={t.phaseHex || ""}
-                        onChange={(e) => updateTask(t.id, "phaseHex", e.target.value)}
-                        placeholder="e.g., 0070C0"
-                      />
-                    </td>
-                    <td>
-                      <input type="text" value={t.category} onChange={(e) => updateTask(t.id, "category", e.target.value)} />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={t.categoryHex || ""}
-                        onChange={(e) => updateTask(t.id, "categoryHex", e.target.value)}
-                        placeholder="e.g., 0070C0"
-                      />
-                    </td>
-                    <td>
-                      <input type="text" value={t.name} onChange={(e) => updateTask(t.id, "name", e.target.value)} />
-                    </td>
-                    <td>
-                      <input type="text" value={t.subTask || ""} onChange={(e) => updateTask(t.id, "subTask", e.target.value)} />
-                    </td>
-                    <td>
-                      <input type="text" value={t.owner || ""} onChange={(e) => updateTask(t.id, "owner", e.target.value)} />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={t.lineHeightAdjust ?? 0}
-                        onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
-                        style={{ width: "80px" }}
-                      />
-                    </td>
-                    <td>
-                      <DatePicker
-                        selected={t.startDate}
-                        onChange={(date) => updateTask(t.id, "startDate", date || new Date())}
-                        dateFormat="yyyy-MM-dd"
-                        popperClassName="task-date-picker-popper"
-                      />
-                    </td>
-                    <td>
-                      <DatePicker
-                        selected={t.endDate}
-                        onChange={(date) => updateTask(t.id, "endDate", date || new Date())}
-                        dateFormat="yyyy-MM-dd"
-                        popperClassName="task-date-picker-popper"
-                      />
-                    </td>
-                    <td>
-                      <button onClick={() => removeTask(t.id)}>Remove</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}</div>
-      <div className="section-container">        <div
-          style={{
-            padding: "0.75rem",
-            backgroundColor: "var(--bg-secondary)",
-            borderBottom: showTimeline ? "1px solid var(--border-medium)" : "none",
-            margin: showTimeline ? "-1.5rem -1.5rem 0 -1.5rem" : "-1.5rem",
+                    dateFormat="MMM dd, yyyy"
+                    customInput={
+                      <button className="v2-btn-sm" style={{ width: "100%", textAlign: "left" }}>
+                        {customMonthStart && customMonthEnd
+                          ? `${format(customMonthStart, "MMM dd")} – ${format(customMonthEnd, "MMM dd, yyyy")}`
+                          : customMonthStart
+                            ? `${format(customMonthStart, "MMM dd, yyyy")} – …`
+                            : "Select date range"}
+                      </button>
+                    }
+                  />
+                </div>
+              )}
+              {rangeMode === "rolling" && (
+                <div className="v2-settings-controls-row">
+                  <button className="v2-btn-sm-icon" onClick={view === "weeks" ? prevWeek : prevMonth}>‹ Prev</button>
+                  <input
+                    type="number"
+                    value={view === "weeks" ? weekSpan : monthSpan}
+                    onChange={(e) => {
+                      const val = Math.max(1, Number(e.target.value));
+                      if (view === "weeks") setWeekSpan(val);
+                      else setMonthSpan(val);
+                    }}
+                    style={{ width: "42px", height: "24px", border: "1px solid #ddd", borderRadius: "4px", padding: "0 6px", fontSize: "11px" }}
+                  />
+                  <span style={{ fontSize: "11px", color: "#666" }}>{view === "weeks" ? "wks" : "mos"}</span>
+                  <button className="v2-btn-sm-icon" onClick={view === "weeks" ? nextWeek : nextMonth}>Next ›</button>
+                </div>
+              )}
+            </div>
+
+            <hr className="v2-divider" />
+
+            {/* Layout */}
+            <div className="v2-settings-section">
+              <div className="v2-settings-heading">Layout</div>
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Stacked layout</span>
+                <div
+                  className={`v2-toggle${timelineLayout === "stacked" ? " on" : ""}`}
+                  onClick={() => {
+                    const next = timelineLayout === "stacked" ? "horizontal" : "stacked";
+                    setTimelineLayout(next);
+                    if (view === "calendar") setView("months");
+                  }}
+                />
+              </div>
+              {timelineLayout === "stacked" && view === "months" && (
+                <div className="v2-toggle-row">
+                  <span className="v2-toggle-label">Split by weeks</span>
+                  <div
+                    className={`v2-toggle${monthStackSplit === "week" ? " on" : ""}`}
+                    onClick={() => setMonthStackSplit(monthStackSplit === "week" ? "day" : "week")}
+                  />
+                </div>
+              )}
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Compact rows</span>
+                <div
+                  className={`v2-toggle${compactTaskSpacing ? " on" : ""}`}
+                  onClick={() => setCompactTaskSpacing((p) => !p)}
+                />
+              </div>
+            </div>
+
+            <hr className="v2-divider" />
+
+            {/* Display */}
+            <div className="v2-settings-section">
+              <div className="v2-settings-heading">Display</div>
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Show weekends</span>
+                <div
+                  className={`v2-toggle${showWeekends ? " on" : ""}`}
+                  onClick={() => setShowWeekends((p) => !p)}
+                />
+              </div>
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Show phases</span>
+                <div
+                  className={`v2-toggle${showPhaseLabels ? " on" : ""}`}
+                  onClick={() => setShowPhaseLabels((p) => !p)}
+                />
+              </div>
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Show week / month #</span>
+                <div
+                  className={`v2-toggle${(view === "weeks" ? showWeekNumbers : showMonthNumbers) ? " on" : ""}`}
+                  onClick={() => {
+                    if (view === "weeks") setShowWeekNumbers((p) => !p);
+                    else setShowMonthNumbers((p) => !p);
+                  }}
+                />
+              </div>
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Show hex columns</span>
+                <div
+                  className={`v2-toggle${showHexColumns ? " on" : ""}`}
+                  onClick={() => setShowHexColumns((p) => !p)}
+                />
+              </div>
+            </div>
+
+            <hr className="v2-divider" />
+
+            {/* Danger */}
+            <div className="v2-settings-section">
+              <div className="v2-settings-heading">Danger</div>
+              <button
+                className="v2-btn-sm"
+                style={{ color: "#c0392b", borderColor: "#e0b0b0", width: "100%" }}
+                onClick={() => {
+                  if (window.confirm(`Clear all ${tasks.length} tasks? This cannot be undone.`)) {
+                    setTasks([]);
+                    setSelectedTimelineTaskId(null);
+                    setShowSettingsPanel(false);
+                  }
+                }}
+              >
+                Clear all tasks
+              </button>
+            </div>
+
+          </div>
+        </>
+      )}
+
+      {/* ─── IMPORT MODAL ─── */}
+      {showImportModal && (
+        <div
+          className="v2-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowImportModal(false);
+              setShowImportTable(false);
+              setImportData([]);
+            }
           }}
         >
-          <h3 style={{ cursor: "pointer", userSelect: "none", margin: 0, fontSize: "1rem" }} onClick={() => setShowTimeline(!showTimeline)}>
-            {showTimeline ? "▼" : "▶"} Timeline
-          </h3>
+          <div className="v2-modal">
+            <div className="v2-modal-header">
+              <span className="v2-modal-title">Import tasks</span>
+              <button
+                className="v2-modal-close"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setShowImportTable(false);
+                  setImportData([]);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="v2-modal-body">
+              <p className="v2-modal-hint">
+                Paste tab-separated rows from Excel. Headers optional — columns auto-detected.
+                Accepts every column the CSV export emits (incl. Display Order &amp; Line Padding) for a lossless round-trip.
+                Preview rows are editable; add/remove before importing. No row merging.
+              </p>
+              <textarea
+                className="v2-paste-area"
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={"Phase\tPhase Hex\tCategory\tCategory HEX\tTask\tSub-Task\tOwner\tDate Start\tDate End"}
+                rows={5}
+              />
+              <div style={{ display: "flex", gap: "8px", marginTop: "8px", alignItems: "center" }}>
+                <button className="v2-btn v2-btn-ghost" onClick={parseImportData}>Parse data</button>
+                {showImportTable && importData.length > 0 && (
+                  <>
+                    <button
+                      className="v2-btn v2-btn-dark"
+                      onClick={() => { importTasks(); setShowImportModal(false); }}
+                    >
+                      Import {importData.length} task{importData.length !== 1 ? "s" : ""}
+                    </button>
+                    <button
+                      className="v2-btn v2-btn-ghost"
+                      onClick={() => { setShowImportTable(false); setImportData([]); }}
+                    >
+                      Clear
+                    </button>
+                  </>
+                )}
+              </div>
+              {showImportTable && importData.length > 0 && (
+                <div style={{ marginTop: "16px" }}>
+                  <div className="v2-preview-label">
+                    Preview — {importData.length} row{importData.length !== 1 ? "s" : ""} detected (editable)
+                  </div>
+                  <div style={{ overflowX: "auto", marginTop: "6px" }}>
+                    <table className="v2-preview-table">
+                      <thead>
+                        <tr>
+                          {Object.keys(importData[0]).map((header) => (
+                            <th key={header}>{header}</th>
+                          ))}
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importData.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {Object.keys(row).map((header) => (
+                              <td key={header}>
+                                <input
+                                  type="text"
+                                  value={row[header]}
+                                  onChange={(e) => updateImportData(rowIndex, header, e.target.value)}
+                                  style={{ width: "100%" }}
+                                />
+                              </td>
+                            ))}
+                            <td>
+                              <button onClick={() => removeImportRow(rowIndex)}>✕</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button style={{ marginTop: "8px" }} onClick={addImportRow}>+ Add row</button>
+                </div>
+              )}
+            </div>
+            <div className="v2-modal-footer">
+              <button
+                className="v2-btn v2-btn-ghost"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setShowImportTable(false);
+                  setImportData([]);
+                }}
+              >
+                Cancel
+              </button>
+              {showImportTable && importData.length > 0 && (
+                <button
+                  className="v2-btn v2-btn-dark"
+                  onClick={() => { importTasks(); setShowImportModal(false); }}
+                >
+                  Import {importData.length} task{importData.length !== 1 ? "s" : ""}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-        {showTimeline && (
-          <div style={{ marginTop: "1rem" }}>
+      )}
+
+      {/* ─── TIMELINE CANVAS ─── */}
+      <div className="v2-canvas">
+        <div>
             {/* ==================== WEEKLY VIEW TIMELINE ==================== */}
             {/* 
               Weekly view uses a "reverse Tetris" packing algorithm to minimize vertical space.
@@ -2694,7 +2515,7 @@ function App() {
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
                                 // Use category color for all task bars, including priority tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
+                                const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                                 const textColor = getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
@@ -2802,7 +2623,7 @@ function App() {
                         return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
                       },
                       compactSpacing: true,
-                      compactTaskSpacing: true,
+                      compactTaskSpacing,
                     });
                   }
 
@@ -2835,7 +2656,7 @@ function App() {
                       return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
                     },
                     compactSpacing: true,
-                    compactTaskSpacing: true,
+                    compactTaskSpacing,
                   });
                 })}
               </div>
@@ -3273,7 +3094,7 @@ function App() {
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
                                 // Use category color for all task bars, including priority tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
+                                const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                                 const textColor = getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
@@ -3382,7 +3203,7 @@ function App() {
                     },
                     compactSpacing: true,
                     compactHeaderPadding: isWeekSplit,
-                    compactTaskSpacing: true,
+                    compactTaskSpacing,
                     headerGroups,
                     showInnerUnitGridlines: !isWeekSplit,
                   });
@@ -3508,33 +3329,24 @@ function App() {
                 Tasks are saved in this browser only. Export CSV when you need a portable copy or backup.
               </div>
             )}
-          </div>
-        )}
+        </div>
+      </div>
 
-        {/* ==================== LEGENDS ==================== */}
-
-        {/* Category Legend: Shows only categories for visible tasks in the current timeline view */}
-        {showTimeline && categories.length > 0 && (() => {
-          // Get unique categories from visible tasks
+      {/* ─── LEGENDS ─── */}
+      <div className="v2-canvas" style={{ paddingTop: 0 }}>
+        {categories.length > 0 && (() => {
           const visibleCategories = Array.from(new Set(visibleLegendTasks.map(t => t.category).filter(Boolean)));
           if (visibleCategories.length === 0) return null;
-
           return (
-            <div style={{ marginTop: "1rem", padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
+            <div style={{ padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
               <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Category Key:</h4>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
                 {visibleCategories.map((category) => {
                   const taskWithCategory = visibleLegendTasks.find(t => t.category === category);
-                  const color = taskWithCategory?.categoryHex ? `#${taskWithCategory.categoryHex}` : 'var(--task-bg-fallback)';
+                  const color = taskWithCategory?.categoryHex ? `#${taskWithCategory.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                   return (
                     <div key={category} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{
-                        width: "20px",
-                        height: "20px",
-                        backgroundColor: color,
-                        borderRadius: "3px",
-                        border: "1px solid var(--border-medium)"
-                      }} />
+                      <div style={{ width: "20px", height: "20px", backgroundColor: color, borderRadius: "3px", border: "1px solid var(--border-medium)" }} />
                       <span style={{ color: "var(--text-primary)", fontSize: "0.875rem" }}>{category}</span>
                     </div>
                   );
@@ -3543,24 +3355,13 @@ function App() {
             </div>
           );
         })()}
-
-        {/* Phase Legend: Shows all phases with their colors */}
-        {showTimeline && showPhaseLabels && visibleLegendPhases.length > 0 && (
+        {showPhaseLabels && visibleLegendPhases.length > 0 && (
           <div style={{ marginTop: "1rem", padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
             <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Phase Key:</h4>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
               {visibleLegendPhases.map((phase) => (
                 <div key={phase} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                  <div
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      backgroundColor: "var(--color-gray-900)",
-                      borderRadius: "4px",
-                      border: "2px solid var(--border-overlay-light)",
-                      flexShrink: 0,
-                    }}
-                  ></div>
+                  <div style={{ width: "24px", height: "24px", backgroundColor: "var(--color-gray-900)", borderRadius: "4px", border: "2px solid var(--border-overlay-light)", flexShrink: 0 }} />
                   <span style={{ color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 500, lineHeight: "24px" }}>{phase}</span>
                 </div>
               ))}
@@ -3568,6 +3369,176 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* ─── TASK PANEL ─── */}
+      <div
+        className={`v2-task-panel-tab${showTaskPanel ? " expanded" : ""}`}
+        onClick={() => setShowTaskPanel((p) => !p)}
+      >
+        <span className="v2-panel-tab-label">Tasks</span>
+        <span className="v2-panel-tab-count">
+          {filteredAndSortedTasks.length} task{filteredAndSortedTasks.length !== 1 ? "s" : ""}
+          {tasks.length > 0 && (() => {
+            const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
+            const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
+            const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
+            return ` · ${format(minDate, "MMM d, yyyy")} – ${format(maxDate, "MMM d, yyyy")}`;
+          })()}
+        </span>
+        <span className="v2-panel-tab-arrow">{showTaskPanel ? "▼ collapse" : "▲ expand"}</span>
+      </div>
+
+      {showTaskPanel && (
+        <div className="v2-task-panel">
+          <div className="v2-panel-toolbar">
+            <input
+              className="v2-panel-filter"
+              placeholder="Filter tasks…"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
+            {(filterText.trim() || selectedTimelineTask) && (
+              <span style={{ fontSize: "11px", color: "#888", whiteSpace: "nowrap" }}>
+                {filteredAndSortedTasks.length} result{filteredAndSortedTasks.length !== 1 ? "s" : ""}
+                {selectedTimelineTask && (
+                  <>
+                    {" · "}
+                    <button
+                      style={{ fontSize: "11px", background: "none", border: "none", cursor: "pointer", color: "#888", padding: 0 }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedTimelineTaskId(null); }}
+                    >
+                      ✕ clear
+                    </button>
+                  </>
+                )}
+              </span>
+            )}
+            <button className="v2-panel-add" onClick={(e) => { e.stopPropagation(); addTask(); }}>+ Add task</button>
+            <button className="v2-panel-export" onClick={(e) => { e.stopPropagation(); exportTasks(); }}>Export CSV</button>
+            {showDevTaskButton && (
+              <button style={{ fontSize: "11px" }} onClick={(e) => { e.stopPropagation(); addTestTask(); }}>Dev task</button>
+            )}
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table className="v2-task-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "18px" }}></th>
+                  {(
+                    [
+                      { key: "displayOrder" as const, label: "Order", width: "48px" },
+                      { key: "phase" as const, label: "Phase", width: "13%" },
+                      ...(showHexColumns ? [{ key: "phaseHex" as const, label: "Phase HEX", width: "80px" }] : []),
+                      { key: "category" as const, label: "Category", width: "16%" },
+                      ...(showHexColumns ? [{ key: "categoryHex" as const, label: "Cat HEX", width: "76px" }] : []),
+                      { key: "name" as const, label: "Task", width: "auto" },
+                      { key: "startDate" as const, label: "Start", width: "68px" },
+                      { key: "endDate" as const, label: "End", width: "68px" },
+                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "50px" },
+                    ] as Array<{ key: typeof sortBy; label: string; width: string }>
+                  ).map((col) => (
+                    <th
+                      key={col.key}
+                      className={`v2-th-sortable${sortBy === col.key ? " sorted" : ""}`}
+                      style={{ width: col.width }}
+                      onClick={() => {
+                        if (sortBy === col.key) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                        else { setSortBy(col.key); setSortOrder("asc"); }
+                      }}
+                    >
+                      {col.label}
+                      {sortBy === col.key && (
+                        <span style={{ fontSize: "8px", marginLeft: "2px" }}>{sortOrder === "asc" ? "▲" : "▼"}</span>
+                      )}
+                    </th>
+                  ))}
+                  <th style={{ width: "56px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAndSortedTasks.map((t) => (
+                  <tr
+                    key={t.id}
+                    draggable
+                    onDragStart={() => handleDragStart(t.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(t.id)}
+                    onDragEnd={handleDragEnd}
+                    style={{ backgroundColor: t.id === draggedTask ? "var(--bg-secondary)" : undefined }}
+                  >
+                    <td><span style={{ color: "#ccc", cursor: "grab", fontSize: "12px", userSelect: "none" }}>⠇</span></td>
+                    <td>{t.displayOrder}</td>
+                    <td><input type="text" value={t.phase || ""} onChange={(e) => updateTask(t.id, "phase", e.target.value)} /></td>
+                    {showHexColumns && (
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                          {t.phaseHex && <span style={{ width: "9px", height: "9px", borderRadius: "2px", backgroundColor: `#${t.phaseHex.replace(/^#/, "")}`, display: "inline-block", border: "1px solid rgba(0,0,0,.1)", flexShrink: 0 }} />}
+                          <input type="text" value={t.phaseHex || ""} onChange={(e) => updateTask(t.id, "phaseHex", e.target.value)} placeholder="hex" />
+                        </div>
+                      </td>
+                    )}
+                    <td><input type="text" value={t.category || ""} onChange={(e) => updateTask(t.id, "category", e.target.value)} /></td>
+                    {showHexColumns && (
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                          {t.categoryHex && <span style={{ width: "9px", height: "9px", borderRadius: "2px", backgroundColor: `#${t.categoryHex.replace(/^#/, "")}`, display: "inline-block", border: "1px solid rgba(0,0,0,.1)", flexShrink: 0 }} />}
+                          <input type="text" value={t.categoryHex || ""} onChange={(e) => updateTask(t.id, "categoryHex", e.target.value)} placeholder="hex" />
+                        </div>
+                      </td>
+                    )}
+                    <td><input type="text" value={t.name || ""} onChange={(e) => updateTask(t.id, "name", e.target.value)} /></td>
+                    <td>
+                      <DatePicker
+                        selected={t.startDate}
+                        onChange={(date) => updateTask(t.id, "startDate", date || new Date())}
+                        dateFormat="M/d/yy"
+                        popperClassName="task-date-picker-popper"
+                      />
+                    </td>
+                    <td>
+                      <DatePicker
+                        selected={t.endDate}
+                        onChange={(date) => updateTask(t.id, "endDate", date || new Date())}
+                        dateFormat="M/d/yy"
+                        popperClassName="task-date-picker-popper"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={t.lineHeightAdjust ?? 0}
+                        onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
+                        style={{ width: "48px" }}
+                      />
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: "2px" }}>
+                        <button
+                          title="Duplicate"
+                          onClick={() => {
+                            const newId = tasks.length > 0 ? Math.max(...tasks.map((t2) => t2.id)) + 1 : 1;
+                            const newOrder = tasks.length > 0 ? Math.max(...tasks.map((t2) => t2.displayOrder || 0)) + 1 : 1;
+                            setTasks((prev) => [...prev, { ...t, id: newId, displayOrder: newOrder }]);
+                          }}
+                        >
+                          ⧉
+                        </button>
+                        <button title="Remove" onClick={() => removeTask(t.id)} style={{ color: "#c0392b" }}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="v2-panel-footer">
+            {tasks.length} task{tasks.length !== 1 ? "s" : ""} · drag ⠇ to reorder · click a header to sort
+            <span style={{ marginLeft: "10px" }}>Saved in this browser only.</span>
+          </div>
+        </div>
+      )}
+
+      <div style={{ height: "16px" }} />
     </div>
   );
 }

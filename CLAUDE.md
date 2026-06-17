@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Roadmap Project — Claude Code Guide
 
 This repository contains **Roadmap Project**, a local planning board for building and reviewing timeline-based project roadmaps.
@@ -21,6 +25,39 @@ This repository contains **Roadmap Project**, a local planning board for buildin
 - Date handling is done with `date-fns`.
 - No backend service is required. This is a client-side app run through the Vite dev server.
 - Project-specific skills live under `.claude/skills/`.
+
+## Architecture — App.tsx Internals
+
+`src/App.tsx` is a deliberate monolith (~3500 lines). It is organized in three layers:
+
+1. **State + logic functions** (top ~1300 lines): all `useState` declarations, task CRUD helpers (`addTask`, `updateTask`, `removeTask`, `importTasks`, `exportTasks`), drag-and-drop handlers, date math, and layout helpers (`getTaskHeightForPeriod`, `getTextColor`, `blendHexWithWhite`, `isSpecialPriorityTask`).
+
+2. **`renderStackedTimelineBoard`** (~lines 1291–1675): a named function that is the core rendering primitive for all stacked/horizontal period boards. It takes `{ periodKey, units, periodStart, periodEnd, visibleTasks, compactTaskSpacing, headerGroups, ... }` and returns the full board JSX including packing algorithm, phase overlays, task bars, and continuation arrows. All five view renderers call it.
+
+3. **Main `return` JSX** (everything after the RENDER comment): the layout shell. Each view combination (`view === "weeks" && timelineLayout === "horizontal"`, etc.) is an inline IIFE that computes local period variables and calls `renderStackedTimelineBoard`. There are five IIFEs: weekly-horizontal, weekly-stacked, monthly-horizontal, monthly-stacked, calendar.
+
+### Key state relationships
+
+- `view` (`"weeks" | "months" | "calendar"`) + `timelineLayout` (`"horizontal" | "stacked"`) together determine the active view — there is no single "current view" state.
+- `useCustomMonthRange` + `customMonthStart`/`customMonthEnd` control whether monthly view uses a rolling span or a fixed date range.
+- `displayOrder` (number) is the manual sort key; drag-and-drop reorders by shifting these values.
+- `lineHeightAdjust` adds extra height lines to a task bar for vertical spacing control; it round-trips through CSV as the "Line Padding" column.
+
+### Hex color convention
+
+`categoryHex` and `phaseHex` are stored **without** a `#` prefix (e.g. `"FF5733"`, not `"#FF5733"`). All rendering callsites prepend `#` when building CSS color strings. `blendHexWithWhite` and `getTextColor` both strip any accidental leading `#` defensively.
+
+### Import column mapping
+
+`importTasks` in `src/App.tsx` uses a `switch (lowerHeader)` to map column names to task fields. The mapping is intentionally forgiving (many aliases per column). Do not tighten it — spreadsheet paste is a primary workflow (I3 guardrail).
+
+## v2 Branch Status
+
+The repository is on the `v2` branch. `master` is tagged `v1` and preserved. A local worktree at `../Roadmap Project v1/` runs v1 on port 5174.
+
+- Design is complete: see `docs/product-brief.md` and `docs/mockups/v2-layout-mockup.html`.
+- Phase 0 bug fixes (C1 category colors, I1 import grouping, I2 line padding round-trip) are done.
+- Phase 1 (layout shell rewrite) is in progress. Before touching the render section, read `docs/handoff.md` for current state.
 
 ## Development Guidance
 

@@ -3,7 +3,18 @@
     "allow": [
       "Edit(/.claude/skills/roadmap-wrap-up/**)",
       "Skill(run)",
-      "Skill(run:*)"
+      "Skill(run:*)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git branch *)",
+      "Bash(git stash *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git tag *)",
+      "Bash(git push *)",
+      "Bash(git worktree *)",
+      "Read(//Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap Project v1/**)",
+      "Bash(npm install *)"
     ]
   }
 }
