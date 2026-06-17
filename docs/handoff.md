@@ -158,6 +158,13 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 - **Merge to master** and open PR for review.
 - **Defer TL3/TL5** until day-column width and day-header label decisions are made.
 
+**Code-review fixes (branch `code-review-fixes-v2`, off current master):** see
+`docs/code-review-findings.md`. Fixed and browser-verified: #1 Critical Colors-panel
+bulk-update data loss (functional `setTasks`), #2 CSV `Display Order` round-trip, #3+#6
+monthly-horizontal height via shared helper (removes duplication, restores wrap safety
+line), #4 debug-tooltip removal, #5 weekly "fit to data" now re-fits reactively like
+monthly. All six findings resolved and browser-verified. PR not yet opened.
+
 ## New Chat Start
 
 **Read first:**

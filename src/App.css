@@ -1235,7 +1235,7 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12pt;
+  font-size: 11pt;
   padding: 3px 5px;
   box-sizing: border-box;
   z-index: 2;

@@ -77,7 +77,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 | I1 | Import deduplication bug: same phase/category + different dates incorrectly merges rows | Bug | Broken | Breaks Vacation/Holiday entries that span non-contiguous dates; also affects any repeated category. |
 | I2 | Line padding: export includes padding values, but import doesn't re-apply them | Bug | Broken | Round-trip fidelity issue; padding is lost on re-import. |
 | I3 | Keep import flexible — do not add strict validation | Guardrail | Working | Spreadsheet paste is a primary workflow. Don't break it for edge cases. |
-| I4 | Import must accept ALL export columns (lossless round-trip) | Bug | Partial | Export emits: Phase, Phase Hex, Category, Category HEX, Task, Sub-Task, Owner, Week, Date Start, Date End, **Display Order**, **Line Padding**. v1 import drops Display Order (reassigns sequentially) and Line Padding (I2). v2: export → re-import must reproduce the exact same board, including manual order. When Display Order is absent (fresh Excel paste), fall back to row order as today. |
+| I4 | Import must accept ALL export columns (lossless round-trip) | Bug | Done | Export emits: Phase, Phase Hex, Category, Category HEX, Task, Sub-Task, Owner, Week, Date Start, Date End, **Display Order**, **Line Padding**. v2 import now maps Line Padding (I2) and Display Order, so export → re-import reproduces the same board including manual order. When Display Order is absent (fresh Excel paste), it still falls back to row order. See `docs/code-review-findings.md` #2. |
 
 ### Timeline Views & Display
 
