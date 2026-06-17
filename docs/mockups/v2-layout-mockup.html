@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap v2 — Layout Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #e8e8e8; }
+
+  /* ── Mockup chrome ── */
+  .mockup-label {
+    background: #1a1a1a; color: #fff; font-size: 10px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; padding: 6px 16px;
+  }
+  .mockup-note {
+    background: #fffbe6; border-bottom: 1px solid #e8d700;
+    font-size: 11px; color: #6a5500; padding: 5px 16px;
+  }
+  .mockup-gap { height: 24px; background: #d4d4d4; }
+
+  /* ── App shell ── */
+  .app { background: #f5f5f5; }
+
+  /* ── Header ── */
+  .header {
+    height: 48px; background: #fff; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; padding: 0 16px; gap: 12px;
+    position: relative; flex-shrink: 0;
+  }
+  .logo { font-size: 13px; font-weight: 800; color: #111; letter-spacing: -.03em; }
+
+  .view-tabs {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    display: flex; background: #f0f0f0; border-radius: 6px; padding: 3px; gap: 1px;
+  }
+  .tab {
+    padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 500;
+    cursor: pointer; color: #777; border: none; background: none; font-family: inherit;
+  }
+  .tab.active {
+    background: #fff; color: #111; font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+  }
+
+  .header-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .btn {
+    padding: 5px 12px; border-radius: 5px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1px solid transparent; font-family: inherit;
+  }
+  .btn-ghost { background: none; color: #444; border-color: #ddd; }
+  .btn-dark { background: #111; color: #fff; }
+
+  /* ── Canvas ── */
+  .canvas { padding: 16px; }
+
+  /* ── Board ── */
+  .board {
+    background: #fff; border: 1px solid #d8d8d8; border-radius: 8px;
+    overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  }
+
+  /* Month header */
+  .month-header { display: flex; border-bottom: 2px solid #ccc; background: #f8f8f8; position: relative; }
+  .month-cell {
+    font-size: 12px; font-weight: 700; color: #333; padding: 7px 0;
+    text-align: center; border-right: 1px solid #ddd; position: absolute;
+  }
+  .month-cell:last-child { border-right: none; }
+  .month-header-spacer { height: 32px; } /* for absolute positioned cells */
+
+  /* Month grid lines overlay */
+  .grid-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+  .grid-month-line { position: absolute; top: 0; bottom: 0; width: 1px; background: #ebebeb; }
+
+  /* Non-working-day column shading (holidays/vacations span full height) */
+  .nonwork-col {
+    position: absolute; top: 0; bottom: 0;
+    background: rgba(45,170,120,.16);
+    border-left: 1px solid rgba(45,170,120,.3);
+    border-right: 1px solid rgba(45,170,120,.3);
+  }
+
+  /* Bars container */
+  .bars-container { position: relative; padding: 6px 0 4px; }
+
+  /* Task row */
+  /* v1-style denser rows: taller bars, tight ~3px gap between rows */
+  .task-row {
+    position: relative; height: 31px; margin-bottom: 3px;
+  }
+  .task-row.holiday-row {
+    background: rgba(98,255,201,.12);
+  }
+  .task-row.holiday-row::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    border-top: 1px solid rgba(98,255,201,.3); border-bottom: 1px solid rgba(98,255,201,.3);
+    pointer-events: none;
+  }
+
+  /* Padding spacer */
+  .pad-spacer { flex-shrink: 0; }
+
+  /* Bar — v1 look: ~28px tall, centered label, comfortable left/right padding.
+     Labels WRAP (K2) and the bar grows taller to fit — never truncate with ellipsis.
+     In the real app the bar height is computed from wrapped line count + Line Padding. */
+  .bar {
+    position: absolute; min-height: 28px; top: 1px;
+    border-radius: 3px; display: flex; align-items: center; justify-content: center;
+    padding: 2px 9px; font-size: 11.5px; font-weight: 500; line-height: 1.15;
+    white-space: normal; overflow: hidden;
+    min-width: 0; text-align: center;
+    /* Horizontal gap so the bar floats on top of the grid (grid shows through left/right) */
+    box-sizing: border-box; border-left: 4px solid transparent; border-right: 4px solid transparent;
+    background-clip: padding-box;
+  }
+  .dark-text { color: #222; }
+  .light-text { color: #fff; }
+
+  /* A bar that wraps to multiple lines grows taller (demo of K2) */
+  .bar.wrap { min-height: 42px; }
+
+  /* Single-day bars stay compact */
+  .bar.single-day {
+    padding: 0 5px; font-size: 10px; overflow: visible; white-space: nowrap;
+  }
+
+  /* Continuation arrows — pinned to the bar EDGES, label stays centered between them.
+     (v1 behaviour: arrow hugs the left/right edge; text never pushed off-center.) */
+  .arrow-l { padding-left: 14px; }
+  .arrow-r { padding-right: 14px; }
+  .arrow-l::before { content: '◀'; position: absolute; left: 3px; top: 50%; transform: translateY(-50%); font-size: 10px; font-weight: bold; line-height: 1; }
+  .arrow-r::after  { content: '▶'; position: absolute; right: 3px; top: 50%; transform: translateY(-50%); font-size: 10px; font-weight: bold; line-height: 1; }
+
+  /* Section header row above holiday group */
+  .section-header {
+    padding: 4px 8px 2px;
+    font-size: 9px; font-weight: 700; color: #2a8a60; text-transform: uppercase;
+    letter-spacing: .07em; background: rgba(98,255,201,.08);
+  }
+
+  /* Divider between holiday group and regular rows */
+  .section-divider {
+    height: 1px; background: #d0d0d0; margin: 4px 0 2px;
+  }
+
+  /* Legend */
+  .legend {
+    padding: 10px 14px; border-top: 1px solid #ebebeb;
+    background: #fafafa;
+  }
+  .legend-heading { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
+  .legend-items { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #444; }
+  .legend-swatch { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; border: 1px solid rgba(0,0,0,.1); }
+
+  /* Settings panel */
+  /* ── Stacking contract (IMPORTANT for Sonnet) ──
+     Timeline bars / phase overlays:        z 0–10
+     Task panel + table sticky headers:     z 10–50
+     Header bar:                            z 100
+     Floating selection UI (settings panel,
+       date pickers, dropdowns, context menu): z 1000  ← must clear timeline + panel
+     Modals (import, edit) + backdrop:      z 2000
+     v1 BUG to avoid: date-picker popovers rendered UNDER timeline bars.
+     In v2, render all popovers in a portal at z ≥ 1000 so they always float on top. */
+  .header { z-index: 100; }
+  .settings-panel {
+    position: absolute; right: 16px; top: 52px; width: 220px;
+    background: #fff; border: 1px solid #ddd; border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.16); padding: 12px; z-index: 1000;
+  }
+  .settings-section { margin-bottom: 12px; }
+  .settings-section:last-child { margin-bottom: 0; }
+  .settings-heading { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+  .toggle-label { font-size: 12px; color: #333; }
+  .toggle { width: 32px; height: 18px; border-radius: 9px; background: #ddd; position: relative; cursor: pointer; flex-shrink: 0; }
+  .toggle.on { background: #111; }
+  .toggle::after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 6px; background: #fff; top: 3px; left: 3px; }
+  .toggle.on::after { left: 17px; }
+  .divider-line { border: none; border-top: 1px solid #eee; margin: 8px 0; }
+  .range-text { font-size: 11px; color: #666; margin-bottom: 6px; }
+  .btn-sm { padding: 4px 10px; border-radius: 4px; font-size: 11px; background: none; border: 1px solid #ddd; color: #555; cursor: pointer; width: 100%; }
+
+  /* Import modal */
+  .modal-backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,.3); z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal { background: #fff; border-radius: 8px; width: 520px; box-shadow: 0 8px 32px rgba(0,0,0,.18); overflow: hidden; }
+  .modal-header { padding: 14px 18px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 14px; font-weight: 700; }
+  .modal-close { background: none; border: none; font-size: 16px; color: #bbb; cursor: pointer; }
+  .modal-body { padding: 16px 18px; }
+  .modal-hint { font-size: 11px; color: #999; margin-bottom: 8px; }
+  .paste-area { width: 100%; height: 90px; border: 1px solid #ddd; border-radius: 5px; padding: 8px; font-size: 11px; font-family: monospace; resize: none; color: #555; background: #fafafa; }
+  .preview-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: .08em; margin: 12px 0 6px; }
+  .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .preview-table th { background: #f5f5f5; padding: 5px 8px; text-align: left; color: #666; font-weight: 600; border-bottom: 1px solid #e5e5e5; }
+  .preview-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; color: #333; }
+  .swatch-inline { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 4px; border: 1px solid rgba(0,0,0,.1); }
+  .modal-footer { padding: 12px 18px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 7px; }
+  .btn-confirm { background: #111; color: #fff; border: none; padding: 7px 16px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-cancel { background: none; color: #555; border: 1px solid #ddd; padding: 7px 14px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+
+  /* ── Task panel ── */
+  .task-panel-tab {
+    background: #fff; border: 1px solid #ddd; border-radius: 8px;
+    margin: 8px 16px 0; display: flex; align-items: center;
+    padding: 0 14px; height: 36px; gap: 10px; cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .task-panel-tab:hover { background: #fafafa; }
+  .panel-tab-label { font-size: 12px; font-weight: 700; color: #333; }
+  .panel-tab-count { font-size: 11px; color: #888; }
+  .panel-tab-arrow { margin-left: auto; font-size: 11px; color: #aaa; }
+  .panel-tab-actions { margin-left: auto; display: flex; gap: 6px; }
+
+  .task-panel {
+    background: #fff; border: 1px solid #ddd; border-radius: 8px;
+    margin: 8px 16px 16px; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  }
+  .panel-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-bottom: 1px solid #eee; background: #fafafa;
+  }
+  .panel-filter {
+    flex: 1; height: 28px; border: 1px solid #ddd; border-radius: 5px;
+    padding: 0 10px; font-size: 12px; color: #333; background: #fff;
+    font-family: inherit;
+  }
+  .panel-sort {
+    height: 28px; border: 1px solid #ddd; border-radius: 5px;
+    padding: 0 8px; font-size: 11px; color: #555; background: #fff;
+    font-family: inherit; cursor: pointer;
+  }
+  .panel-add { height: 28px; padding: 0 10px; border-radius: 5px; font-size: 11px; font-weight: 600; background: #111; color: #fff; border: none; cursor: pointer; }
+  .panel-export { height: 28px; padding: 0 10px; border-radius: 5px; font-size: 11px; background: none; color: #555; border: 1px solid #ddd; cursor: pointer; }
+
+  .task-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+  .task-table th {
+    background: #f5f5f5; padding: 4px 6px; text-align: left;
+    color: #666; font-weight: 600; border-bottom: 1px solid #e0e0e0;
+    font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+    position: sticky; top: 0; white-space: nowrap; overflow: hidden;
+    cursor: pointer; user-select: none;
+  }
+  .task-table th.sortable:hover { background: #ededed; }
+  .task-table th.sorted { color: #111; background: #e8e8e8; }
+  .sort-ind { font-size: 8px; margin-left: 2px; }
+  .task-table td { padding: 4px 6px; border-bottom: 1px solid #f0f0f0; color: #333; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task-table tr:hover td { background: #fafafa; }
+  .drag-handle { color: #ccc; cursor: grab; font-size: 12px; }
+  .color-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: middle; margin-right: 3px; flex-shrink: 0; border: 1px solid rgba(0,0,0,.1); }
+  .hex-cell { display: flex; align-items: center; white-space: nowrap; }
+  .row-actions { display: flex; gap: 3px; }
+  .act-btn { width: 20px; height: 20px; padding: 0; border-radius: 3px; font-size: 11px; border: 1px solid #ddd; background: none; color: #555; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; }
+  .act-btn:hover { background: #f0f0f0; }
+  .act-btn.danger { color: #c0392b; border-color: #e0b0b0; }
+  .panel-footer { padding: 6px 12px; border-top: 1px solid #eee; font-size: 10px; color: #aaa; background: #fafafa; }
+
+  /* ── Stacked month board ── */
+  .stack-title { font-size: 12px; font-weight: 700; color: #444; margin: 0 0 5px 2px; }
+  .stack-board { border: 1px solid #d8d8d8; border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
+  .day-header { display: flex; background: #f0f0f0; border-bottom: 1px solid #ccc; }
+  .day-col-head {
+    flex: 1; text-align: center; padding: 4px 0; font-size: 10px; font-weight: 600; color: #555;
+    border-right: 1px solid #ddd; line-height: 1.2;
+  }
+  .day-col-head:last-child { border-right: none; }
+  .day-col-head .dow { color: #999; font-size: 8px; text-transform: uppercase; display: block; }
+  .day-col-head.weekend-gap { border-right: 4px solid #c4c4c4; }
+  .day-col-head.nonwork { background: rgba(45,170,120,.22); color: #1f6b48; }
+  .stack-bars { position: relative; padding: 5px 0; }
+  .stack-grid { position: absolute; inset: 0; display: flex; pointer-events: none; }
+  .stack-grid-col { flex: 1; border-right: 1px solid #f0f0f0; }
+  .stack-grid-col:last-child { border-right: none; }
+  .stack-grid-col.weekend-gap { border-right: 4px solid #c4c4c4; }
+  .stack-grid-col.nonwork { background: rgba(45,170,120,.18); }
+  .stack-row { position: relative; min-height: 31px; margin-bottom: 3px; }
+  .stack-bar {
+    position: absolute; min-height: 28px; top: 1px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center; padding: 2px 9px; font-size: 11.5px; line-height: 1.15;
+    white-space: normal; overflow: hidden; text-align: center;
+    /* Left/width positions in HTML use calc(X% + 4px) / calc(Y% - 8px) to create the
+       4px horizontal inset on each side — matching v1's horizontalPadding render logic. */
+  }
+  .stack-bar.wrap { min-height: 42px; }
+
+  /* ── Edit task modal ── */
+  .edit-modal { background: #fff; border-radius: 8px; width: 480px; box-shadow: 0 8px 32px rgba(0,0,0,.18); overflow: hidden; }
+  .edit-body { padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: .05em; }
+  .field input {
+    height: 30px; border: 1px solid #ddd; border-radius: 5px; padding: 0 9px;
+    font-size: 12px; color: #222; font-family: inherit; background: #fff;
+  }
+  .field input:focus { outline: none; border-color: #888; box-shadow: 0 0 0 2px rgba(0,0,0,.05); }
+  .hex-field { display: flex; gap: 6px; align-items: center; }
+  .hex-field input { flex: 1; }
+  .color-swatch-lg { width: 30px; height: 30px; border-radius: 5px; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
+  .edit-hint { font-size: 10px; color: #aaa; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     STATE INDEX (for Sonnet handoff — maps each mockup to docs/product-brief.md items)
+     State 1 — Default monthly horizontal. Holidays grouped 1 row + vertical non-working shading (V4).
+              Carryover: K1 packing, K2 dynamic height, K3 auto text color, K4 arrows, K5 special overlay,
+              K9 visible-only legend, K13 count+duration.
+     State 2 — Settings panel (⚙): N1 range modes, N4 relative labels, K1 compact toggle, V5 phases,
+              C4/C5 color+label source, V4 priority labels, clear-all.
+     State 3 — Import modal: paste + editable preview (K17 flexible mapping, I3 stay forgiving). I1 = no row merging.
+     State 4 — Task panel collapsed (thin bar below timeline). One scroll direction (vertical).
+     State 5 — Task panel expanded: E6 click-to-sort headers, K6 drag handles, E4 dupe / E8 edit / remove,
+              E5 filter, K14 hidden fields kept in data+CSV.
+     State 6 — Stacked Split-by-days: V4 column shading works per-day, weekend-gap 4px border.
+     State 7 — Edit modal: E8 real inputs, E10 ‹ › prev/next, E9 right-click entry, color swatch+hex.
+     Bars use v1 density (taller, centered labels). Panel never wider than the timeline board.
+     ═══════════════════════════════════════════════ -->
+
+<!-- ═══════════════════════════════════════════════
+     STATE 1 — DEFAULT VIEW (real data)
+     Timeline: Jun 22 – Oct 1, 2026 (106 days total w/ buffer)
+     Holidays/Vacations sorted to top with tinted background
+     ═══════════════════════════════════════════════ -->
+<div class="mockup-label">State 1 — Default view · Monthly horizontal · real data</div>
+<div class="mockup-note">Board fills available width. Thin header. Controls out of the way. Holidays/Vacations at top with tinted row. Line padding from data respected.</div>
+
+<div class="app">
+  <div class="header">
+    <span class="logo">Roadmap</span>
+    <div class="view-tabs">
+      <button class="tab">Weekly</button>
+      <button class="tab active">Monthly</button>
+      <button class="tab">Stacked</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">⬇ Import</button>
+      <button class="btn btn-ghost">⚙</button>
+      <button class="btn btn-dark">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="canvas">
+    <div class="board">
+
+      <!-- Month header — proportional (106 days: Jun22–Oct5) -->
+      <!-- Jun 22-30 = 9d → 8.49% | Jul = 31d → 29.25% | Aug = 31d → 29.25% | Sep = 30d → 28.30% | Oct = 5d → 4.72% -->
+      <div class="month-header">
+        <div class="month-header-spacer"></div>
+        <div class="month-cell" style="left:0%;       width:8.49%;">Jun 2026</div>
+        <div class="month-cell" style="left:8.49%;   width:29.25%;">Jul 2026</div>
+        <div class="month-cell" style="left:37.74%;  width:29.25%;">Aug 2026</div>
+        <div class="month-cell" style="left:66.98%;  width:28.30%;">Sep 2026</div>
+        <div class="month-cell" style="left:95.28%;  width:4.72%;">Oct</div>
+      </div>
+
+      <!-- Bars -->
+      <div class="bars-container">
+
+        <!-- Grid lines + vertical non-working-day shading (full height, no horizontal row tint) -->
+        <div class="grid-overlay">
+          <div class="grid-month-line" style="left:8.49%"></div>
+          <div class="grid-month-line" style="left:37.74%"></div>
+          <div class="grid-month-line" style="left:66.98%"></div>
+          <div class="grid-month-line" style="left:95.28%"></div>
+          <div class="nonwork-col" style="left:10.38%; width:0.94%;"></div>   <!-- Jul 3 -->
+          <div class="nonwork-col" style="left:23.58%; width:0.94%;"></div>   <!-- Jul 17 -->
+          <div class="nonwork-col" style="left:34.91%; width:8.49%;"></div>   <!-- Jul 29 – Aug 6 -->
+          <div class="nonwork-col" style="left:72.64%; width:0.94%;"></div>   <!-- Sep 7 -->
+        </div>
+
+        <!-- ── HOLIDAYS / VACATIONS — grouped onto ONE row (none overlap in time) ── -->
+        <div class="section-header">Holidays &amp; Time Off</div>
+        <div class="task-row">
+          <div class="bar dark-text single-day" style="background:#62FFC9; left:10.38%; width:0.94%;">4th</div>
+          <div class="bar dark-text single-day" style="background:#62FFC9; left:23.58%; width:0.94%;">PTO</div>
+          <div class="bar dark-text" style="background:#62FFC9; left:34.91%; width:8.49%;">Sarah M PTO</div>
+          <div class="bar dark-text single-day" style="background:#62FFC9; left:72.64%; width:0.94%;">LD</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ── REGULAR TASKS in display order ── -->
+
+        <!-- 1. Project Kickoff: Jun 22, 1 day, left=0%, w=0.94% -->
+        <div class="task-row">
+          <div class="bar light-text single-day" style="background:#4F93D9; left:0%; width:0.94%;">●</div>
+        </div>
+
+        <!-- 2. SME Interviews: Jun 23-26, left=0.94%, w=3.77% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#57B5E6; left:0.94%; width:3.77%;">SME Interviews</div>
+        </div>
+
+        <!-- 3. Data Source Assessment: Jun 23-26 -->
+        <div class="task-row">
+          <div class="bar light-text" style="background:#B01C87; left:0.94%; width:3.77%;">Data Source Assessment</div>
+        </div>
+
+        <!-- 4. Use Case Alignment: Jun 23-26 -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#CBC7C5; left:0.94%; width:3.77%;">Use Case Alignment</div>
+        </div>
+
+        <!-- 5. Data Integration Planning (Jun): Jun 29 – Jul 2, left=6.60%, w=3.77% [line pad 1.25 → 15px] -->
+        <div class="task-row" style="margin-top:15px;">
+          <div class="bar dark-text" style="background:#C296DA; left:6.60%; width:3.77%;">Data Integration Planning</div>
+        </div>
+
+        <!-- 6. Platform Architecture Design: Jun 29 – Jul 2 [line pad 0.25 → 3px] -->
+        <div class="task-row" style="margin-top:3px;">
+          <div class="bar dark-text" style="background:#D1E3F5; left:6.60%; width:3.77%;">Platform Architecture Design</div>
+        </div>
+
+        <!-- 7. Platform Set up: Jun 29 – Jul 2 [line pad 1.25 → 15px] -->
+        <div class="task-row" style="margin-top:15px;">
+          <div class="bar dark-text" style="background:#EE95D6; left:6.60%; width:3.77%;">Platform Set up and Configuration</div>
+        </div>
+
+        <!-- 9. CI/CD Code Promotion: Aug 3 – Sep 18, left=39.62%, w=44.34% -->
+        <div class="task-row">
+          <div class="bar dark-text arrow-r" style="background:#7AAEE2; left:39.62%; width:44.34%;">CI/CD Code Promotion</div>
+        </div>
+
+        <!-- 10. Buildout Medallion Architecture: Jul 6 – Aug 7, left=13.21%, w=31.13% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#BBE0F4; left:13.21%; width:31.13%;">Buildout Medallion Architecture</div>
+        </div>
+
+        <!-- 11. Build Metadata: Jul 13 – Aug 7, left=19.81%, w=24.53% -->
+        <div class="task-row">
+          <div class="bar light-text" style="background:#5C5552; left:19.81%; width:24.53%;">Build Metadata (basic MDM) Architecture</div>
+        </div>
+
+        <!-- 12. Buildout Database: Jul 27 – Aug 7, left=33.02%, w=11.32% -->
+        <div class="task-row">
+          <div class="bar light-text" style="background:#421E55; left:33.02%; width:11.32%;">Buildout Database</div>
+        </div>
+
+        <!-- 13. Data Integration Planning (Jul): Jul 6-10, left=13.21%, w=4.72% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#C296DA; left:13.21%; width:4.72%;">Data Integration Planning</div>
+        </div>
+
+        <!-- 17. Knowledge Transfer: Sep 14 – Oct 1, left=79.25%, w=16.98% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#E0CAEC; left:79.25%; width:16.98%;">Knowledge Transfer</div>
+        </div>
+
+        <!-- 18. Fabric Consumption Estimate: Sep 14-25, left=79.25%, w=11.32% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#E6E2E1; left:79.25%; width:11.32%;">Fabric Consumption Estimate</div>
+        </div>
+
+        <!-- 19. Verify Cataloging: Aug 10-28, left=46.23%, w=17.92% -->
+        <div class="task-row">
+          <div class="bar light-text" style="background:#841565; left:46.23%; width:17.92%;">Verify Cataloging</div>
+        </div>
+
+        <!-- 20. Test Pipelines/Flows: Aug 17-28, left=52.83%, w=11.32% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#B1AAA7; left:52.83%; width:11.32%;">Test Pipelines/Flows</div>
+        </div>
+
+        <!-- 21. Promote Code to Production: Aug 17-28 -->
+        <div class="task-row">
+          <div class="bar light-text" style="background:#1F91CD; left:52.83%; width:11.32%;">Promote Code to Production</div>
+        </div>
+
+        <!-- 22. Data Modeling: Aug 24 – Sep 11, left=59.43%, w=17.92% -->
+        <div class="task-row">
+          <div class="bar light-text" style="background:#A460C8; left:59.43%; width:17.92%;">Data Modeling</div>
+        </div>
+
+        <!-- 23. Semantic/Gold Model Creation: Sep 1-11, left=66.98%, w=10.38% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#E660C0; left:66.98%; width:10.38%;">Semantic/Gold Model Creation</div>
+        </div>
+
+        <!-- 24. Develop Reports: Aug 24 – Sep 18, left=59.43%, w=24.53% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#A6C9EC; left:59.43%; width:24.53%;">Develop Reports</div>
+        </div>
+
+        <!-- 25. Final Deliverables: Sep 28-30, left=92.45%, w=2.83% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#ECF3FB; left:92.45%; width:2.83%;"></div>
+        </div>
+
+        <!-- 26. Sensitivity Labels: Sep 7-18, left=72.64%, w=11.32% -->
+        <div class="task-row">
+          <div class="bar dark-text" style="background:#99D1F0; left:72.64%; width:11.32%;">Sensitivity Labels</div>
+        </div>
+
+      </div><!-- /bars-container -->
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-heading">Category Key</div>
+        <div class="legend-items">
+          <span class="legend-item"><span class="legend-swatch" style="background:#4F93D9"></span>Project Kickoff</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#57B5E6"></span>SME Interviews</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#B01C87"></span>Data Source Assessment</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#CBC7C5"></span>Use Case Alignment</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#C296DA"></span>Data Integration Planning</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#D1E3F5"></span>Platform Architecture Design</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#EE95D6"></span>Platform Set up and Configuration</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#62FFC9"></span>Holiday / PTO</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#7AAEE2"></span>CI/CD Code Promotion</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#BBE0F4"></span>Buildout Medallion Architecture</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#5C5552"></span>Build Metadata Architecture</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#421E55"></span>Buildout Database</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#E0CAEC"></span>Knowledge Transfer</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#E6E2E1"></span>Fabric Consumption Estimate</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#841565"></span>Verify Cataloging</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#B1AAA7"></span>Test Pipelines/Flows</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#1F91CD"></span>Promote Code to Production</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#A460C8"></span>Data Modeling</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#E660C0"></span>Semantic/Gold Model Creation</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#A6C9EC"></span>Develop Reports</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#ECF3FB; border:1px solid #ccc"></span>Final Deliverables</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#99D1F0"></span>Sensitivity Labels</span>
+        </div>
+      </div>
+
+    </div><!-- /board -->
+  </div><!-- /canvas -->
+</div>
+
+<div class="mockup-gap"></div>
+
+<!-- ═══════════════════════════════════════════════
+     STATE 2 — SETTINGS PANEL OPEN
+     ═══════════════════════════════════════════════ -->
+<div class="mockup-label">State 2 — Settings panel open (⚙ click)</div>
+<div class="mockup-note">All toggles live here. Panel closes on click-away. Timeline stays fully visible beneath it.</div>
+
+<div class="app" style="position:relative;">
+  <div class="header">
+    <span class="logo">Roadmap</span>
+    <div class="view-tabs">
+      <button class="tab">Weekly</button>
+      <button class="tab active">Monthly</button>
+      <button class="tab">Stacked</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">⬇ Import</button>
+      <button class="btn btn-ghost" style="background:#f0f0f0; border-color:#ccc;">⚙</button>
+      <button class="btn btn-dark">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="settings-panel" style="width:248px;">
+    <div class="settings-section">
+      <div class="settings-heading">Range mode (N1 — pick one)</div>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#333; margin-bottom:4px;"><input type="radio" name="rangemode" checked> Fit to data</label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#333; margin-bottom:4px;"><input type="radio" name="rangemode"> Specific date range</label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#333; margin-bottom:6px;"><input type="radio" name="rangemode"> Rolling span</label>
+      <!-- Contextual controls for the chosen mode: -->
+      <div style="font-size:11px; color:#888; margin-bottom:4px;">Showing: Jun 22 – Oct 1, 2026</div>
+      <div style="display:flex; gap:4px; align-items:center; opacity:.5;">
+        <button class="btn-sm" style="width:auto; padding:3px 8px;">‹ Prev</button>
+        <input style="width:42px; height:24px; border:1px solid #ddd; border-radius:4px; padding:0 6px; font-size:11px;" value="2">
+        <select class="panel-sort" style="height:24px;"><option>months</option><option>weeks</option></select>
+        <button class="btn-sm" style="width:auto; padding:3px 8px;">Next ›</button>
+      </div>
+      <div style="font-size:10px; color:#bbb; margin-top:3px;">(Prev/Next + span show only in Rolling span mode)</div>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#333; margin-top:6px;"><input type="checkbox"> Relative labels (Week 1, Month 1) <span style="color:#bbb;">N4</span></label>
+    </div>
+    <hr class="divider-line">
+    <div class="settings-section">
+      <div class="settings-heading">Layout</div>
+      <div class="toggle-row"><span class="toggle-label">Stacked layout</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Split by weeks</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Compact rows <span style="color:#bbb;">K1</span></span><div class="toggle on"></div></div>
+    </div>
+    <hr class="divider-line">
+    <div class="settings-section">
+      <div class="settings-heading">Display</div>
+      <div class="toggle-row"><span class="toggle-label">Show weekends</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Show phases <span style="color:#bbb;">V5</span></span><div class="toggle"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Show week / month #</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Show hex columns</span><div class="toggle"></div></div>
+    </div>
+    <hr class="divider-line">
+    <div class="settings-section">
+      <div class="settings-heading">Color &amp; label source (C4 / C5)</div>
+      <div style="font-size:11px; color:#888; margin-bottom:4px;">Bar color from:</div>
+      <div style="display:flex; gap:4px; margin-bottom:6px;">
+        <button class="btn-sm" style="background:#111; color:#fff; border-color:#111;">Category</button>
+        <button class="btn-sm">Phase</button>
+      </div>
+      <div style="font-size:11px; color:#888; margin-bottom:4px;">Bar label from:</div>
+      <div style="display:flex; gap:4px;">
+        <button class="btn-sm" style="background:#111; color:#fff; border-color:#111;">Task</button>
+        <button class="btn-sm">Category</button>
+        <button class="btn-sm">Phase</button>
+      </div>
+    </div>
+    <hr class="divider-line">
+    <div class="settings-section">
+      <div class="settings-heading">Priority labels (V4)</div>
+      <div style="font-size:11px; color:#888; margin-bottom:6px;">Phase/category values that group at top + shade their date columns</div>
+      <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">
+        <span style="display:inline-flex; align-items:center; gap:3px; background:#f0f0f0; border:1px solid #ddd; border-radius:4px; padding:2px 6px; font-size:11px; color:#333;">Holiday <span style="color:#aaa; cursor:pointer;">✕</span></span>
+        <span style="display:inline-flex; align-items:center; gap:3px; background:#f0f0f0; border:1px solid #ddd; border-radius:4px; padding:2px 6px; font-size:11px; color:#333;">Vacation <span style="color:#aaa; cursor:pointer;">✕</span></span>
+        <span style="display:inline-flex; align-items:center; gap:3px; background:#f0f0f0; border:1px solid #ddd; border-radius:4px; padding:2px 6px; font-size:11px; color:#333;">OOO <span style="color:#aaa; cursor:pointer;">✕</span></span>
+      </div>
+      <input style="width:100%; height:26px; border:1px solid #ddd; border-radius:4px; padding:0 8px; font-size:11px; font-family:inherit; color:#333;" placeholder="Add a label… press Enter">
+    </div>
+    <hr class="divider-line">
+    <div class="settings-section">
+      <div class="settings-heading">Danger</div>
+      <button class="btn-sm" style="color:#c0392b; border-color:#e0b0b0;">Clear all tasks</button>
+    </div>
+  </div>
+
+  <div class="canvas">
+    <div class="board" style="opacity:.5; pointer-events:none;">
+      <div class="month-header">
+        <div class="month-header-spacer"></div>
+        <div class="month-cell" style="left:0%; width:8.49%;">Jun</div>
+        <div class="month-cell" style="left:8.49%; width:29.25%;">Jul 2026</div>
+        <div class="month-cell" style="left:37.74%; width:29.25%;">Aug 2026</div>
+        <div class="month-cell" style="left:66.98%; width:28.30%;">Sep 2026</div>
+        <div class="month-cell" style="left:95.28%; width:4.72%;">Oct</div>
+      </div>
+      <div class="bars-container" style="height:160px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup-gap"></div>
+
+<!-- ═══════════════════════════════════════════════
+     STATE 3 — IMPORT MODAL OPEN
+     ═══════════════════════════════════════════════ -->
+<div class="mockup-label">State 3 — Import modal open</div>
+<div class="mockup-note">Paste from Excel → preview detected rows → confirm. Can re-import at any time. Modal closes after import and timeline updates.</div>
+
+<div class="app" style="position:relative;">
+  <div class="header">
+    <span class="logo">Roadmap</span>
+    <div class="view-tabs">
+      <button class="tab">Weekly</button>
+      <button class="tab active">Monthly</button>
+      <button class="tab">Stacked</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" style="background:#f0f0f0; border-color:#ccc;">⬇ Import</button>
+      <button class="btn btn-ghost">⚙</button>
+      <button class="btn btn-dark">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" style="position:absolute; top:48px; bottom:0; left:0; right:0; border-radius:0 0 8px 8px;">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Import tasks</span>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">Paste tab-separated rows from Excel. Headers optional — columns auto-detected. Accepts <strong>every column the CSV export emits</strong> (incl. Display Order &amp; Line Padding) for a lossless round-trip (I4). Preview rows are editable; add/remove before importing. No row merging (I1).</p>
+        <textarea class="paste-area" placeholder="Phase	Phase Hex	Category	Category HEX	Task	Sub-Task	Owner	Week	Date Start	Date End	Display Order	Line Padding&#10;Planning	ED1944	Project Kickoff	4F93D9	Project Kickoff			1	6/22/26	6/22/26	1	0&#10;Planning	ED1944	SME Interviews	57B5E6	SME Interviews			1	6/23/26	6/26/26	2	0"></textarea>
+        <div class="preview-label">Preview — 3 rows detected (editable)</div>
+        <div style="overflow-x:auto;">
+        <table class="preview-table">
+          <thead><tr><th>Task</th><th>Category</th><th>Cat HEX</th><th>Start</th><th>End</th><th>Order</th><th>Line Pad</th></tr></thead>
+          <tbody>
+            <tr><td>Project Kickoff</td><td>Project Kickoff</td><td><span class="swatch-inline" style="background:#4F93D9"></span>4F93D9</td><td>Jun 22</td><td>Jun 22</td><td>1</td><td>0</td></tr>
+            <tr><td>SME Interviews</td><td>SME Interviews</td><td><span class="swatch-inline" style="background:#57B5E6"></span>57B5E6</td><td>Jun 23</td><td>Jun 26</td><td>2</td><td>0</td></tr>
+            <tr><td>Data Integration Planning</td><td>Data Integration Planning</td><td><span class="swatch-inline" style="background:#C296DA"></span>C296DA</td><td>Jun 29</td><td>Jul 2</td><td>5</td><td>1.25</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel">Cancel</button>
+        <button class="btn-confirm">Import 3 tasks</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas">
+    <div class="board" style="opacity:.25; pointer-events:none; height:200px;"></div>
+  </div>
+</div>
+
+<div class="mockup-gap"></div>
+
+<!-- ═══════════════════════════════════════════════
+     STATE 4 — TASK PANEL COLLAPSED
+     ═══════════════════════════════════════════════ -->
+<div class="mockup-label">State 4 — Task panel collapsed (default after screenshot)</div>
+<div class="mockup-note">Timeline fills the page. Panel is a thin bar below — always accessible, never in the way. This is what you'd screenshot.</div>
+
+<div class="app">
+  <div class="header">
+    <span class="logo">Roadmap</span>
+    <div class="view-tabs">
+      <button class="tab">Weekly</button>
+      <button class="tab active">Monthly</button>
+      <button class="tab">Stacked</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">⬇ Import</button>
+      <button class="btn btn-ghost">⚙</button>
+      <button class="btn btn-dark">Export CSV</button>
+    </div>
+  </div>
+  <div class="canvas">
+    <div class="board" style="height:220px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:13px;">
+      ← timeline board (same as State 1) →
+    </div>
+  </div>
+  <!-- Collapsed panel tab -->
+  <div class="task-panel-tab">
+    <span class="panel-tab-label">Tasks</span>
+    <span class="panel-tab-count">26 tasks · Jun 22 – Oct 1, 2026</span>
+    <span class="panel-tab-arrow">▲ expand</span>
+  </div>
+  <div style="height:16px;"></div>
+</div>
+
+<div class="mockup-gap"></div>
+
+<!-- ═══════════════════════════════════════════════
+     STATE 5 — TASK PANEL EXPANDED
+     ═══════════════════════════════════════════════ -->
+<div class="mockup-label">State 5 — Task panel expanded (scroll down to reach it)</div>
+<div class="mockup-note">Timeline above, task panel below. Page gets taller — scroll down to reach the table. Filter, sort, edit, duplicate, remove. No overlap.</div>
+
+<div class="app">
+  <div class="header">
+    <span class="logo">Roadmap</span>
+    <div class="view-tabs">
+      <button class="tab">Weekly</button>
+      <button class="tab active">Monthly</button>
+      <button class="tab">Stacked</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">⬇ Import</button>
+      <button class="btn btn-ghost">⚙</button>
+      <button class="btn btn-dark">Export CSV</button>
+    </div>
+  </div>
+  <div class="canvas">
+    <div class="board" style="height:180px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:13px;">
+      ← timeline board →
+    </div>
+  </div>
+
+  <!-- Expanded panel -->
+  <div class="task-panel-tab" style="border-radius:8px 8px 0 0; border-bottom:none; margin-bottom:0;">
+    <span class="panel-tab-label">Tasks</span>
+    <span class="panel-tab-count">26 tasks · Jun 22 – Oct 1, 2026</span>
+    <span class="panel-tab-arrow">▼ collapse</span>
+  </div>
+  <div class="task-panel" style="margin-top:0; border-radius:0 0 8px 8px; border-top:none;">
+    <!-- Toolbar -->
+    <div class="panel-toolbar">
+      <input class="panel-filter" placeholder="Filter tasks…" value="">
+      <span style="font-size:11px; color:#999;">Click a column to sort · drag ⠿ to reorder</span>
+      <button class="panel-add">+ Add task</button>
+      <button class="panel-export">Export CSV</button>
+    </div>
+
+    <!-- Task table -->
+    <div style="overflow-x:auto;">
+    <table class="task-table">
+      <thead>
+        <tr>
+          <th style="width:18px;"></th>
+          <th class="sortable sorted" style="width:48px;">Order <span class="sort-ind">▲</span></th>
+          <th class="sortable" style="width:13%;">Phase</th>
+          <th class="sortable" style="width:80px;">Phase HEX</th>
+          <th class="sortable" style="width:16%;">Category</th>
+          <th class="sortable" style="width:76px;">Cat HEX</th>
+          <th class="sortable" style="width:auto;">Task</th>
+          <th class="sortable" style="width:62px;">Start</th>
+          <th class="sortable" style="width:62px;">End</th>
+          <th class="sortable" style="width:50px;">Line Pad</th>
+          <th style="width:74px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="drag-handle">⠿</span></td><td>1</td><td>Planning</td><td><div class="hex-cell"><span class="color-dot" style="background:#ED1944"></span>ED1944</div></td><td>Project Kickoff</td><td><div class="hex-cell"><span class="color-dot" style="background:#4F93D9"></span>4F93D9</div></td><td>Project Kickoff</td><td>6/22/26</td><td>6/22/26</td><td>0</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>2</td><td>Planning</td><td><div class="hex-cell"><span class="color-dot" style="background:#ED1944"></span>ED1944</div></td><td>SME Interviews</td><td><div class="hex-cell"><span class="color-dot" style="background:#57B5E6"></span>57B5E6</div></td><td>SME Interviews</td><td>6/23/26</td><td>6/26/26</td><td>0</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>3</td><td>Planning</td><td><div class="hex-cell"><span class="color-dot" style="background:#ED1944"></span>ED1944</div></td><td>Data Source Assessment</td><td><div class="hex-cell"><span class="color-dot" style="background:#B01C87"></span>B01C87</div></td><td>Data Source Assessment</td><td>6/23/26</td><td>6/26/26</td><td>0</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>4</td><td>Planning</td><td><div class="hex-cell"><span class="color-dot" style="background:#ED1944"></span>ED1944</div></td><td>Use Case Alignment</td><td><div class="hex-cell"><span class="color-dot" style="background:#CBC7C5"></span>CBC7C5</div></td><td>Use Case Alignment</td><td>6/23/26</td><td>6/26/26</td><td>0</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>5</td><td>Planning</td><td><div class="hex-cell"><span class="color-dot" style="background:#ED1944"></span>ED1944</div></td><td>Data Integration Planning</td><td><div class="hex-cell"><span class="color-dot" style="background:#C296DA"></span>C296DA</div></td><td>Data Integration Planning</td><td>6/29/26</td><td>7/2/26</td><td>1.25</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>6</td><td>Planning</td><td><div class="hex-cell"><span class="color-dot" style="background:#ED1944"></span>ED1944</div></td><td>Platform Architecture Design</td><td><div class="hex-cell"><span class="color-dot" style="background:#D1E3F5"></span>D1E3F5</div></td><td>Platform Architecture Design</td><td>6/29/26</td><td>7/2/26</td><td>0.25</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>7</td><td>Configure and Setup</td><td><div class="hex-cell"><span class="color-dot" style="background:#57B5E6"></span>57B5E6</div></td><td>Platform Set up and Configuration</td><td><div class="hex-cell"><span class="color-dot" style="background:#EE95D6"></span>EE95D6</div></td><td>Platform Set up and Configuration</td><td>6/29/26</td><td>7/2/26</td><td>1.25</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr style="background:#f5fff9;"><td><span class="drag-handle">⠿</span></td><td>8</td><td>Holiday</td><td><div class="hex-cell"><span class="color-dot" style="background:#B01C87"></span>B01C87</div></td><td>Holiday</td><td><div class="hex-cell"><span class="color-dot" style="background:#62FFC9"></span>62FFC9</div></td><td>4th of July observed</td><td>7/3/26</td><td>7/3/26</td><td>0</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>9</td><td>Develop and Implement</td><td><div class="hex-cell"><span class="color-dot" style="background:#D30C55"></span>D30C55</div></td><td>CI/CD Code Promotion</td><td><div class="hex-cell"><span class="color-dot" style="background:#7AAEE2"></span>7AAEE2</div></td><td>CI/CD Code Promotion</td><td>8/3/26</td><td>9/18/26</td><td>0</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td><span class="drag-handle">⠿</span></td><td>10</td><td>Develop and Implement</td><td><div class="hex-cell"><span class="color-dot" style="background:#D30C55"></span>D30C55</div></td><td>Buildout Medallion Architecture</td><td><div class="hex-cell"><span class="color-dot" style="background:#BBE0F4"></span>BBE0F4</div></td><td>Buildout Medallion Architecture</td><td>7/6/26</td><td>8/7/26</td><td>0</td><td><div class="row-actions"><button class="act-btn" title="Edit">✎</button><button class="act-btn" title="Duplicate">⧉</button><button class="act-btn danger" title="Remove">✕</button></div></td></tr>
+        <tr><td colspan="11" style="text-align:center; color:#bbb; padding:6px; font-size:11px;">… 16 more rows …</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="panel-footer">26 tasks · drag ⠿ to reorder · click a row to select on timeline</div>
+  </div>
+  <div style="height:16px;"></div>
+</div>
+
+<div class="mockup-gap"></div>
+
+<!-- ═══════════════════════════════════════════════
+     STATE 6 — STACKED MONTHLY (Split by Days) · non-working shading works here
+     July 2026, weekends hidden, 23 weekday columns
+     ═══════════════════════════════════════════════ -->
+<div class="mockup-label">State 6 — Stacked · Split by days · weekends hidden</div>
+<div class="mockup-note">Non-working-day shading works per-day (Jul 3, 17, 29–31). Thicker border = collapsed weekend gap. Bars that don't fit WRAP + grow taller (K2, never truncate). Continuation arrows ◀ ▶ are pinned to the bar EDGES with the label centered between them (K4). Label color is computed dark/light from each bar's background luminance (K3) — not hardcoded. All three already work in v1's week/month views; carry them into every view.</div>
+
+<div class="app">
+  <div class="header">
+    <span class="logo">Roadmap</span>
+    <div class="view-tabs">
+      <button class="tab">Weekly</button>
+      <button class="tab">Monthly</button>
+      <button class="tab active">Stacked</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">⬇ Import</button>
+      <button class="btn btn-ghost">⚙</button>
+      <button class="btn btn-dark">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="canvas">
+    <div class="board">
+      <div style="padding:12px 12px 6px;">
+        <div class="stack-title">July 2026 · Jul 1 – Jul 31</div>
+        <div class="stack-board">
+          <!-- Day headers: 23 weekdays. nonwork = Jul 3 (idx2), Jul 17 (idx12), Jul 29-31 (idx20-22). weekend-gap after each Friday -->
+          <div class="day-header">
+            <div class="day-col-head"><span class="dow">Wed</span>1</div>
+            <div class="day-col-head"><span class="dow">Thu</span>2</div>
+            <div class="day-col-head nonwork weekend-gap"><span class="dow">Fri</span>3</div>
+            <div class="day-col-head"><span class="dow">Mon</span>6</div>
+            <div class="day-col-head"><span class="dow">Tue</span>7</div>
+            <div class="day-col-head"><span class="dow">Wed</span>8</div>
+            <div class="day-col-head"><span class="dow">Thu</span>9</div>
+            <div class="day-col-head weekend-gap"><span class="dow">Fri</span>10</div>
+            <div class="day-col-head"><span class="dow">Mon</span>13</div>
+            <div class="day-col-head"><span class="dow">Tue</span>14</div>
+            <div class="day-col-head"><span class="dow">Wed</span>15</div>
+            <div class="day-col-head"><span class="dow">Thu</span>16</div>
+            <div class="day-col-head nonwork weekend-gap"><span class="dow">Fri</span>17</div>
+            <div class="day-col-head"><span class="dow">Mon</span>20</div>
+            <div class="day-col-head"><span class="dow">Tue</span>21</div>
+            <div class="day-col-head"><span class="dow">Wed</span>22</div>
+            <div class="day-col-head"><span class="dow">Thu</span>23</div>
+            <div class="day-col-head weekend-gap"><span class="dow">Fri</span>24</div>
+            <div class="day-col-head"><span class="dow">Mon</span>27</div>
+            <div class="day-col-head"><span class="dow">Tue</span>28</div>
+            <div class="day-col-head nonwork"><span class="dow">Wed</span>29</div>
+            <div class="day-col-head nonwork"><span class="dow">Thu</span>30</div>
+            <div class="day-col-head nonwork"><span class="dow">Fri</span>31</div>
+          </div>
+
+          <!-- Bars -->
+          <div class="stack-bars">
+            <!-- Grid columns w/ shading -->
+            <div class="stack-grid">
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col nonwork weekend-gap"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col weekend-gap"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col nonwork weekend-gap"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col weekend-gap"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col"></div>
+              <div class="stack-grid-col nonwork"></div>
+              <div class="stack-grid-col nonwork"></div>
+              <div class="stack-grid-col nonwork"></div>
+            </div>
+
+            <!-- Holiday group — ONE row, none overlap (4th idx2; PTO idx12; PTO idx20-22) -->
+            <!-- col width = 4.348% -->
+            <div class="stack-row" style="margin-top:2px;">
+              <div class="stack-bar dark-text" style="background:#62FFC9; left:calc(8.70% + 4px); width:calc(4.35% - 8px);">4th</div>
+              <div class="stack-bar dark-text" style="background:#62FFC9; left:calc(52.17% + 4px); width:calc(4.35% - 8px);">PTO</div>
+              <div class="stack-bar dark-text arrow-r" style="background:#62FFC9; left:calc(86.96% + 4px); width:calc(13.04% - 8px);">Sarah M PTO</div>
+            </div>
+
+            <div class="section-divider" style="margin:4px 6px;"></div>
+
+            <!-- Row 1 (packed): Data Integration #1 (cols 0-1) + Buildout Medallion (cols 3-22) — no overlap -->
+            <!-- Data Integration wraps → row grows to 44px; Buildout Medallion stays 28px top-aligned -->
+            <div class="stack-row" style="min-height:44px;">
+              <div class="stack-bar wrap dark-text arrow-l" style="background:#C296DA; left:4px; width:calc(8.70% - 8px);">Data Integration Planning</div>
+              <div class="stack-bar dark-text arrow-r" style="background:#BBE0F4; left:calc(13.04% + 4px); width:calc(86.96% - 8px);">Buildout Medallion Architecture</div>
+            </div>
+            <!-- Row 2 (packed): Data Integration #2 (cols 3-7) + Build Metadata (cols 8-22) — adjacent, no overlap -->
+            <div class="stack-row">
+              <div class="stack-bar dark-text" style="background:#C296DA; left:calc(13.04% + 4px); width:calc(21.74% - 8px);">Data Integration Planning</div>
+              <div class="stack-bar light-text arrow-r" style="background:#5C5552; left:calc(34.78% + 4px); width:calc(65.22% - 8px);">Build Metadata (basic MDM) Architecture</div>
+            </div>
+            <!-- Row 3: Buildout Database (cols 18-22) — overlaps both rows above, needs own row -->
+            <div class="stack-row">
+              <div class="stack-bar light-text arrow-r" style="background:#421E55; left:calc(78.26% + 4px); width:calc(21.74% - 8px);">Buildout Database</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup-gap"></div>
+
+<!-- ═══════════════════════════════════════════════
+     STATE 7 — EDIT TASK MODAL
+     ═══════════════════════════════════════════════ -->
+<div class="mockup-label">State 7 — Edit task (click "Edit" on a row)</div>
+<div class="mockup-note">Real form inputs replace the broken in-cell editing: click to place cursor, double-click to select, proper date + color pickers. No more arrow-key navigation.</div>
+
+<div class="app" style="position:relative;">
+  <div class="header">
+    <span class="logo">Roadmap</span>
+    <div class="view-tabs">
+      <button class="tab">Weekly</button>
+      <button class="tab active">Monthly</button>
+      <button class="tab">Stacked</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">⬇ Import</button>
+      <button class="btn btn-ghost">⚙</button>
+      <button class="btn btn-dark">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" style="position:absolute; top:48px; bottom:0; left:0; right:0;">
+    <div class="edit-modal">
+      <div class="modal-header">
+        <span class="modal-title">Edit task</span>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:11px; color:#aaa;">5 of 26</span>
+          <button style="width:26px; height:26px; border:1px solid #ddd; border-radius:5px; background:#fff; color:#555; cursor:pointer; font-size:13px;">‹</button>
+          <button style="width:26px; height:26px; border:1px solid #ddd; border-radius:5px; background:#fff; color:#555; cursor:pointer; font-size:13px;">›</button>
+          <button class="modal-close" style="margin-left:4px;">✕</button>
+        </div>
+      </div>
+      <div class="edit-body">
+        <div class="field full">
+          <label>Task</label>
+          <input value="Data Integration Planning">
+        </div>
+        <div class="field">
+          <label>Phase</label>
+          <input value="Planning">
+        </div>
+        <div class="field">
+          <label>Phase HEX</label>
+          <div class="hex-field">
+            <div class="color-swatch-lg" style="background:#ED1944"></div>
+            <input value="#ED1944">
+          </div>
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <input value="Data Integration Planning">
+        </div>
+        <div class="field">
+          <label>Category HEX</label>
+          <div class="hex-field">
+            <div class="color-swatch-lg" style="background:#C296DA"></div>
+            <input value="#C296DA">
+          </div>
+        </div>
+        <div class="field">
+          <label>Start date</label>
+          <input value="2026-06-29" type="text">
+        </div>
+        <div class="field">
+          <label>End date</label>
+          <input value="2026-07-02" type="text">
+        </div>
+        <div class="field">
+          <label>Display order</label>
+          <input value="5">
+        </div>
+        <div class="field">
+          <label>Line padding</label>
+          <input value="1.25">
+          <span class="edit-hint">Extra space above this row</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel">Cancel</button>
+        <button class="btn-confirm">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas">
+    <div class="board" style="opacity:.25; pointer-events:none; height:200px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
