@@ -243,7 +243,7 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>(() => loadStoredTasks());
 
   // Timeline view mode: "weeks" or "months"
-  const [view, setView] = useState<"weeks" | "months" | "calendar">("weeks");
+  const [view, setView] = useState<"weeks" | "months" | "calendar">("months");
 
   // Current week/month being displayed in the timeline
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date()));
@@ -272,8 +272,8 @@ function App() {
   // Toggle between showing week numbers or dates in weekly view
   const [showWeekNumbers, setShowWeekNumbers] = useState(false);
   const [showMonthNumbers, setShowMonthNumbers] = useState(false);
-  const [showWeekends, setShowWeekends] = useState(true);
-  const [timelineLayout, setTimelineLayout] = useState<"horizontal" | "stacked">("horizontal");
+  const [showWeekends, setShowWeekends] = useState(false);
+  const [timelineLayout, setTimelineLayout] = useState<"horizontal" | "stacked">("stacked");
   const [monthStackSplit, setMonthStackSplit] = useState<"day" | "week">("day");
   
   // Toggle for showing/hiding phase labels and colors
@@ -296,7 +296,7 @@ function App() {
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [compactTaskSpacing, setCompactTaskSpacing] = useState(true);
-  const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("rolling");
+  const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("fit");
 
   // N4: Relative timeline mode (Week 1 / Month 1 instead of dates)
   const [useRelativeTimeline, setUseRelativeTimeline] = useState(false);
@@ -3504,25 +3504,25 @@ function App() {
                       />
                     </td>
                     <td>
-                      <div style={{ display: "flex", gap: "2px", justifyContent: "flex-end" }}>
+                      <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
                         <button
+                          className="v2-task-row-action"
                           title="Edit"
                           onClick={() => openTaskEditor(t.id)}
-                          style={{ fontSize: "11px", padding: "0 4px" }}
                         >
                           ✎
                         </button>
                         <button
+                          className="v2-task-row-action"
                           title="Duplicate"
                           onClick={() => duplicateTask(t)}
-                          style={{ fontSize: "11px", padding: "0 4px" }}
                         >
                           ⧉
                         </button>
                         <button
+                          className="v2-task-row-action delete"
                           title="Remove"
                           onClick={() => removeTask(t.id)}
-                          style={{ color: "#c0392b", fontSize: "11px", padding: "0 4px" }}
                         >
                           ✕
                         </button>
