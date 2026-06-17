@@ -13,163 +13,75 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 3 complete: C2 palette management, N4 relative timeline; build clean; ready for Phase 4)
+Last updated: 2026-06-16 (Phase 4: L1 Presentation mode complete; E6 verified working; next: E7 task panel layout refactor)
 
 ## Current Snapshot
 
-The repository is now on the `v2` branch. This is a ground-up redesign effort driven by a product brief at `docs/product-brief.md`. The goal is to move from a feature-accumulation codebase to a design-led product with a clear layout, screenshot-first UX, and cleaner controls.
+Roadmap Project v2 redesign. Ground-up rewrite driven by product brief (`docs/product-brief.md`), targeting screenshot-first UX for client deliverables. v1 preserved as tag `v1` and worktree `../Roadmap Project v1/`.
 
-**v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
+**Branch:** `master` (Phase 0–3 merged, L1 complete). Phase 4 work in `feat/phase-4-presentation-mode` (L1 done, ready for merge) and new branch `feat/phase-4-e6-column-sorting` (E7 next).
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and Phase 2 now has three bounded commits on branch `feat/phase-2-settings`: `3f5f1e2 Wire Phase 2 settings controls`, `a390e0b Tighten Phase 2 timeline carryover`, and `1ead8d6 Extend Phase 2 priority shading`. The current branch is `codex/phase-3-edit-modal`, branched from `master` at `310231c`, and commit `8a9b4f0 Add phase 3 edit modal` captures the modal editor slice. A follow-up browser pass on 2026-06-16 verified the Compact rows toggle and priority-period shading behavior across weekly horizontal, monthly horizontal, and monthly stacked views. The Phase 3 edit-modal slice is in place and browser-checked: row actions open an edit modal with live task fields, and Prev/Next steps through the current sort order. The bar color and label source controls are also wired and smoke-tested, right-clicking a task bar opens the editor, and the task filter now matches hex values as well as text.
+**Latest commits:**
+- `ec828c6` Fix: Add top padding in presentation mode to prevent banner overlay
+- `229a17a` Update handoff: Phase 4 L1 Presentation mode complete
+- `4384fb5` Add L1 Presentation mode—hide all controls, show timeline only
 
-## What v1 Has (all still in the codebase)
+**Build:** `npm run build` passes clean. Dev server: `npm run dev` → `http://localhost:5173`.
 
-- Editable task table with drag-to-reorder
-- Tab-separated spreadsheet import with preview before import
-- Weekly and monthly timeline views (horizontal and stacked layouts)
-- Stacked monthly split-by-days and split-by-weeks modes
-- Calendar view
-- Weekend toggle (affects weekly, monthly, and calendar views)
-- Timeline-click task selection filter
-- CSV export (includes week number)
-- Browser-local task persistence
-- Special priority treatment for Vacation / Holiday / OOO tasks
-- Category key / legend
+## Phases Status
 
-## v2 Direction
+| Phase | Task | Status | Notes |
+|-------|------|--------|-------|
+| 0 | Bug fixes (C1, I1, I2, V3) | Complete | Category colors, import grouping, line padding round-trip fixed |
+| 1 | Layout shell | Complete | Header, settings panel, import modal, task panel UI |
+| 2 | Timeline carryover | Complete | Packing, text wrapping, auto-color, special priority shading |
+| 3 | Edit modal + colors | Complete | Modal editing, color/label source toggles, hex palette, relative timeline |
+| **4a** | **L1 Presentation mode** | **Complete** | Ctrl+P toggle, hides all controls, shows timeline + legend only |
+| 4b | E6 Column sorting | **Verified working** | Already implemented; no action needed |
+| 4c | **E7 Task panel layout** | **Next** | Refactor task panel from overlay to collapsible section below timeline |
 
-See `docs/product-brief.md` for the full brief. Key points:
+## L1 Presentation Mode — COMPLETE
 
-- **Primary output is a screenshot** that goes into a PowerPoint deck
-- **Excel is the data source** — paste/import is the primary entry workflow
-- **Monthly horizontal view** is the most-used and most client-friendly
-- **Stacked layouts** solve the unreadable single-day-task problem
-- **Calendar view** is under review — may overlap with stacked monthly now that stacked exists
+**Branch:** `feat/phase-4-presentation-mode` (3 commits, ready to merge)
+- Keyboard shortcut: Ctrl/Cmd+P
+- UI button: 🎬 in header
+- Behavior: Hides header, settings, import modal, task panel; shows dark overlay banner with exit instructions
+- Fix: Added `paddingTop: 40px` to app when active (prevents banner overlay on timeline)
+- Build: Clean, verified with `npm run build`
 
-**Design principles driving v2:**
-1. Screenshot-first — timeline must look presentation-quality without manual cleanup
-2. View = audience — view selector is the most important control, not one of eight equal buttons
-3. Every task must be legible at screenshot scale
-4. Controls live out of the way; the timeline owns the space
+## E6 Column Header Sorting — VERIFIED WORKING
 
-## Branch and Working Tree
+No implementation needed. Already in place:
+- Column headers clickable for sort (lines 3803–3806 in `src/App.tsx`)
+- Sort indicators (▲/▼) visible on active column (line 3810)
+- All required columns covered: Phase, Phase HEX, Category, Cat HEX, Task, Start, End, Order, Line Padding
+- Row drag-to-reorder wired (lines 3821–3824)
 
-- `codex/phase-3-edit-modal` — active development branch based on `master` at `310231c`; `8a9b4f0 Add phase 3 edit modal` and `d730fb7 Add phase 3 color controls` are committed; hex filter support is part of the current branch state; v1 baseline is still preserved as tag `v1`
-- Working tree — `docs/handoff.md` is the only repo file still carrying the current wrap-up notes; unrelated `.claude/settings.json` remains dirty, and untracked `AGENTS.md` plus `.agents/` are present
-- `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
+## E7 Task Panel Layout — NEXT TASK
 
-## How to Run
+**Requirement (from product-brief.md):**
+- Task panel must be below timeline (structural layout change, not overlay)
+- Starts collapsed as thin bar, expands downward
+- Timeline always visible at top (never scrolls away)
+- Single scroll direction (vertical for whole page)
+- No overlap between timeline and panel
 
-```bash
-npm install
-npm run dev
-```
+**Current state:** Task panel is a fixed-height overlay (`.v2-task-panel`) that appears above/alongside timeline. E7 requires repositioning it in the page layout flow below the timeline.
 
-v2 (feat/phase-1-layout): `http://localhost:5173` (or 5174 if 5173 is occupied)
-v1 (worktree): `cd "../Roadmap Project v1" && npm run dev` → `http://localhost:5174`
+**Implementation scope:**
+1. Restructure page layout (remove overlay CSS, use flexbox/grid below timeline)
+2. Update collapse/expand state behavior
+3. Adjust scrolling behavior (vertical scroll for entire page, not per-section)
+4. Verify timeline stays pinned at top during scroll
 
-## How to Verify
+**Effort:** ~30–45 minutes (layout refactor + testing). New session recommended.
 
-```bash
-npm run build
-npx eslint src/App.tsx
-git diff --check
-```
-
-## Design Package — Complete
-
-The v2 design work is done and committed. Do not start implementation without reading both:
-
-- `docs/product-brief.md` — full requirements, carryover inventory (K1–K18), build order
-- `docs/mockups/v2-layout-mockup.html` — open in browser; 7 annotated states covering every surface
-
-Four open design questions remain in `product-brief.md` (hex palette, calendar retirement, relative-mode anchor, phase bars). These can be decided during Phase 3; they don't block Phase 0–2.
-
-## Phase 0 Status — Complete (except V3)
-
-| Bug | Status | Notes |
-|-----|--------|-------|
-| C1 — category colors | Fixed | All 4 `bgColor` callsites now strip any existing `#` before prepending, matching how `blendHexWithWhite` and `getTextColor` already handled it. Affects weekly view, both stacked monthly views, and the category key legend. |
-| I1 — import row merging | Fixed | Removed the `GROUP TASKS` block in `importTasks`. Rows are no longer collapsed by `phase\|category\|name` key — every row becomes its own task. |
-| I2 — line padding round-trip | Verified working | `case "line padding"` was already present in the import switch. The grouping (I1) was the actual cause of `lineHeightAdjust` loss on re-import. Removing I1 fixes I2 too. |
-| V3 — calendar date bleed | Not started | Fold into "retire calendar" decision (open design question #2). |
-
-## Phase 1 Status — Complete
-
-| Item | Status | Notes |
-|------|--------|-------|
-| 48px v2 header | Done | Logo · Weekly/Monthly/Stacked tabs (centered) · Import/⚙/Export (right) |
-| Settings panel | Done | Range mode radio, Layout/Display toggles, Danger section; backdrop closes on outside click |
-| Import modal | Done | Paste area → preview table → Import button; z-index 2000 |
-| Task panel tab | Done | Collapsed by default (hidden), expands on click to full sortable table |
-| compactTaskSpacing state | Done | Wired to all 3 renderStackedTimelineBoard stacked calls |
-| Build | Clean | `npm run build` passes with no errors |
-| Browser verification | PASS | All 4 flows verified via Playwright headless |
-
-New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compactTaskSpacing`, `rangeMode`, `showHexColumns`. Old UI toggles (`showTaskList`, `showImportSection`, `showTimeline`) removed. Calendar state setters removed (no v2 UI controls for calendar navigation).
-
-## Phase 2 Browser Verification — PASS
-
-- `Compact rows` ON/OFF was verified in weekly horizontal, monthly horizontal, monthly stacked split-by-days, and monthly stacked split-by-weeks.
-- With `Compact rows` ON, non-overlapping execution tasks share rows; with it OFF, those same tasks step down one row at a time as intended.
-- Priority-period shading is visible in weekly horizontal, monthly horizontal, and both monthly stacked split modes for the seeded Holiday/PTO spans.
-- The current V4 behavior is hardcoded through `isSpecialPriorityTask` (`Vacation` / `Holiday` / `OOO`) and looks stable enough to close the Phase 2 carryover slice.
-- `L4` configurable priority labels should be treated as a Phase 3 / net-new follow-on, not Phase 2 cleanup. The product brief still marks it as `New` + `Missing`, and the current shipped behavior already satisfies the carryover verification target.
-
-## Phase 3 Edit Modal — PASS
-
-- Added a row-level `Edit` action that opens a modal with real form inputs for task name, sub-task, phase, category, owner, week, dates, display order, line padding, and both hex fields.
-- Modal edits save immediately and the browser smoke test confirmed the change persists back into the task table row.
-- `Prev` / `Next` now steps through tasks in the current sort order, and the browser smoke test confirmed the modal advances from task 1 to task 2.
-- The row-level duplicate action remains available alongside the new edit flow.
-
-## Phase 3 Color/Label Source — PASS
-
-- Added settings controls for bar color source (`Category` / `Phase`) and bar label source (`Task` / `Category` / `Phase`).
-- Timeline bars, calendar chips, special-priority column shading, and the color legend now follow the selected color source.
-- The browser smoke test confirmed the `Phase` color source and `Phase` label source update the visible bars and legend, while the settings UI reflects the active selection.
-
-## Phase 3 Right-Click Edit — PASS
-
-- Right-clicking a task bar or calendar chip opens the edit modal for that task.
-- The browser smoke test confirmed the editor opens from a right-click on a visible task bar after horizontal scroll is reset.
-
-## Phase 3 Hex Filter — PASS
-
-- The task filter now matches `phaseHex` and `categoryHex` values, including entries typed with or without a leading `#`.
-- This keeps the task panel search aligned with the color-source controls and makes it easier to find tasks by exact color value.
-
-## Phase 3 — Complete ✅
-
-**C2: Hex Palette Management** (commits fa51cd5, 181839b, b7f50c7, 2234a42)
-- Palette state: `colorPalette` (8 defaults), `categoryColorMap` (category → index)
-- Rendering: `getTaskBarColorHex` checks palette mapping first
-- Auto-assign on import: new categories get next unused palette color
-- Settings UI: shows swatches + category mappings + per-category override dropdowns
-
-**N4: Relative Timeline Mode** (commit 7104973)
-- Toggle: `useRelativeTimeline` state
-- Settings control: "Relative timeline (Week 1, 2, ...)"
-- Headers show W1/W2/M1/M2 instead of dates when enabled
-- For projects with unconfirmed dates
-
-**Phase 3 items not implemented:**
-- Lighter/darker color variants (can defer)
-
-## Phase 4 — Next
-
-From product-brief.md, Phase 3 is complete. Phase 4 candidates:
-- **L1**: Presentation mode (hide all controls, show timeline + legend only) — biggest UX win
-- **E6**: Click column headers to sort + drag to reorder in task table
-- **E7**: Task panel as true collapsible section below timeline
-- Continue with remaining bugs/enhancements in priority order
+**Other Phase 4 candidates:** E7 is the priority. After that, continue with remaining items per product-brief.md priority order.
 
 ## New Chat Start
 
-Read only these two files to orient:
-
+Read these first:
 - `CLAUDE.md`
-- `docs/handoff.md`
+- `docs/handoff.md` (this file)
 
-Pull in `src/App.tsx`, `README.md`, `docs/product-brief.md`, or skill files only once the specific task is clear.
+Then pull in `src/App.tsx`, `README.md`, or `docs/product-brief.md` as needed for the specific task.
