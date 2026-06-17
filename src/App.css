@@ -143,14 +143,23 @@
 }
 
 .v2-btn {
-  padding: 2px;
+  height: 28px;
+  padding: 0 10px;
   border-radius: 5px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
   font-family: inherit;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v2-btn-icon {
+  width: 28px;
+  padding: 0;
 }
 
 .v2-btn-ghost {

@@ -1911,14 +1911,12 @@ function App() {
             <button
               className="v2-btn v2-btn-ghost"
               onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
-              style={{ fontSize: "14px" }}
             >
               ⬇ Import
             </button>
             <button
-              className={`v2-btn v2-btn-ghost${showSettingsPanel ? " v2-btn-active" : ""}`}
+              className={`v2-btn v2-btn-ghost v2-btn-icon${showSettingsPanel ? " v2-btn-active" : ""}`}
               onClick={() => setShowSettingsPanel((p) => !p)}
-              style={{ fontSize: "14px" }}
             >
               ⚙
             </button>
@@ -1926,10 +1924,9 @@ function App() {
               Export CSV
             </button>
             <button
-              className="v2-btn v2-btn-ghost"
+              className="v2-btn v2-btn-ghost v2-btn-icon"
               onClick={() => setPresentationMode(true)}
               title="Presentation mode (Ctrl+P)"
-              style={{ fontSize: "14px" }}
             >
               🎬
             </button>
