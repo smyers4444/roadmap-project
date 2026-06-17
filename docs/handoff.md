@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 0 bugs C1/I1/I2 fixed; build clean)
+Last updated: 2026-06-16 (Phase 1 layout shell complete; build clean, browser-verified)
 
 ## Current Snapshot
 
@@ -21,7 +21,7 @@ The repository is now on the `v2` branch. This is a ground-up redesign effort dr
 
 **v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete (see status table below). The codebase is v1 code with those three bugs patched; the v2 layout shell has not been started yet.
+The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete and Phase 1 (v2 layout shell) is complete. The app now runs the full v2 shell on branch `feat/phase-1-layout`.
 
 ## What v1 Has (all still in the codebase)
 
@@ -56,7 +56,7 @@ See `docs/product-brief.md` for the full brief. Key points:
 ## Branch and Working Tree
 
 - `master` — v1 baseline, tagged as `v1`
-- `v2` — active development branch (current)
+- `feat/phase-1-layout` — active development branch (current); Phase 1 complete
 - `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
 
 ## How to Run
@@ -66,7 +66,7 @@ npm install
 npm run dev
 ```
 
-v2: `http://localhost:5173`
+v2 (feat/phase-1-layout): `http://localhost:5173` (or 5174 if 5173 is occupied)
 v1 (worktree): `cd "../Roadmap Project v1" && npm run dev` → `http://localhost:5174`
 
 ## How to Verify
@@ -94,11 +94,29 @@ Four open design questions remain in `product-brief.md` (hex palette, calendar r
 | I2 — line padding round-trip | Verified working | `case "line padding"` was already present in the import switch. The grouping (I1) was the actual cause of `lineHeightAdjust` loss on re-import. Removing I1 fixes I2 too. |
 | V3 — calendar date bleed | Not started | Fold into "retire calendar" decision (open design question #2). |
 
+## Phase 1 Status — Complete
+
+| Item | Status | Notes |
+|------|--------|-------|
+| 48px v2 header | Done | Logo · Weekly/Monthly/Stacked tabs (centered) · Import/⚙/Export (right) |
+| Settings panel | Done | Range mode radio, Layout/Display toggles, Danger section; backdrop closes on outside click |
+| Import modal | Done | Paste area → preview table → Import button; z-index 2000 |
+| Task panel tab | Done | Collapsed by default (hidden), expands on click to full sortable table |
+| compactTaskSpacing state | Done | Wired to all 3 renderStackedTimelineBoard stacked calls |
+| Build | Clean | `npm run build` passes with no errors |
+| Browser verification | PASS | All 4 flows verified via Playwright headless |
+
+New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compactTaskSpacing`, `rangeMode`, `showHexColumns`. Old UI toggles (`showTaskList`, `showImportSection`, `showTimeline`) removed. Calendar state setters removed (no v2 UI controls for calendar navigation).
+
 ## Recommended Next Task
 
-**Phase 1 — Layout shell** (new header, settings panel, task panel as collapsible section, import modal).
+**Phase 2** — Wire the settings panel controls to actual app behavior:
+- Range mode radio → connect to `useCustomMonthRange` / `customMonthStart` / `customMonthEnd`
+- Layout toggles → wire compactTaskSpacing, showWeekends, showPhases, showWeekNumbers
+- Display toggles → wire hex column visibility in task panel table
+- Danger → confirm-then-clear all tasks
 
-Read `docs/mockups/v2-layout-mockup.html` in a browser (States 1–7) and `docs/product-brief.md` Phase 1 build order before starting.
+Read `docs/product-brief.md` Phase 2 build order and `docs/mockups/v2-layout-mockup.html` States 4–6 before starting.
 
 ## New Chat Start
 
