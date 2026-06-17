@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (Phase 6 rock-solid batch complete on branch `phase-6-ux-polish`)
+Last updated: 2026-06-17 (Phase 6 TP6/TP7/TP8 UX polish complete on branch `phase-6-ux-polish`)
 
 ## Current Snapshot
 
@@ -22,10 +22,12 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 **Branch:** `phase-6-ux-polish` (off master; Phase 5 already merged into master)
 
 **Latest commits:**
+- `84347e2` TP8: Fix category color square sizing and reduce heading margin (App.css dead-class cleanup)
+- `86ca466` TP8: Tighten Category Key spacing and fix color square sizing
+- `0103a6e` TP8: Reduce Category Key vertical gap from 1rem to 0.5rem
+- `2283232` TP7: Reduce vertical task row padding from 4px to 2px
+- `4300fd0` TP6: Set Actions column width to 110px
 - `795074f` Phase 6: Rock-solid batch — CSS + view defaults (LY1, LY2, HD1, TP1, TP4, DF1, DF2)
-- [Phase 5 merged] PR #11: Phase 5 (phase header removal, TL1/TL2) merged to master
-- `8865e20` Phase 5 wrap-up: sync docs for phase header removal
-- `7758b04` Phase 5: remove phase header bars and "Show phases" toggle (TL1, TL2)
 
 **Build:** `npm run build` passes clean. Dev server: `npm run dev` → `http://localhost:5173`.
 
@@ -41,7 +43,7 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 | **4b** | **E6 Column sorting** | **✅ Complete** | Already implemented; verified working |
 | **4c** | **E7 Task panel layout** | **✅ Complete** | Refactored to flexbox: single scroll direction, timeline pinned, task panel below |
 | **5** | **Phase header removal (TL1, TL2)** | **✅ Complete** | Sonnet/Opus work. Phase bands + `showPhaseLabels` toggle removed; all tasks pack into one combined board per period. Committed on `phase-5-remove-phase-headers`, PR open. |
-| **6** | **UX Polish (Haiku, 12 items)** | **🚀 In Progress** | Rock-solid batch (LY1, LY2, HD1, TP1, TP4, DF1, DF2) complete & committed. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending. |
+| **6** | **UX Polish (Haiku, 12 items)** | **🚀 In Progress** | Rock-solid batch (LY1, LY2, HD1, TP1, TP4, DF1, DF2) complete. TP6 (Action column width), TP7 (task row padding), TP8 (Category Key spacing/sizing) complete. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending. |
 
 ## Phase 4 — Complete (L1 + E6 + E7)
 
@@ -94,6 +96,24 @@ Already implemented and verified working. No changes needed.
 
 **Verified:** `npm run build` clean, `npx eslint src/App.tsx` clean, browser preview working (white bg, full width, stacked+days layout, no weekends, fit-to-data range).
 
+### TP6, TP7, TP8 batch ✅ Complete
+
+**Branch:** `phase-6-ux-polish`
+
+- **TP6** — Actions column width set to 110px so Edit/Copy/Delete buttons don't wrap.
+- **TP7** — Task row vertical padding reduced: `padding: 4px 6px` → `padding: 2px 6px` for denser task list.
+- **TP8** — Category Key legend spacing and alignment overhaul:
+  - Fixed in `App.tsx` inline styles (the CSS classes in `App.css` for `.category-key-list` etc. are dead code — not referenced in JSX).
+  - `rowGap` reduced from 12px → 8px; kept `columnGap: 12px`.
+  - Item rows changed from `alignItems: "center"` → `"flex-start"` to eliminate phantom vertical gaps from multi-line labels.
+  - Color squares locked: `minWidth/minHeight: 20px`, `flexShrink: 0`.
+  - Category name text: `lineHeight: 1.2` for tighter wrapping.
+  - Heading bottom margin: 12px → 10px.
+
+**Verified:** `npm run build` clean, browser verified with live task data.
+
+**Note:** `.category-key-list`, `.category-key-item`, `.category-color`, `.category-name` CSS classes in `App.css` are dead code — they have no `className` references in App.tsx. Safe to remove in a future cleanup pass.
+
 ## Phase 6 — UX Polish (Haiku) 📋
 
 Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merges** so Haiku reorganizes a stable settings panel.
@@ -125,4 +145,4 @@ Read these first:
 - `docs/handoff.md` (this file)
 - `docs/product-brief.md` (for Phase 6 remaining items and design decisions)
 
-Current state: Phases 0–5 complete and merged to master. Phase 6 rock-solid batch (LY1–TP4, DF1–DF2) complete on `phase-6-ux-polish` branch. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending; ready to start if state wiring is stable. All v1 carryover features preserved. Build clean, lint clean, browser verified.
+Current state: Phases 0–5 complete and merged to master. Phase 6 rock-solid batch (LY1–TP4, DF1–DF2) plus TP6/TP7/TP8 UX polish complete on `phase-6-ux-polish` branch. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending; ready to start if state wiring is stable. All v1 carryover features preserved. Build clean, browser verified.

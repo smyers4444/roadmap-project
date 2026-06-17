@@ -1268,13 +1268,11 @@ button:hover {
 }
 
 .category-color {
-  width: 20px;
+  flex: 0 0 20px;
   height: 20px;
-  min-width: 20px;
   min-height: 20px;
   border-radius: 4px;
   border: 1px solid var(--border-medium);
-  flex-shrink: 0;
 }
 
 .category-name {

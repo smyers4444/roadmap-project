@@ -3274,16 +3274,16 @@ function App() {
 
           return (
             <div style={{ padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
-              <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>{getColorKeyLabel()}</h4>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
+              <h4 style={{ margin: "0 0 10px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>{getColorKeyLabel()}</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", columnGap: "12px", rowGap: "8px" }}>
                 {visibleColorValues.map((value) => {
                   const taskWithValue = visibleLegendTasks.find((task) => getColorKeyValue(task) === value);
                   const colorHex = getTaskBarColorHex(taskWithValue || visibleLegendTasks[0]);
                   const color = colorHex ? `#${colorHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                   return (
-                    <div key={value} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: "20px", height: "20px", backgroundColor: color, borderRadius: "3px", border: "1px solid var(--border-medium)" }} />
-                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem" }}>{value}</span>
+                    <div key={value} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                      <div style={{ width: "20px", height: "20px", minWidth: "20px", minHeight: "20px", flexShrink: 0, backgroundColor: color, borderRadius: "3px", border: "1px solid var(--border-medium)" }} />
+                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem", lineHeight: "1.2" }}>{value}</span>
                     </div>
                   );
                 })}
