@@ -293,6 +293,7 @@ function App() {
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [compactTaskSpacing, setCompactTaskSpacing] = useState(true);
   const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("rolling");
   const [showHexColumns, setShowHexColumns] = useState(true);
@@ -340,6 +341,12 @@ function App() {
     setCustomMonthEnd((currentEnd) => currentEnd ?? bounds.end);
   }, [rangeMode, tasks, view]);
 
+  useEffect(() => {
+    if (editingTaskId !== null && !tasks.some((task) => task.id === editingTaskId)) {
+      setEditingTaskId(null);
+    }
+  }, [editingTaskId, tasks]);
+
   // ==================== TASK MANAGEMENT FUNCTIONS ====================
 
   /**
@@ -385,6 +392,12 @@ function App() {
     ]);
   };
 
+  const getNextTaskIdentity = () => {
+    const newId = tasks.length > 0 ? Math.max(...tasks.map((task) => task.id)) + 1 : 1;
+    const newDisplayOrder = tasks.length > 0 ? Math.max(...tasks.map((task) => task.displayOrder || 0)) + 1 : 1;
+    return { newId, newDisplayOrder };
+  };
+
   /**
    * Updates a specific field of a task
    * @param id - Task ID to update
@@ -393,6 +406,10 @@ function App() {
    */
   const updateTask = (id: number, field: keyof Task, value: Date | string | number) => {
     setTasks(tasks.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
+  };
+
+  const updateTaskFields = (id: number, updates: Partial<Task>) => {
+    setTasks(tasks.map((task) => (task.id === id ? { ...task, ...updates } : task)));
   };
 
   /**
@@ -404,6 +421,39 @@ function App() {
       setSelectedTimelineTaskId(null);
     }
     setTasks(tasks.filter((t) => t.id !== id));
+  };
+
+  const duplicateTask = (task: Task) => {
+    const { newId, newDisplayOrder } = getNextTaskIdentity();
+    setTasks((prev) => [
+      ...prev,
+      {
+        ...task,
+        id: newId,
+        displayOrder: newDisplayOrder,
+      },
+    ]);
+  };
+
+  const openTaskEditor = (taskId: number) => {
+    setEditingTaskId(taskId);
+    setShowTaskPanel(true);
+  };
+
+  const closeTaskEditor = () => {
+    setEditingTaskId(null);
+  };
+
+  const stepTaskEditor = (direction: -1 | 1) => {
+    const currentIndex = filteredAndSortedTasks.findIndex((task) => task.id === editingTaskId);
+    if (currentIndex === -1) {
+      return;
+    }
+
+    const nextTask = filteredAndSortedTasks[currentIndex + direction];
+    if (nextTask) {
+      setEditingTaskId(nextTask.id);
+    }
   };
 
   // ==================== DRAG AND DROP HANDLERS ====================
@@ -1025,6 +1075,10 @@ function App() {
   const selectedTimelineTask = selectedTimelineTaskId === null
     ? null
     : tasks.find((task) => task.id === selectedTimelineTaskId) ?? null;
+  const editingTask = editingTaskId === null ? null : tasks.find((task) => task.id === editingTaskId) ?? null;
+  const editingTaskIndex = editingTask === null
+    ? -1
+    : filteredAndSortedTasks.findIndex((task) => task.id === editingTask.id);
   const calendarPeriodStart = useCustomCalendarRange && customCalendarStart
     ? customCalendarStart
     : startOfMonth(currentMonth);
@@ -2166,6 +2220,184 @@ function App() {
                   Import {importData.length} task{importData.length !== 1 ? "s" : ""}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── EDIT MODAL ─── */}
+      {editingTask && (
+        <div
+          className="v2-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeTaskEditor();
+            }
+          }}
+        >
+          <div className="v2-modal v2-edit-modal">
+            <div className="v2-modal-header">
+              <div>
+                <span className="v2-modal-title">Edit task</span>
+                <div className="v2-edit-subtitle">
+                  {editingTaskIndex >= 0
+                    ? `Task ${editingTaskIndex + 1} of ${filteredAndSortedTasks.length}`
+                    : "Task details"}
+                </div>
+              </div>
+              <button className="v2-modal-close" onClick={closeTaskEditor}>✕</button>
+            </div>
+            <div className="v2-modal-body">
+              <p className="v2-modal-hint">
+                Changes save instantly. Use Prev/Next to move through tasks in the current sort order.
+              </p>
+              <div className="v2-edit-grid">
+                <label className="v2-edit-field v2-edit-field--wide">
+                  <span className="v2-edit-label">Task</span>
+                  <input
+                    type="text"
+                    value={editingTask.name || ""}
+                    onChange={(e) => updateTaskFields(editingTask.id, { name: e.target.value })}
+                  />
+                </label>
+                <label className="v2-edit-field v2-edit-field--wide">
+                  <span className="v2-edit-label">Sub-task</span>
+                  <input
+                    type="text"
+                    value={editingTask.subTask || ""}
+                    onChange={(e) => updateTaskFields(editingTask.id, { subTask: e.target.value })}
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Phase</span>
+                  <input
+                    type="text"
+                    value={editingTask.phase || ""}
+                    onChange={(e) => updateTaskFields(editingTask.id, { phase: e.target.value })}
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Phase HEX</span>
+                  <div className="v2-edit-color-row">
+                    <span
+                      className="v2-edit-color-swatch"
+                      style={{
+                        backgroundColor: editingTask.phaseHex ? `#${editingTask.phaseHex.replace(/^#/, "")}` : "var(--bg-fallback)",
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={editingTask.phaseHex || ""}
+                      onChange={(e) => updateTaskFields(editingTask.id, { phaseHex: e.target.value })}
+                      placeholder="hex"
+                    />
+              </div>
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Category</span>
+                  <input
+                    type="text"
+                    value={editingTask.category || ""}
+                    onChange={(e) => updateTaskFields(editingTask.id, { category: e.target.value })}
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Category HEX</span>
+                  <div className="v2-edit-color-row">
+                    <span
+                      className="v2-edit-color-swatch"
+                      style={{
+                        backgroundColor: editingTask.categoryHex ? `#${editingTask.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)",
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={editingTask.categoryHex || ""}
+                      onChange={(e) => updateTaskFields(editingTask.id, { categoryHex: e.target.value })}
+                      placeholder="hex"
+                    />
+                  </div>
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Owner</span>
+                  <input
+                    type="text"
+                    value={editingTask.owner || ""}
+                    onChange={(e) => updateTaskFields(editingTask.id, { owner: e.target.value })}
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Week</span>
+                  <input
+                    type="number"
+                    value={editingTask.week ?? ""}
+                    onChange={(e) => updateTaskFields(editingTask.id, { week: e.target.value === "" ? undefined : Number(e.target.value) })}
+                    placeholder="optional"
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Start</span>
+                  <DatePicker
+                    selected={editingTask.startDate}
+                    onChange={(date) => updateTaskFields(editingTask.id, { startDate: date || editingTask.startDate })}
+                    dateFormat="M/d/yy"
+                    popperClassName="task-date-picker-popper"
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">End</span>
+                  <DatePicker
+                    selected={editingTask.endDate}
+                    onChange={(date) => updateTaskFields(editingTask.id, { endDate: date || editingTask.endDate })}
+                    dateFormat="M/d/yy"
+                    popperClassName="task-date-picker-popper"
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Display Order</span>
+                  <input
+                    type="number"
+                    value={editingTask.displayOrder}
+                    onChange={(e) => updateTaskFields(editingTask.id, { displayOrder: Number(e.target.value) })}
+                  />
+                </label>
+                <label className="v2-edit-field">
+                  <span className="v2-edit-label">Line Padding</span>
+                  <input
+                    type="number"
+                    value={editingTask.lineHeightAdjust ?? 0}
+                    onChange={(e) => updateTaskFields(editingTask.id, { lineHeightAdjust: Number(e.target.value) })}
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="v2-modal-footer v2-edit-modal-footer">
+              <button
+                className="v2-btn v2-btn-ghost"
+                onClick={() => stepTaskEditor(-1)}
+                disabled={editingTaskIndex <= 0}
+              >
+                ‹ Prev
+              </button>
+              <button
+                className="v2-btn v2-btn-ghost"
+                onClick={() => duplicateTask(editingTask)}
+              >
+                Duplicate
+              </button>
+              <button
+                className="v2-btn v2-btn-ghost"
+                onClick={() => stepTaskEditor(1)}
+                disabled={editingTaskIndex === -1 || editingTaskIndex >= filteredAndSortedTasks.length - 1}
+              >
+                Next ›
+              </button>
+              <button
+                className="v2-btn v2-btn-dark"
+                onClick={closeTaskEditor}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -3358,7 +3590,7 @@ function App() {
                       )}
                     </th>
                   ))}
-                  <th style={{ width: "56px" }}>Actions</th>
+                  <th style={{ width: "84px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -3418,18 +3650,28 @@ function App() {
                       />
                     </td>
                     <td>
-                      <div style={{ display: "flex", gap: "2px" }}>
+                      <div style={{ display: "flex", gap: "2px", justifyContent: "flex-end" }}>
+                        <button
+                          title="Edit"
+                          onClick={() => openTaskEditor(t.id)}
+                          style={{ fontSize: "11px", padding: "0 4px" }}
+                        >
+                          ✎
+                        </button>
                         <button
                           title="Duplicate"
-                          onClick={() => {
-                            const newId = tasks.length > 0 ? Math.max(...tasks.map((t2) => t2.id)) + 1 : 1;
-                            const newOrder = tasks.length > 0 ? Math.max(...tasks.map((t2) => t2.displayOrder || 0)) + 1 : 1;
-                            setTasks((prev) => [...prev, { ...t, id: newId, displayOrder: newOrder }]);
-                          }}
+                          onClick={() => duplicateTask(t)}
+                          style={{ fontSize: "11px", padding: "0 4px" }}
                         >
                           ⧉
                         </button>
-                        <button title="Remove" onClick={() => removeTask(t.id)} style={{ color: "#c0392b" }}>✕</button>
+                        <button
+                          title="Remove"
+                          onClick={() => removeTask(t.id)}
+                          style={{ color: "#c0392b", fontSize: "11px", padding: "0 4px" }}
+                        >
+                          ✕
+                        </button>
                       </div>
                     </td>
                   </tr>

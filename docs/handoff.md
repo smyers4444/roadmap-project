@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 2 browser verification completed; handoff updated; build/lint/diff clean)
+Last updated: 2026-06-16 (Phase 3 edit modal smoke-tested; build/lint/diff clean)
 
 ## Current Snapshot
 
@@ -21,7 +21,7 @@ The repository is now on the `v2` branch. This is a ground-up redesign effort dr
 
 **v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and Phase 2 now has three bounded commits on branch `feat/phase-2-settings`: `3f5f1e2 Wire Phase 2 settings controls`, `a390e0b Tighten Phase 2 timeline carryover`, and `1ead8d6 Extend Phase 2 priority shading`. A follow-up browser pass on 2026-06-16 verified the Compact rows toggle and priority-period shading behavior across weekly horizontal, monthly horizontal, and monthly stacked views.
+The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and Phase 2 now has three bounded commits on branch `feat/phase-2-settings`: `3f5f1e2 Wire Phase 2 settings controls`, `a390e0b Tighten Phase 2 timeline carryover`, and `1ead8d6 Extend Phase 2 priority shading`. A follow-up browser pass on 2026-06-16 verified the Compact rows toggle and priority-period shading behavior across weekly horizontal, monthly horizontal, and monthly stacked views. A new Phase 3 edit-modal slice is now in place and browser-checked: row actions open an edit modal with live task fields, and Prev/Next steps through the current sort order.
 
 ## What v1 Has (all still in the codebase)
 
@@ -55,8 +55,8 @@ See `docs/product-brief.md` for the full brief. Key points:
 
 ## Branch and Working Tree
 
-- `master` — v1 baseline, tagged as `v1`
-- `feat/phase-2-settings` — active development branch (current); three Phase 2 commits landed, tracked diff is `docs/handoff.md`, unrelated `.claude/settings.json` remains dirty, and untracked `AGENTS.md` plus `.agents/` are present
+- `codex/phase-3-edit-modal` — active development branch based on `master` at `310231c`; v1 baseline is still preserved as tag `v1`
+- Working tree — Phase 3 edit-modal work is now in `src/App.tsx` and `src/App.css`, tracked diff includes `docs/handoff.md`, unrelated `.claude/settings.json` remains dirty, and untracked `AGENTS.md` plus `.agents/` are present
 - `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
 
 ## How to Run
@@ -117,12 +117,19 @@ New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compa
 - The current V4 behavior is hardcoded through `isSpecialPriorityTask` (`Vacation` / `Holiday` / `OOO`) and looks stable enough to close the Phase 2 carryover slice.
 - `L4` configurable priority labels should be treated as a Phase 3 / net-new follow-on, not Phase 2 cleanup. The product brief still marks it as `New` + `Missing`, and the current shipped behavior already satisfies the carryover verification target.
 
+## Phase 3 Edit Modal — PASS
+
+- Added a row-level `Edit` action that opens a modal with real form inputs for task name, sub-task, phase, category, owner, week, dates, display order, line padding, and both hex fields.
+- Modal edits save immediately and the browser smoke test confirmed the change persists back into the task table row.
+- `Prev` / `Next` now steps through tasks in the current sort order, and the browser smoke test confirmed the modal advances from task 1 to task 2.
+- The row-level duplicate action remains available alongside the new edit flow.
+
 ## Recommended Next Task
 
-Close out Phase 2 with a small documentation/commit checkpoint, then choose the next net-new v2 feature:
-- Commit the current `docs/handoff.md` update if this verification checkpoint should be preserved in history
-- Treat configurable priority labels (`L4`) as a later Phase 3 feature, not part of Phase 2 carryover cleanup
-- Pick the next Phase 3 candidate from `docs/product-brief.md` (`E8/E10` edit modal flow, `E4` duplicate task, or `C4/C5` label/color source controls are the cleanest follow-ons)
+Pick the next Phase 3 candidate from `docs/product-brief.md`:
+- `C4/C5` label/color source controls are the cleanest follow-on now that the edit modal is in place
+- `E9` right-click-to-edit is another small follow-on if direct timeline access is the priority
+- `C2` hex palette management can wait until the display/edit affordances settle
 
 ## New Chat Start
 
