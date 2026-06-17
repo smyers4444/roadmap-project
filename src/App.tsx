@@ -446,11 +446,15 @@ function App() {
    * @param value - New value for the field
    */
   const updateTask = (id: number, field: keyof Task, value: Date | string | number) => {
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
+    // Functional updater: callers like the Colors panel invoke this in a loop
+    // over many tasks within one event handler. React batches those calls, so a
+    // closure-captured `tasks` snapshot would make every call but the last lose
+    // its change. Reading `prev` composes the updates correctly.
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
   };
 
   const updateTaskFields = (id: number, updates: Partial<Task>) => {
-    setTasks(tasks.map((task) => (task.id === id ? { ...task, ...updates } : task)));
+    setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, ...updates } : task)));
   };
 
   /**
@@ -710,6 +714,17 @@ function App() {
           case "line height":
             taskData.lineHeightAdjust = value ? parseInt(value, 10) || 0 : 0;
             break;
+          case "display order":
+          case "order":
+          case "sort order": {
+            // Preserve manual ordering on CSV round-trip; blank/invalid falls
+            // through to the running counter below (I3: stay forgiving).
+            const parsedOrder = value ? parseInt(value, 10) : NaN;
+            if (!Number.isNaN(parsedOrder)) {
+              taskData.displayOrder = parsedOrder;
+            }
+            break;
+          }
         }
       });
 
@@ -732,7 +747,7 @@ function App() {
           owner: taskData.owner,
           startDate: taskData.startDate || new Date(),
           endDate: taskData.endDate || new Date(),
-          displayOrder: nextDisplayOrder++,
+          displayOrder: typeof taskData.displayOrder === "number" ? taskData.displayOrder : nextDisplayOrder++,
           lineHeightAdjust: typeof taskData.lineHeightAdjust === "number" ? taskData.lineHeightAdjust : 0,
         };
         newTasks.push(newTask);
@@ -2578,56 +2593,12 @@ function App() {
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
                 const taskHeights = new Map<number, number>();
-                const debugInfo = new Map<number, string>();
                 visibleTasks.forEach((task) => {
                   const position = getTaskPosition(task);
                   if (!position) return;
-                  const { width } = position;
-                  const actualWidth = (width / 100) * 1800; // Approximate pixel width
-                  const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
-                  const charsPerLine = Math.max(1, Math.floor(textWidth / 7.2)); // Consolas 13px ≈ 7.5px per char (slightly conservative)
-
-                  // Simulate word wrapping to count actual lines needed
-                  const words = task.name.split(" ");
-                  let lines = 1;
-                  let currentLineLength = 0;
-
-                  words.forEach((word) => {
-                    const wordLength = word.length;
-                    if (currentLineLength === 0) {
-                      // First word on line
-                      currentLineLength = wordLength;
-                    } else if (currentLineLength + 1 + wordLength <= charsPerLine) {
-                      // Word fits on current line (including space)
-                      currentLineLength += 1 + wordLength;
-                    } else {
-                      // Word needs new line
-                      lines++;
-                      currentLineLength = wordLength;
-                    }
-                  });
-                  
-                  // Add safety margin - add one more line to prevent overflow
-                  // This ensures text never gets cut off even with font rendering variations
-                  if (currentLineLength > charsPerLine * 0.85) {
-                    lines++;
-                  }
-
-                  // Calculate height based on number of lines
-                  let height;
-                  if (lines === 1) {
-                    height = 36;
-                  } else if (lines === 2) {
-                    height = 50;
-                  } else {
-                    height = 50 + (lines - 2) * 16;
-                  }
-                  const manualExtraLines = task.lineHeightAdjust ?? 0;
-                  height += manualExtraLines * 16;
-                  height = Math.max(28, height);
-
-                  taskHeights.set(task.id, height);
-                  debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
+                  // Shared helper (also used by the stacked views) — includes the
+                  // wrap safety line so text never clips in screenshots.
+                  taskHeights.set(task.id, getTaskHeightForPeriod(task, position.width, true));
                 });
 
                 return (
@@ -2791,8 +2762,7 @@ function App() {
                                       `End: ${format(task.endDate, 'MMM dd, yyyy')}`,
                                       `ID: ${task.displayOrder}`,
                                       '',
-                                      `Top: ${top}px`,
-                                      debugInfo.get(task.id) || ''
+                                      `Top: ${top}px`
                                     ].filter(Boolean).join('\n')}
                                     style={{
                                       left: `calc(${start}% + ${horizontalPadding}%)`,
@@ -2905,56 +2875,14 @@ function App() {
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
                 const taskHeights = new Map<number, number>();
-                  const debugInfo = new Map<number, string>();
-                  const weekHeaderGroups = getWeekHeaderGroupsForDays(visibleMonthlyDays);
-                  visibleTasks.forEach((task) => {
-                    const position = getMonthTaskPosition(task);
-                    if (!position) return;
-                  const { width } = position;
-                  const actualWidth = (width / 100) * 1800; // Approximate pixel width
-                  const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
-                  const charsPerLine = Math.max(1, Math.floor(textWidth / 7.2)); // Consolas 13px ≈ 7.2px per char
-
-                  // Simulate word wrapping to count actual lines needed
-                  const words = task.name.split(" ");
-                  let lines = 1;
-                  let currentLineLength = 0;
-
-                  words.forEach((word) => {
-                    const wordLength = word.length;
-                    if (currentLineLength === 0) {
-                      // First word on line
-                      currentLineLength = wordLength;
-                    } else if (currentLineLength + 1 + wordLength <= charsPerLine) {
-                      // Word fits on current line (including space)
-                      currentLineLength += 1 + wordLength;
-                    } else {
-                      // Word needs new line
-                      lines++;
-                      currentLineLength = wordLength;
-                    }
-                  });
-                  
-                  // // Add safety margin - bump up lines by 1 if we're close to the edge
-                  // if (currentLineLength > charsPerLine * 0.85) {
-                  //   lines++;
-                  // }
-
-                  // Calculate height based on number of lines
-                  let height;
-                  if (lines === 1) {
-                    height = 36;
-                  } else if (lines === 2) {
-                    height = 50;
-                  } else {
-                    height = 50 + (lines - 2) * 16;
-                  }
-                  const manualExtraLines = task.lineHeightAdjust ?? 0;
-                  height += manualExtraLines * 16;
-                  height = Math.max(28, height);
-
-                  taskHeights.set(task.id, height);
-                  debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
+                const weekHeaderGroups = getWeekHeaderGroupsForDays(visibleMonthlyDays);
+                visibleTasks.forEach((task) => {
+                  const position = getMonthTaskPosition(task);
+                  if (!position) return;
+                  // Shared helper with the wrap safety line ON — matches weekly and
+                  // both stacked views. (Previously this block omitted the safety
+                  // line, so monthly-horizontal bars could clip text in screenshots.)
+                  taskHeights.set(task.id, getTaskHeightForPeriod(task, position.width, true));
                 });
 
                 return (
@@ -3136,8 +3064,7 @@ function App() {
                                       `End: ${format(task.endDate, 'MMM dd, yyyy')}`,
                                       `ID: ${task.displayOrder}`,
                                       '',
-                                      `Top: ${top}px`,
-                                      debugInfo.get(task.id) || ''
+                                      `Top: ${top}px`
                                     ].filter(Boolean).join('\n')}
                                     style={{
                                       left: `calc(${start}% + ${horizontalPadding}%)`,
