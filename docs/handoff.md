@@ -13,13 +13,13 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 5 started on branch `phase-5-remove-phase-headers`)
+Last updated: 2026-06-16 (Phase 5 complete on branch `phase-5-remove-phase-headers`, PR open)
 
 ## Current Snapshot
 
 Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/product-brief.md`), targeting screenshot-first UX for client deliverables. v1 preserved as tag `v1` and worktree `../Roadmap Project v1/`.
 
-**Branch:** `phase-5-remove-phase-headers` (off master; Phases 0–4 merged and complete)
+**Branch:** `phase-5-remove-phase-headers` (off master; Phase 5 committed, PR open for merge)
 
 **Latest commits:**
 - `19f6f09` Update handoff: Phase 4 L1 complete, E6 verified, E7 scoped (post-merge on master)
@@ -40,7 +40,7 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 | **4a** | **L1 Presentation mode** | **✅ Complete** | Ctrl+P toggle, hides all controls, shows timeline + legend only |
 | **4b** | **E6 Column sorting** | **✅ Complete** | Already implemented; verified working |
 | **4c** | **E7 Task panel layout** | **✅ Complete** | Refactored to flexbox: single scroll direction, timeline pinned, task panel below |
-| **5** | **Phase header removal (TL1, TL2)** | **🚧 In progress** | Sonnet/Opus work — touches shared render primitive. Branch `phase-5-remove-phase-headers`. Must land before Phase 6. |
+| **5** | **Phase header removal (TL1, TL2)** | **✅ Complete** | Sonnet/Opus work. Phase bands + `showPhaseLabels` toggle removed; all tasks pack into one combined board per period. Committed on `phase-5-remove-phase-headers`, PR open. |
 | **6** | **UX Polish (Haiku, 12 items)** | **📋 Backlog** | CSS + default flips + settings reorg. Anchored in product-brief.md. Starts after Phase 5 merges. |
 
 ## Phase 4 — Complete (L1 + E6 + E7)
@@ -69,13 +69,14 @@ Already implemented and verified working. No changes needed.
 - **Result:** Single scroll direction (vertical), timeline pinned at top, no overlaps
 - **Verification:** All features tested, builds and lints clean
 
-## Phase 5 — Phase Header Removal (TL1, TL2) 🚧
+## Phase 5 — Phase Header Removal (TL1, TL2) ✅
 
-**In progress on `phase-5-remove-phase-headers`.** Sonnet/Opus work — touches the shared render primitive, so it is split out from the Haiku batch and must land first.
+**Complete on `phase-5-remove-phase-headers` (PR open).** Sonnet/Opus work — touched the shared render primitive, so it was split out from the Haiku batch and landed first.
 
-- **TL1** — Remove phase header bars: the two `PHASE HEADER BAR` blocks (`src/App.tsx:2800`, `:3282`) and the phase-band rendering in `renderStackedTimelineBoard`. Phase stays a color/label source (C4/C5); only the band goes.
-- **TL2** — Remove the `showPhaseLabels` state (`src/App.tsx:280`), toggle UI (`:2137`), and the gated branches (`:1608`, `:1680`, `:1743`, `:1822`, `:2731`).
-- **Verify:** packing + column shading render correctly across all five view IIFEs after removal; `npm run build` + `npx eslint src/App.tsx` clean.
+- **TL1** — Removed the dark phase header bands and per-phase grouping from `renderStackedTimelineBoard` and both inline horizontal boards. All tasks now pack into one combined board per period. Phase remains a color/label source (C4/C5).
+- **TL2** — Removed the `showPhaseLabels` state, its Settings → Display toggle, the orphaned "Phase Key" legend, and the unused `phases`/`visibleLegendPhases` derivations.
+- **Approach:** collapsed onto the existing `showPhaseLabels === false` path (already working) rather than inventing new layout.
+- **Verified:** `npm run build` clean, `npx eslint src/App.tsx` clean, browser render confirmed.
 
 ## Phase 6 — UX Polish (Haiku) 📋
 
@@ -86,8 +87,8 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 
 ## Next Steps
 
-1. **Finish Phase 5** (current branch): implement TL1 + TL2, verify, commit, open PR, merge to master.
-2. **Then Phase 6** (Haiku): branch off updated master; do the rock-solid batch first, then the settings-reorg cluster.
+1. **Merge Phase 5 PR** into master and delete the remote branch.
+2. **Then Phase 6** (Haiku): branch off updated master; do the rock-solid batch first (LY1, LY2, HD1, TP1, TP4, DF1, DF2), then the settings-reorg cluster (TP2, TP3, TP5, ST1, ST2 — pull back to Sonnet if state wiring breaks).
 3. **Defer** TL3/TL5 until day-column and day-header decisions are made.
 
 ## New Chat Start
@@ -98,4 +99,4 @@ Read these first:
 - `docs/handoff.md` (this file)
 - `docs/product-brief.md` (for Phase 5/6 backlog and design decisions)
 
-Current state: Phases 0–4 complete, merged to master. Phase 5 (phase header removal, TL1+TL2) in progress on `phase-5-remove-phase-headers`. Phase 6 (Haiku UX polish) documented and waiting for Phase 5 to merge. All v1 carryover features preserved. Build clean, lint clean.
+Current state: Phases 0–4 complete and merged to master. Phase 5 (phase header removal, TL1+TL2) complete on `phase-5-remove-phase-headers` with an open PR. Phase 6 (Haiku UX polish) documented and waiting for Phase 5 to merge. All v1 carryover features preserved. Build clean, lint clean.

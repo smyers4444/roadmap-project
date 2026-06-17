@@ -134,7 +134,7 @@ These exist in v1 `src/App.tsx` and are core to how the timeline looks and behav
 | K6 | **Drag/drop in BOTH places** | task-table rows + `.task-bar` draggable | Reorder from the task panel AND directly on timeline bars. Both update `displayOrder`. |
 | K7 | **Hover tooltips on bars** | `title={[...]}` on `.task-bar` | Full task / sub-task / phase / category / owner / start / end / order on hover. |
 | K8 | **Selected-bar highlight** | `selectedTimelineTaskId`, boxShadow | Click a bar → it glows, others dim to ~0.72 opacity, task panel filters to it. Click again clears. |
-| K9 | **Legend shows only visible tasks** | `visibleLegendTasks`, `visibleLegendPhases` | Category/phase key reflects only what's in the current window, not the whole dataset. |
+| K9 | **Legend shows only visible tasks** | `visibleLegendTasks` | Category key reflects only what's in the current window, not the whole dataset. (Phase key removed in Phase 5 with the phase header bars.) |
 | K10 | **Filter feedback** | "Showing X task-list results" | Show count when a text filter or timeline selection is active. |
 | K11 | **CSV week-number auto-compute** | `getRelativeWeekNumber` in `exportTasks` | When a task has no week value, compute it relative to the earliest task on export. |
 | K12 | **Collapsible sections** | `showTaskList`, `showTimeline` | Tasks panel and timeline are independently collapsible. |
@@ -265,16 +265,16 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 ---
 
-## Phase 5 — Phase Header Removal (render surgery) 📋 Backlog
+## Phase 5 — Phase Header Removal (render surgery) ✅ Complete
 
-**Owner: Sonnet/Opus (not Haiku).** This phase touches the shared render primitive and must land *before* Phase 6, so Haiku reorganizes a stable settings panel. The `showPhaseLabels` flag is load-bearing — it gates task grouping, phase-bar positioning, and the `isWithinPhase` column shading, not just a visual band.
+**Owner: Sonnet/Opus (not Haiku).** Touched the shared render primitive and landed *before* Phase 6, so Haiku reorganizes a stable settings panel. The `showPhaseLabels` flag was load-bearing — it gated task grouping, phase-bar positioning, and the `isWithinPhase` column shading, not just a visual band.
 
-| # | Item | Type | Notes & code anchors |
-|---|------|------|----------------------|
-| TL1 | Remove phase header bars from timeline | UX | Remove the two `PHASE HEADER BAR` blocks (`src/App.tsx:2800`, `:3282`) and the phase-band rendering inside `renderStackedTimelineBoard`. Phase remains a **color/label source** (C4/C5) — only the header band goes, not the phase concept. |
-| TL2 | Remove "Show phases" toggle | UX | Remove the `showPhaseLabels` state (`src/App.tsx:280`), its toggle UI (`:2137`), and simplify all gated branches (`:1608`, `:1680`, `:1743`, `:1822`, `:2731`) to the always-on-without-band path. |
+| # | Item | Type | Result |
+|---|------|------|--------|
+| TL1 | Remove phase header bars from timeline | UX | ✅ Done. Removed the dark phase bands and per-phase grouping from `renderStackedTimelineBoard` and both inline horizontal boards; all tasks now pack into one combined board per period. Phase remains a **color/label source** (C4/C5). |
+| TL2 | Remove "Show phases" toggle | UX | ✅ Done. Removed the `showPhaseLabels` state, its Settings → Display toggle, the orphaned "Phase Key" legend, and the unused `phases`/`visibleLegendPhases` derivations. |
 
-**Decision:** Full removal (not default-off) confirmed. Verify packing + column shading still render correctly across all five view IIFEs after removal.
+**Decision:** Full removal (not default-off). Collapsed onto the existing `showPhaseLabels === false` code path. Build + lint clean; verified in browser (single combined board renders across views).
 
 ---
 
@@ -313,7 +313,7 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 ### Summary
 
-**Phase 5 — Sonnet/Opus (do first):** TL1, TL2 (phase header removal; touches shared render primitive)  
+**Phase 5 — Sonnet/Opus:** ✅ TL1, TL2 (phase header removal) complete  
 **Phase 6 — Haiku, rock-solid:** LY1, LY2, HD1, TP1, TP4, DF1, DF2  
 **Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2 (pull back to Sonnet if state wiring breaks)  
 **Deferred (design-needed):** TL3, TL5  
