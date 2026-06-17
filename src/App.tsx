@@ -1967,7 +1967,7 @@ function App() {
   const activeTab = timelineLayout === "stacked" ? "stacked" : view === "weeks" ? "weekly" : "monthly";
 
   return (
-    <div className="app" style={{ position: "relative" }}>
+    <div className="app" style={{ position: "relative", paddingTop: presentationMode ? "40px" : "0" }}>
 
       {/* ─── v2 HEADER ─── */}
       {!presentationMode && (
