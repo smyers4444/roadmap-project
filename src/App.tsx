@@ -2226,31 +2226,38 @@ function App() {
                 <strong>Categories mapped:</strong>
                 <br />
                 {Object.entries(categoryColorMap).length > 0 ? (
-                  <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
+                  <div style={{ marginTop: "8px" }}>
                     {Object.entries(categoryColorMap).map(([cat, idx]) => {
                       const paletteIdx = parseInt(idx, 10);
-                      const hex = colorPalette[paletteIdx % colorPalette.length];
                       return (
-                        <li key={cat} style={{ marginBottom: "2px" }}>
-                          {cat}{" "}
-                          <span
-                            style={{
-                              display: "inline-block",
-                              width: "12px",
-                              height: "12px",
-                              backgroundColor: `#${hex}`,
-                              borderRadius: "2px",
-                              verticalAlign: "middle",
-                              marginLeft: "4px",
-                              border: "1px solid #999",
+                        <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                          <span style={{ fontSize: "11px", flex: 1 }}>{cat}</span>
+                          <select
+                            value={paletteIdx}
+                            onChange={(e) => {
+                              const newIdx = parseInt(e.target.value, 10);
+                              setCategoryColorMap({ ...categoryColorMap, [cat]: String(newIdx) });
                             }}
-                          />
-                        </li>
+                            style={{
+                              padding: "2px 4px",
+                              fontSize: "10px",
+                              border: "1px solid #ddd",
+                              borderRadius: "3px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {colorPalette.map((_, i) => (
+                              <option key={i} value={i}>
+                                {i + 1}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       );
                     })}
-                  </ul>
+                  </div>
                 ) : (
-                  <em style={{ color: "#999" }}>No categories yet</em>
+                  <em style={{ color: "#999", fontSize: "11px" }}>No categories yet</em>
                 )}
               </div>
             </div>
