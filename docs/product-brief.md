@@ -311,6 +311,7 @@ User-reported issues and refinements for screenshot workflow and general usabili
 |---|------|------|----------|-------|
 | TL1 | Remove phase header bars from timeline | UX | Medium | Phase header bars in the timeline (colored bars spanning phase duration) add visual noise. Consider removing or hiding by default. |
 | TL2 | Remove "Show phases" toggle | UX | Medium | If phase headers are removed from timeline, remove the settings toggle as well (currently rarely used). |
+| TL3 | Consistent day column widths across months | Design | Medium | Currently, months with fewer days (e.g., February) are narrower than months with more days (e.g., March) because column width is calculated per-month. Design decision: should all days be uniform width (so Feb naturally spans less)? Requires refactoring position calculations if yes. |
 
 ### Settings Panel Organization
 
@@ -332,4 +333,6 @@ User-reported issues and refinements for screenshot workflow and general usabili
 
 **Medium lift:** TP2 (column widths), TP3 (increment buttons), TP5 (settings reorganization), ST1 (settings IA), ST2 (dropdown)
 
-**Recommended approach:** Batch quick wins first, then tackle IA/UX refinements (TP5/ST1/ST2) as a cohesive settings panel cleanup.
+**Design-needed:** TL3 (consistent day column widths across month boundaries)
+
+**Recommended approach:** Batch quick wins first, then tackle IA/UX refinements (TP5/ST1/ST2) as a cohesive settings panel cleanup. Decide on TL3 approach before implementing.
