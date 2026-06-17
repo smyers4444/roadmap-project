@@ -3346,14 +3346,6 @@ function App() {
               </span>
             )}
             <button
-              className="v2-btn v2-btn-ghost v2-btn-sm"
-              onClick={(e) => { e.stopPropagation(); setShowColorsPanel((p) => !p); }}
-              title="Color settings"
-              style={{ fontSize: "11px", marginLeft: "8px" }}
-            >
-              🎨 Colors
-            </button>
-            <button
               className="v2-toggle"
               style={{ marginLeft: "8px", width: "20px", height: "12px" }}
               title={showHexColumns ? "Hide hex columns" : "Show hex columns"}
@@ -3366,6 +3358,13 @@ function App() {
             {showDevTaskButton && (
               <button style={{ fontSize: "11px" }} onClick={(e) => { e.stopPropagation(); addTestTask(); }}>Dev task</button>
             )}
+            <button
+              className={`v2-btn v2-btn-ghost v2-btn-icon${showColorsPanel ? " v2-btn-active" : ""}`}
+              onClick={(e) => { e.stopPropagation(); setShowColorsPanel((p) => !p); }}
+              title="Color settings"
+            >
+              🎨
+            </button>
           </div>
           <div style={{ overflowX: "auto", overflowY: "auto", flex: 1 }}>
             <table className="v2-task-table">
@@ -3516,54 +3515,65 @@ function App() {
       )}
 
       {!presentationMode && showColorsPanel && (
-        <div className="v2-task-panel" style={{ maxWidth: "400px" }}>
-          <div className="v2-panel-toolbar">
-            <span style={{ fontWeight: 500, fontSize: "12px" }}>Color Settings</span>
-            <button className="v2-btn v2-btn-ghost v2-btn-sm" onClick={(e) => { e.stopPropagation(); setShowColorsPanel(false); }} style={{ marginLeft: "auto", padding: "2px 6px" }}>✕</button>
-          </div>
-          <div style={{ overflowX: "auto", overflowY: "auto", flex: 1, padding: "12px", fontSize: "11px" }}>
-            <div style={{ marginBottom: "16px" }}>
-              <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Phases</h4>
-              {phases.length === 0 ? (
-                <em style={{ color: "#999" }}>No phases yet</em>
-              ) : (
-                phases.map((phase) => (
-                  <div key={phase} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                    <span style={{ flex: 1 }}>{phase}</span>
-                    <input
-                      type="text"
-                      value={phaseHexMap[phase] || ""}
-                      onChange={(e) => setPhaseHexMap({ ...phaseHexMap, [phase]: e.target.value })}
-                      placeholder="hex"
-                      maxLength={7}
-                      style={{ width: "80px", padding: "4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
-                    />
-                  </div>
-                ))
-              )}
+        <>
+          <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
+          <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, maxWidth: "500px", width: "90%" }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #ddd", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 600 }}>Color Settings</h3>
+              <button className="v2-btn v2-btn-ghost v2-btn-icon" onClick={() => setShowColorsPanel(false)} style={{ padding: "4px" }}>✕</button>
             </div>
-            <div>
-              <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Categories</h4>
-              {categories.length === 0 ? (
-                <em style={{ color: "#999" }}>No categories yet</em>
-              ) : (
-                categories.map((cat) => (
-                  <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                    <span style={{ flex: 1 }}>{cat}</span>
-                    <input
-                      type="text"
-                      value={categoryHexMap[cat] || ""}
-                      onChange={(e) => setCategoryHexMap({ ...categoryHexMap, [cat]: e.target.value })}
-                      placeholder="hex"
-                      maxLength={7}
-                      style={{ width: "80px", padding: "4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
-                    />
-                  </div>
-                ))
-              )}
+            <div style={{ padding: "12px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", fontSize: "11px" }}>
+              <div>
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Phases</h4>
+                {phases.length === 0 ? (
+                  <em style={{ color: "#999" }}>No phases</em>
+                ) : (
+                  phases.map((phase) => (
+                    <div key={phase} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <span style={{ flex: 1, minWidth: 0 }}>{phase}</span>
+                      <input
+                        type="text"
+                        value={phaseHexMap[phase] || ""}
+                        onChange={(e) => {
+                          const newHex = e.target.value;
+                          setPhaseHexMap({ ...phaseHexMap, [phase]: newHex });
+                          tasks.filter(t => t.phase === phase).forEach(t => updateTask(t.id, "phaseHex", newHex));
+                        }}
+                        placeholder="#000000"
+                        maxLength={7}
+                        style={{ width: "70px", padding: "3px 4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+              <div>
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Categories</h4>
+                {categories.length === 0 ? (
+                  <em style={{ color: "#999" }}>No categories</em>
+                ) : (
+                  categories.map((cat) => (
+                    <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <span style={{ flex: 1, minWidth: 0 }}>{cat}</span>
+                      <input
+                        type="text"
+                        value={categoryHexMap[cat] || ""}
+                        onChange={(e) => {
+                          const newHex = e.target.value;
+                          setCategoryHexMap({ ...categoryHexMap, [cat]: newHex });
+                          tasks.filter(t => t.category === cat).forEach(t => updateTask(t.id, "categoryHex", newHex));
+                        }}
+                        placeholder="#000000"
+                        maxLength={7}
+                        style={{ width: "70px", padding: "3px 4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
       </div>
 
