@@ -221,7 +221,7 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 
 | Item | Status | Notes |
 |------|--------|-------|
-| 48px v2 header | ✅ Done | Logo · Weekly/Monthly/Stacked tabs · Import/⚙/Export buttons |
+| 48px v2 header | ✅ Done | Logo · Weekly/Monthly tabs · Import/⚙/Export buttons |
 | Settings panel | ✅ Done | Range mode (Fit/Range/Rolling), layout toggles, danger section, backdrop close |
 | Import modal | ✅ Done | Paste → preview table → import; flexible column mapping (I3 guardrail: stays forgiving) |
 | Task panel UI | ✅ Done | Collapsible tab, sortable table, drag-to-reorder rows |
@@ -315,7 +315,7 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 | TP5 | Move "Show hex columns" to task settings | IA | Move control from timeline settings → task panel section. Keep state wiring intact. ✅ Done |
 | ST1 | Move color palette to task settings | IA | Move hex palette management (`colorPalette`/`categoryColorMap`, `src/App.tsx:306–309`) UI from timeline settings → task panel. ✅ Done |
 | ST2 | Range Mode: radio → dropdown | UX | Convert the three `rangeMode` options (`fit`/`range`/`rolling`) from radios to a dropdown. ✅ Done |
-| LY3 | Remove "Stacked" as top-level toggle | Navigation | "Stacked" is a third header tab alongside Weekly/Monthly but overlaps the "Stacked layout" settings toggle. Remove from header; control only in settings. |
+| LY3 | Remove "Stacked" as top-level toggle | Navigation | ✅ Complete. Stacking is now controlled only in the Layout section; the header just switches Weekly/Monthly. |
 | LY4 | Icon sizing: settings & import buttons | Style | ⚙ and import icon too small. Increase button padding/icon size for better visual weight and hit target. |
 | TP6 | Action column width + text padding | Layout | Widen Actions column (`src/App.tsx:3447`); reduce left/right padding on text columns (Phase, Category, Task). Plenty of space available. |
 | TP7 | Reduce vertical task spacing | Layout | Tasks stacked too far apart vertically. Reduce margins/gaps between rows and/or row height to tighten vertical density. |
@@ -340,8 +340,8 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 **Phase 5 — Sonnet/Opus:** ✅ TL1, TL2 (phase header removal) complete  
 **Phase 6 — Haiku, rock-solid:** LY1, LY2, HD1, TP1, TP4, DF1, DF2  
-**Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2 (pull back to Sonnet if state wiring breaks); LY3 needs scoping first  
+**Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2  
 **Needs scoping (Sonnet):** TL4 (week labels in monthly header)  
 **Deferred (design-needed):** TL3, TL5  
 
-**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → scope LY3/TL4 → revisit TL3/TL5 once decisions are made.
+**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → TL4 → revisit TL3/TL5 once decisions are made.

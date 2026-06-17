@@ -1882,7 +1882,7 @@ function App() {
 
   // ==================== RENDER ====================
 
-  const activeTab = timelineLayout === "stacked" ? "stacked" : view === "weeks" ? "weekly" : "monthly";
+  const activeTab = view === "weeks" ? "weekly" : "monthly";
 
   return (
     <div className="app" style={{ paddingTop: presentationMode ? "40px" : "0" }}>
@@ -1894,24 +1894,15 @@ function App() {
           <div className="v2-view-tabs">
             <button
               className={`v2-tab${activeTab === "weekly" ? " active" : ""}`}
-              onClick={() => { setView("weeks"); setTimelineLayout("horizontal"); }}
+              onClick={() => setView("weeks")}
             >
               Weekly
             </button>
             <button
               className={`v2-tab${activeTab === "monthly" ? " active" : ""}`}
-              onClick={() => { setView("months"); setTimelineLayout("horizontal"); }}
+              onClick={() => setView("months")}
             >
               Monthly
-            </button>
-            <button
-              className={`v2-tab${activeTab === "stacked" ? " active" : ""}`}
-              onClick={() => {
-                setTimelineLayout("stacked");
-                if (view === "calendar") setView("months");
-              }}
-            >
-              Stacked
             </button>
           </div>
           <div className="v2-header-actions">
