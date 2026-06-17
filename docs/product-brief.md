@@ -312,6 +312,7 @@ User-reported issues and refinements for screenshot workflow and general usabili
 | TL1 | Remove phase header bars from timeline | UX | Medium | Phase header bars in the timeline (colored bars spanning phase duration) add visual noise. Consider removing or hiding by default. |
 | TL2 | Remove "Show phases" toggle | UX | Medium | If phase headers are removed from timeline, remove the settings toggle as well (currently rarely used). |
 | TL3 | Consistent day column widths across months | Design | Medium | Currently, months with fewer days (e.g., February) are narrower than months with more days (e.g., March) because column width is calculated per-month. Design decision: should all days be uniform width (so Feb naturally spans less)? Requires refactoring position calculations if yes. |
+| TL4 | Week labels in monthly view header | Enhancement | Medium | Add week number labels (Week 1, Week 2, etc.) spanning their respective day columns in monthly view. Month callout remains unchanged. Week labels persist even if day numbers are toggled off. |
 
 ### Settings Panel Organization
 
