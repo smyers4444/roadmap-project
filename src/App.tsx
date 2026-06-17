@@ -1912,7 +1912,7 @@ function App() {
               className="v2-btn v2-btn-ghost"
               onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
             >
-              ⬇ Import
+              Import
             </button>
             <button
               className={`v2-btn v2-btn-ghost v2-btn-icon${showSettingsPanel ? " v2-btn-active" : ""}`}
