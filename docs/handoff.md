@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 1 layout shell complete; build clean, browser-verified)
+Last updated: 2026-06-16 (Phase 2 browser verification completed; handoff updated; build/lint/diff clean)
 
 ## Current Snapshot
 
@@ -21,7 +21,7 @@ The repository is now on the `v2` branch. This is a ground-up redesign effort dr
 
 **v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete and Phase 1 (v2 layout shell) is complete. The app now runs the full v2 shell on branch `feat/phase-1-layout`.
+The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and Phase 2 now has three bounded commits on branch `feat/phase-2-settings`: `3f5f1e2 Wire Phase 2 settings controls`, `a390e0b Tighten Phase 2 timeline carryover`, and `1ead8d6 Extend Phase 2 priority shading`. A follow-up browser pass on 2026-06-16 verified the Compact rows toggle and priority-period shading behavior across weekly horizontal, monthly horizontal, and monthly stacked views.
 
 ## What v1 Has (all still in the codebase)
 
@@ -56,7 +56,7 @@ See `docs/product-brief.md` for the full brief. Key points:
 ## Branch and Working Tree
 
 - `master` — v1 baseline, tagged as `v1`
-- `feat/phase-1-layout` — active development branch (current); Phase 1 complete
+- `feat/phase-2-settings` — active development branch (current); three Phase 2 commits landed, tracked diff is `docs/handoff.md`, unrelated `.claude/settings.json` remains dirty, and untracked `AGENTS.md` plus `.agents/` are present
 - `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
 
 ## How to Run
@@ -74,6 +74,7 @@ v1 (worktree): `cd "../Roadmap Project v1" && npm run dev` → `http://localhost
 ```bash
 npm run build
 npx eslint src/App.tsx
+git diff --check
 ```
 
 ## Design Package — Complete
@@ -108,15 +109,20 @@ Four open design questions remain in `product-brief.md` (hex palette, calendar r
 
 New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compactTaskSpacing`, `rangeMode`, `showHexColumns`. Old UI toggles (`showTaskList`, `showImportSection`, `showTimeline`) removed. Calendar state setters removed (no v2 UI controls for calendar navigation).
 
+## Phase 2 Browser Verification — PASS
+
+- `Compact rows` ON/OFF was verified in weekly horizontal, monthly horizontal, monthly stacked split-by-days, and monthly stacked split-by-weeks.
+- With `Compact rows` ON, non-overlapping execution tasks share rows; with it OFF, those same tasks step down one row at a time as intended.
+- Priority-period shading is visible in weekly horizontal, monthly horizontal, and both monthly stacked split modes for the seeded Holiday/PTO spans.
+- The current V4 behavior is hardcoded through `isSpecialPriorityTask` (`Vacation` / `Holiday` / `OOO`) and looks stable enough to close the Phase 2 carryover slice.
+- `L4` configurable priority labels should be treated as a Phase 3 / net-new follow-on, not Phase 2 cleanup. The product brief still marks it as `New` + `Missing`, and the current shipped behavior already satisfies the carryover verification target.
+
 ## Recommended Next Task
 
-**Phase 2** — Wire the settings panel controls to actual app behavior:
-- Range mode radio → connect to `useCustomMonthRange` / `customMonthStart` / `customMonthEnd`
-- Layout toggles → wire compactTaskSpacing, showWeekends, showPhases, showWeekNumbers
-- Display toggles → wire hex column visibility in task panel table
-- Danger → confirm-then-clear all tasks
-
-Read `docs/product-brief.md` Phase 2 build order and `docs/mockups/v2-layout-mockup.html` States 4–6 before starting.
+Close out Phase 2 with a small documentation/commit checkpoint, then choose the next net-new v2 feature:
+- Commit the current `docs/handoff.md` update if this verification checkpoint should be preserved in history
+- Treat configurable priority labels (`L4`) as a later Phase 3 feature, not part of Phase 2 carryover cleanup
+- Pick the next Phase 3 candidate from `docs/product-brief.md` (`E8/E10` edit modal flow, `E4` duplicate task, or `C4/C5` label/color source controls are the cleanest follow-ons)
 
 ## New Chat Start
 
