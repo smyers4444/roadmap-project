@@ -51,13 +51,14 @@ This repository contains **Roadmap Project**, a local planning board for buildin
 
 `importTasks` in `src/App.tsx` uses a `switch (lowerHeader)` to map column names to task fields. The mapping is intentionally forgiving (many aliases per column). Do not tighten it — spreadsheet paste is a primary workflow (I3 guardrail).
 
-## v2 Branch Status
+## v2 Status
 
-The repository is on the `v2` branch. `master` is tagged `v1` and preserved. A local worktree at `../Roadmap Project v1/` runs v1 on port 5174.
+The v2 redesign is merged into `master` (Phases 0–4 complete). The `v1` tag preserves the v1 release, and a local worktree at `../Roadmap Project v1/` runs v1 on port 5174.
 
 - Design is complete: see `docs/product-brief.md` and `docs/mockups/v2-layout-mockup.html`.
-- Phase 0 bug fixes (C1 category colors, I1 import grouping, I2 line padding round-trip) are done.
-- Phase 1 (layout shell rewrite) is in progress. Before touching the render section, read `docs/handoff.md` for current state.
+- Phases 0–4 (bug fixes, layout shell, timeline carryover, edit modal/colors, presentation mode/sorting/panel layout) are done and merged.
+- **Phase 5 (phase header removal — TL1/TL2)** is in progress on branch `phase-5-remove-phase-headers`. **Phase 6** (Haiku UX-polish batch) follows once Phase 5 merges.
+- Before touching the render section, read `docs/handoff.md` for current state.
 
 ## Development Guidance
 

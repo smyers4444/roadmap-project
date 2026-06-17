@@ -265,45 +265,57 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 ---
 
-## Phase 5 — UX Polish & Layout Cleanup 📋 Backlog
+## Phase 5 — Phase Header Removal (render surgery) 📋 Backlog
 
-17 items documented and prioritized for next phase. See below for full list.
+**Owner: Sonnet/Opus (not Haiku).** This phase touches the shared render primitive and must land *before* Phase 6, so Haiku reorganizes a stable settings panel. The `showPhaseLabels` flag is load-bearing — it gates task grouping, phase-bar positioning, and the `isWithinPhase` column shading, not just a visual band.
 
-### Quick Wins (Low Effort, ~1–2 hours)
+| # | Item | Type | Notes & code anchors |
+|---|------|------|----------------------|
+| TL1 | Remove phase header bars from timeline | UX | Remove the two `PHASE HEADER BAR` blocks (`src/App.tsx:2800`, `:3282`) and the phase-band rendering inside `renderStackedTimelineBoard`. Phase remains a **color/label source** (C4/C5) — only the header band goes, not the phase concept. |
+| TL2 | Remove "Show phases" toggle | UX | Remove the `showPhaseLabels` state (`src/App.tsx:280`), its toggle UI (`:2137`), and simplify all gated branches (`:1608`, `:1680`, `:1743`, `:1822`, `:2731`) to the always-on-without-band path. |
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| LY1 | Background color: grey → white | Style | High | White background makes screenshots easier to crop and paste into decks. |
-| LY2 | Page 100% width (remove left overhang) | Layout | High | Content currently has left overhang; should render at 100% viewport width. |
-| HD1 | Settings icon padding reduction | Style | Medium | Settings ⚙ icon is too small relative to button padding. |
-| TP1 | Remove vertical grid lines in task table | Style | Low | Vertical lines clutter the view. Consider removing or making very light. |
-| TP4 | Restyle row action buttons | Style | Medium | Edit/Copy/Delete buttons should match "Export CSV" style: grey outline with icon, larger hit target. |
-| TL1 | Remove phase header bars from timeline | UX | Medium | Phase header bars add visual noise; consider removing or hiding by default. |
-| TL2 | Remove "Show phases" toggle | UX | Medium | If phase headers are removed, remove the settings toggle as well. |
-| DF1 | Change view defaults | Config | Medium | Current: weekly/horizontal. Desired: monthly/stacked with weekends OFF, compact rows ON. |
-| DF2 | Range Mode default: Fit to data | Config | Medium | Current: rolling span. Desired: "Fit to data" (auto-spans earliest → latest task). |
+**Decision:** Full removal (not default-off) confirmed. Verify packing + column shading still render correctly across all five view IIFEs after removal.
 
-### Medium Lift (~2–4 hours)
+---
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| TP2 | Expand "Line Padding" column visibility | Layout | Medium | "Line Padding" column not fully visible. Adjust column widths. |
-| TP3 | Line padding: +/−0.25 increment buttons | Interaction | Medium | Add increment/decrement buttons so users can adjust without typing. |
-| TP5 | Move "Show hex columns" to task settings | IA | Medium | Currently lives in timeline settings; should move to task panel section. |
-| ST1 | Move color palette to task settings | IA | Medium | Hex palette management currently in timeline settings; should move to task panel. |
-| ST2 | Range Mode: radio → dropdown | UX | Medium | Mutually exclusive options are more compact in a dropdown. |
+## Phase 6 — UX Polish & Layout Cleanup 📋 Backlog
 
-### Design-Needed (Undecided)
+**Owner: Haiku** (after Phase 5 lands). All items below are mechanical and anchored. The settings-reorg cluster (TP3/TP5/ST1/ST2) is the one borderline group — if state wiring breaks on the JSX move, pull that cluster back to Sonnet.
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| TL3 | Consistent day column widths across months | Design | Medium | Currently, Feb is narrower than March. Decision: uniform width or variable? |
-| TL5 | Day headers with "Show week/month #" toggle | Design | Low | When showing numbers, keep day-of-week (e.g., "Mon 6") or just number (e.g., "6")? Trade-off: space vs. context. |
+### Rock-solid for Haiku (CSS + default flips)
+
+| # | Item | Type | Notes & code anchors |
+|---|------|------|----------------------|
+| LY1 | Background color: grey → white | Style | `#root` and `.app` both set `#f5f5f5` (`src/App.css:48`, `:53`) → white. `body` is already `#ffffff`. |
+| LY2 | Page 100% width (remove left overhang) | Layout | Root cause: `#root { width: 1800px; margin: 0 auto }` (`src/App.css:48`). Change to `width: 100%`. (Note: `index.css:17` also defines `#root`; App.css wins.) |
+| HD1 | Settings icon padding reduction | Style | Settings ⚙ icon too small relative to button padding. CSS-only. |
+| TP1 | Remove vertical grid lines in task table | Style | **Decision: use a CSS variable set to `transparent`** (not white — white couples to background). Add `--task-grid-line: transparent` to `:root`; point `.v2-task-table` cell `border-right` (`src/App.css:655`) at it. Flip the variable to re-enable later. |
+| TP4 | Restyle row action buttons | Style | Edit/Copy/Delete row actions (`src/App.tsx:3877`, `:3884`, + delete) → match the `.v2-panel-export` "Export CSV" style (`:3776`): grey outline, icon, larger hit target. |
+| DF1 | Change view defaults | Config | `view` `"weeks"`→`"months"` (`src/App.tsx:246`); `timelineLayout` `"horizontal"`→`"stacked"` (`:276`); **stacked split = Split by Days** (`isWeekSplit` path off); `showWeekends` `true`→`false` (`:275`). `compactTaskSpacing` is **already** `true` (`:299`) — no change needed. |
+| DF2 | Range Mode default: Fit to data | Config | `rangeMode` default `"rolling"`→`"fit"` (`src/App.tsx:300`). Mode already exists (`:335`) — pure default flip. |
+
+### Settings reorganization cluster (borderline — verify state wiring)
+
+| # | Item | Type | Notes & code anchors |
+|---|------|------|----------------------|
+| TP2 | Expand "Line Padding" column visibility | Layout | Adjust `.v2-task-table` column widths so "Line Padding" is fully visible. |
+| TP3 | Line padding: +/−0.25 increment buttons | Interaction | Add increment/decrement buttons next to the Line Padding input; round-trips via `lineHeightAdjust` (CSV "Line Padding" column). |
+| TP5 | Move "Show hex columns" to task settings | IA | Move control from timeline settings → task panel section. Keep state wiring intact. |
+| ST1 | Move color palette to task settings | IA | Move hex palette management (`colorPalette`/`categoryColorMap`, `src/App.tsx:306–309`) UI from timeline settings → task panel. |
+| ST2 | Range Mode: radio → dropdown | UX | Convert the three `rangeMode` options (`fit`/`range`/`rolling`) from radios to a dropdown. Do after DF2. |
+
+### Deferred — Design-Needed (not yet scoped)
+
+| # | Item | Type | Notes |
+|---|------|------|-------|
+| TL3 | Consistent day column widths across months | Design | Currently Feb is narrower than March. Decision needed: uniform width or variable? |
+| TL5 | Day headers with "Show week/month #" toggle | Design | When showing numbers, keep day-of-week ("Mon 6") or just number ("6")? Space vs. context. |
 
 ### Summary
 
-**Quick wins (9 items):** LY1, LY2, HD1, TP1, TP4, TL1, TL2, DF1, DF2  
-**Medium lift (5 items):** TP2, TP3, TP5, ST1, ST2  
-**Design-needed (2 items):** TL3, TL5  
+**Phase 5 — Sonnet/Opus (do first):** TL1, TL2 (phase header removal; touches shared render primitive)  
+**Phase 6 — Haiku, rock-solid:** LY1, LY2, HD1, TP1, TP4, DF1, DF2  
+**Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2 (pull back to Sonnet if state wiring breaks)  
+**Deferred (design-needed):** TL3, TL5  
 
-**Recommended approach:** Batch quick wins first (1–2 hours), then tackle IA/UX refinements (TP5/ST1/ST2) as a cohesive settings reorganization. Defer design-needed items until decisions are made.
+**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → revisit TL3/TL5 once decisions are made.

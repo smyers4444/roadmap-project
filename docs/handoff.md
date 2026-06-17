@@ -13,13 +13,13 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 4 complete and merged to master)
+Last updated: 2026-06-16 (Phase 5 started on branch `phase-5-remove-phase-headers`)
 
 ## Current Snapshot
 
 Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/product-brief.md`), targeting screenshot-first UX for client deliverables. v1 preserved as tag `v1` and worktree `../Roadmap Project v1/`.
 
-**Branch:** `master` (Phases 0–4 merged and complete)
+**Branch:** `phase-5-remove-phase-headers` (off master; Phases 0–4 merged and complete)
 
 **Latest commits:**
 - `19f6f09` Update handoff: Phase 4 L1 complete, E6 verified, E7 scoped (post-merge on master)
@@ -40,7 +40,8 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 | **4a** | **L1 Presentation mode** | **✅ Complete** | Ctrl+P toggle, hides all controls, shows timeline + legend only |
 | **4b** | **E6 Column sorting** | **✅ Complete** | Already implemented; verified working |
 | **4c** | **E7 Task panel layout** | **✅ Complete** | Refactored to flexbox: single scroll direction, timeline pinned, task panel below |
-| **5** | **UX Polish (17 items)** | **📋 Backlog** | Quick wins, medium-lift, design-needed items documented in product-brief.md |
+| **5** | **Phase header removal (TL1, TL2)** | **🚧 In progress** | Sonnet/Opus work — touches shared render primitive. Branch `phase-5-remove-phase-headers`. Must land before Phase 6. |
+| **6** | **UX Polish (Haiku, 12 items)** | **📋 Backlog** | CSS + default flips + settings reorg. Anchored in product-brief.md. Starts after Phase 5 merges. |
 
 ## Phase 4 — Complete (L1 + E6 + E7)
 
@@ -68,26 +69,26 @@ Already implemented and verified working. No changes needed.
 - **Result:** Single scroll direction (vertical), timeline pinned at top, no overlaps
 - **Verification:** All features tested, builds and lints clean
 
-## Phase 5 — UX Polish & Layout Cleanup (17 items)
+## Phase 5 — Phase Header Removal (TL1, TL2) 🚧
 
-Documented and prioritized in `docs/product-brief.md`:
-- **Quick wins** (~1–2 hours): white bg, 100% width, icon padding, grid lines, button styling, phase header removal, defaults
-- **Medium-lift:** spacing, line padding buttons, settings reorganization
-- **Design-needed:** day column widths, day header display toggle
+**In progress on `phase-5-remove-phase-headers`.** Sonnet/Opus work — touches the shared render primitive, so it is split out from the Haiku batch and must land first.
 
-Ready to start on new branch `feat/phase-5-ux-polish` when prioritized.
+- **TL1** — Remove phase header bars: the two `PHASE HEADER BAR` blocks (`src/App.tsx:2800`, `:3282`) and the phase-band rendering in `renderStackedTimelineBoard`. Phase stays a color/label source (C4/C5); only the band goes.
+- **TL2** — Remove the `showPhaseLabels` state (`src/App.tsx:280`), toggle UI (`:2137`), and the gated branches (`:1608`, `:1680`, `:1743`, `:1822`, `:2731`).
+- **Verify:** packing + column shading render correctly across all five view IIFEs after removal; `npm run build` + `npx eslint src/App.tsx` clean.
+
+## Phase 6 — UX Polish (Haiku) 📋
+
+Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merges** so Haiku reorganizes a stable settings panel.
+- **Rock-solid (CSS + default flips):** LY1 white bg, LY2 100% width, HD1 icon padding, TP1 grid lines (transparent variable), TP4 row buttons, DF1 defaults (months/stacked/split-by-days/weekends-off), DF2 fit-to-data default.
+- **Settings-reorg cluster (borderline):** TP2, TP3, TP5, ST1, ST2 — pull back to Sonnet if state wiring breaks on the JSX move.
+- **Deferred (design-needed):** TL3 day column widths, TL5 day header display.
 
 ## Next Steps
 
-**Option 1: Start Phase 5 UX Polish**
-- Create branch: `git checkout -b feat/phase-5-ux-polish`
-- Quick wins batch: 7–8 items, ~1–2 hours (white bg, 100% width, icon padding, grid lines, buttons, phase headers, defaults)
-- Medium-lift: spacing, column widths, settings reorganization
-- See `docs/product-brief.md` Phase 5 section for full prioritized list
-
-**Option 2: Wait for Design Input**
-- Design-needed items (TL3: consistent day column widths, TL5: day header display) are deferred
-- Can batch with quick wins once decisions are made
+1. **Finish Phase 5** (current branch): implement TL1 + TL2, verify, commit, open PR, merge to master.
+2. **Then Phase 6** (Haiku): branch off updated master; do the rock-solid batch first, then the settings-reorg cluster.
+3. **Defer** TL3/TL5 until day-column and day-header decisions are made.
 
 ## New Chat Start
 
@@ -95,6 +96,6 @@ Read these first:
 - `README.md`
 - `CLAUDE.md`
 - `docs/handoff.md` (this file)
-- `docs/product-brief.md` (for Phase 5 backlog and design decisions)
+- `docs/product-brief.md` (for Phase 5/6 backlog and design decisions)
 
-Current state: Phases 0–4 complete, merged to master. Phase 5 (17 UX polish items) is documented and ready to prioritize. All v1 carryover features preserved. Build clean, lint clean.
+Current state: Phases 0–4 complete, merged to master. Phase 5 (phase header removal, TL1+TL2) in progress on `phase-5-remove-phase-headers`. Phase 6 (Haiku UX polish) documented and waiting for Phase 5 to merge. All v1 carryover features preserved. Build clean, lint clean.
