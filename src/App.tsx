@@ -2172,67 +2172,6 @@ function App() {
 
             <hr className="v2-divider" />
 
-            {/* C2: Palette */}
-            <div className="v2-settings-section">
-              <div className="v2-settings-heading">Color Palette</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "10px" }}>
-                {colorPalette.map((hex, idx) => (
-                  <div
-                    key={idx}
-                    title={hex}
-                    style={{
-                      width: "100%",
-                      aspectRatio: "1",
-                      backgroundColor: `#${hex}`,
-                      borderRadius: "4px",
-                      border: "1px solid #ddd",
-                      cursor: "default",
-                    }}
-                  />
-                ))}
-              </div>
-              <div style={{ fontSize: "11px", color: "#666", lineHeight: "1.4" }}>
-                <strong>Categories mapped:</strong>
-                <br />
-                {Object.entries(categoryColorMap).length > 0 ? (
-                  <div style={{ marginTop: "8px" }}>
-                    {Object.entries(categoryColorMap).map(([cat, idx]) => {
-                      const paletteIdx = parseInt(idx, 10);
-                      return (
-                        <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                          <span style={{ fontSize: "11px", flex: 1 }}>{cat}</span>
-                          <select
-                            value={paletteIdx}
-                            onChange={(e) => {
-                              const newIdx = parseInt(e.target.value, 10);
-                              setCategoryColorMap({ ...categoryColorMap, [cat]: String(newIdx) });
-                            }}
-                            style={{
-                              padding: "2px 4px",
-                              fontSize: "10px",
-                              border: "1px solid #ddd",
-                              borderRadius: "3px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            {colorPalette.map((_, i) => (
-                              <option key={i} value={i}>
-                                {i + 1}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <em style={{ color: "#999", fontSize: "11px" }}>No categories yet</em>
-                )}
-              </div>
-            </div>
-
-            <hr className="v2-divider" />
-
             {/* Danger */}
             <div className="v2-settings-section">
               <div className="v2-settings-heading">Danger</div>
@@ -3553,6 +3492,63 @@ function App() {
               </tbody>
             </table>
           </div>
+          <details style={{ padding: "8px 12px", borderTop: "1px solid #eee", fontSize: "11px" }}>
+            <summary style={{ cursor: "pointer", fontWeight: 500, marginBottom: "8px" }}>Color Palette</summary>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "10px", marginTop: "8px" }}>
+              {colorPalette.map((hex, idx) => (
+                <div
+                  key={idx}
+                  title={hex}
+                  style={{
+                    width: "100%",
+                    aspectRatio: "1",
+                    backgroundColor: `#${hex}`,
+                    borderRadius: "4px",
+                    border: "1px solid #ddd",
+                    cursor: "default",
+                  }}
+                />
+              ))}
+            </div>
+            <div style={{ color: "#666", lineHeight: "1.4" }}>
+              <strong>Categories mapped:</strong>
+              <br />
+              {Object.entries(categoryColorMap).length > 0 ? (
+                <div style={{ marginTop: "8px" }}>
+                  {Object.entries(categoryColorMap).map(([cat, idx]) => {
+                    const paletteIdx = parseInt(idx, 10);
+                    return (
+                      <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                        <span style={{ fontSize: "11px", flex: 1 }}>{cat}</span>
+                        <select
+                          value={paletteIdx}
+                          onChange={(e) => {
+                            const newIdx = parseInt(e.target.value, 10);
+                            setCategoryColorMap({ ...categoryColorMap, [cat]: String(newIdx) });
+                          }}
+                          style={{
+                            padding: "2px 4px",
+                            fontSize: "10px",
+                            border: "1px solid #ddd",
+                            borderRadius: "3px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {colorPalette.map((_, i) => (
+                            <option key={i} value={i}>
+                              {i + 1}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <em style={{ color: "#999", fontSize: "11px" }}>No categories yet</em>
+              )}
+            </div>
+          </details>
           <div className="v2-panel-footer">
             {tasks.length} task{tasks.length !== 1 ? "s" : ""} · drag ⠇ to reorder · click a header to sort
             <span style={{ marginLeft: "10px" }}>Saved in this browser only.</span>
