@@ -2591,6 +2591,7 @@ function App() {
                     type="number"
                     value={editingTask.lineHeightAdjust ?? 0}
                     onChange={(e) => updateTaskFields(editingTask.id, { lineHeightAdjust: Number(e.target.value) })}
+                    step={0.25}
                   />
                 </label>
               </div>
