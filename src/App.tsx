@@ -309,6 +309,9 @@ function App() {
   const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({}); // category name -> palette index
   const [showHexColumns, setShowHexColumns] = useState(true);
 
+  // L1: Presentation mode (hide all controls)
+  const [presentationMode, setPresentationMode] = useState(false);
+
   useEffect(() => {
     try {
       window.localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
@@ -316,6 +319,27 @@ function App() {
       // Ignore storage write failures so task editing still works in restricted browsers.
     }
   }, [tasks]);
+
+  // L1: Keyboard shortcut for presentation mode (Ctrl/Cmd+P)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+        e.preventDefault();
+        setPresentationMode((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // L1: Close all panels when entering presentation mode
+  useEffect(() => {
+    if (presentationMode) {
+      setShowSettingsPanel(false);
+      setShowImportModal(false);
+      setShowTaskPanel(false);
+    }
+  }, [presentationMode]);
 
   useEffect(() => {
     if (view !== "months") {
@@ -1946,52 +1970,83 @@ function App() {
     <div className="app" style={{ position: "relative" }}>
 
       {/* ─── v2 HEADER ─── */}
-      <header className="v2-header">
-        <span className="v2-logo">Roadmap</span>
-        <div className="v2-view-tabs">
-          <button
-            className={`v2-tab${activeTab === "weekly" ? " active" : ""}`}
-            onClick={() => { setView("weeks"); setTimelineLayout("horizontal"); }}
-          >
-            Weekly
-          </button>
-          <button
-            className={`v2-tab${activeTab === "monthly" ? " active" : ""}`}
-            onClick={() => { setView("months"); setTimelineLayout("horizontal"); }}
-          >
-            Monthly
-          </button>
-          <button
-            className={`v2-tab${activeTab === "stacked" ? " active" : ""}`}
-            onClick={() => {
-              setTimelineLayout("stacked");
-              if (view === "calendar") setView("months");
-            }}
-          >
-            Stacked
-          </button>
+      {!presentationMode && (
+        <header className="v2-header">
+          <span className="v2-logo">Roadmap</span>
+          <div className="v2-view-tabs">
+            <button
+              className={`v2-tab${activeTab === "weekly" ? " active" : ""}`}
+              onClick={() => { setView("weeks"); setTimelineLayout("horizontal"); }}
+            >
+              Weekly
+            </button>
+            <button
+              className={`v2-tab${activeTab === "monthly" ? " active" : ""}`}
+              onClick={() => { setView("months"); setTimelineLayout("horizontal"); }}
+            >
+              Monthly
+            </button>
+            <button
+              className={`v2-tab${activeTab === "stacked" ? " active" : ""}`}
+              onClick={() => {
+                setTimelineLayout("stacked");
+                if (view === "calendar") setView("months");
+              }}
+            >
+              Stacked
+            </button>
+          </div>
+          <div className="v2-header-actions">
+            <button
+              className="v2-btn v2-btn-ghost"
+              onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
+            >
+              ⬇ Import
+            </button>
+            <button
+              className={`v2-btn v2-btn-ghost${showSettingsPanel ? " v2-btn-active" : ""}`}
+              onClick={() => setShowSettingsPanel((p) => !p)}
+            >
+              ⚙
+            </button>
+            <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
+              Export CSV
+            </button>
+            <button
+              className="v2-btn v2-btn-ghost"
+              onClick={() => setPresentationMode(true)}
+              title="Presentation mode (Ctrl+P)"
+            >
+              🎬
+            </button>
+          </div>
+        </header>
+      )}
+
+      {/* ─── PRESENTATION MODE OVERLAY ─── */}
+      {presentationMode && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            padding: "8px",
+            backgroundColor: "rgba(0,0,0,0.7)",
+            color: "white",
+            fontSize: "12px",
+            cursor: "pointer",
+            textAlign: "center",
+          }}
+          onClick={() => setPresentationMode(false)}
+        >
+          Presentation mode (Ctrl+P to exit)
         </div>
-        <div className="v2-header-actions">
-          <button
-            className="v2-btn v2-btn-ghost"
-            onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
-          >
-            ⬇ Import
-          </button>
-          <button
-            className={`v2-btn v2-btn-ghost${showSettingsPanel ? " v2-btn-active" : ""}`}
-            onClick={() => setShowSettingsPanel((p) => !p)}
-          >
-            ⚙
-          </button>
-          <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
-            Export CSV
-          </button>
-        </div>
-      </header>
+      )}
 
       {/* ─── SETTINGS PANEL ─── */}
-      {showSettingsPanel && (
+      {!presentationMode && showSettingsPanel && (
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowSettingsPanel(false)} />
           <div className="v2-settings-panel">
@@ -2304,7 +2359,7 @@ function App() {
       )}
 
       {/* ─── IMPORT MODAL ─── */}
-      {showImportModal && (
+      {!presentationMode && showImportModal && (
         <div
           className="v2-modal-backdrop"
           onClick={(e) => {
@@ -3730,24 +3785,26 @@ function App() {
       </div>
 
       {/* ─── TASK PANEL ─── */}
-      <div
-        className={`v2-task-panel-tab${showTaskPanel ? " expanded" : ""}`}
-        onClick={() => setShowTaskPanel((p) => !p)}
-      >
-        <span className="v2-panel-tab-label">Tasks</span>
-        <span className="v2-panel-tab-count">
-          {filteredAndSortedTasks.length} task{filteredAndSortedTasks.length !== 1 ? "s" : ""}
-          {tasks.length > 0 && (() => {
-            const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
-            const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-            const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
-            return ` · ${format(minDate, "MMM d, yyyy")} – ${format(maxDate, "MMM d, yyyy")}`;
-          })()}
-        </span>
-        <span className="v2-panel-tab-arrow">{showTaskPanel ? "▼ collapse" : "▲ expand"}</span>
-      </div>
+      {!presentationMode && (
+        <div
+          className={`v2-task-panel-tab${showTaskPanel ? " expanded" : ""}`}
+          onClick={() => setShowTaskPanel((p) => !p)}
+        >
+          <span className="v2-panel-tab-label">Tasks</span>
+          <span className="v2-panel-tab-count">
+            {filteredAndSortedTasks.length} task{filteredAndSortedTasks.length !== 1 ? "s" : ""}
+            {tasks.length > 0 && (() => {
+              const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
+              const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
+              const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
+              return ` · ${format(minDate, "MMM d, yyyy")} – ${format(maxDate, "MMM d, yyyy")}`;
+            })()}
+          </span>
+          <span className="v2-panel-tab-arrow">{showTaskPanel ? "▼ collapse" : "▲ expand"}</span>
+        </div>
+      )}
 
-      {showTaskPanel && (
+      {!presentationMode && showTaskPanel && (
         <div className="v2-task-panel">
           <div className="v2-panel-toolbar">
             <input
