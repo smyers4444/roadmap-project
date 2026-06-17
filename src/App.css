@@ -96,6 +96,21 @@
   flex-basis: auto;
 }
 
+.v2-header--presentation {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 1500;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.v2-header--hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .v2-logo {
   font-size: 13px;
   font-weight: 800;
@@ -113,6 +128,16 @@
   border-radius: 6px;
   padding: 3px;
   gap: 1px;
+}
+
+.v2-presentation-indicator {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
 }
 
 .v2-tab {

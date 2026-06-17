@@ -50,7 +50,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 
 | # | Item | Type | Status | Notes / Constraints |
 |---|------|------|--------|---------------------|
-| L1 | Presentation / clean mode: hide all controls, show only timeline + optional legend | New | Missing | **Biggest single UX win.** Currently requires manual cropping every time. |
+| L1 | Presentation / clean mode: hide controls, show only screenshot-relevant UI, and let a temporary exit bar reappear on movement | New | Working | Ctrl/Cmd+P and the presentation button toggle presentation mode. Timeline + legend remain visible; the app preserves the normal top offset so the roadmap does not jump. A reduced presentation header reappears on pointer movement, shows that presentation mode is active, and explains how to exit with Ctrl/Cmd+P or the button before auto-hiding again after 2 seconds of idle time. |
 | L2 | Redesign control area: 7–8 equal-weight toggle buttons need hierarchy and grouping | Design | Broken UX | View selector is the most important choice but looks like one of many equal buttons. |
 | L3 | Redesign task section: import + add + filter layout is clunky and takes too much vertical space | Design | Broken UX | The import panel dominates space that belongs to the timeline. |
 | L4 | Configurable priority labels: user defines which phase/category values sort to top + get column shading | New | Missing | Currently hardcoded to "Vacation / Holiday / OOO". v2 settings panel shows editable tag chips. Empty list = feature disabled. |
@@ -66,6 +66,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 | E8 | Edit task via modal with real form inputs | New | Missing | Replaces broken in-cell editing. Proper text fields, date pickers, color swatch + hex inputs. Reachable from row "Edit" button. |
 | E9 | Right-click a timeline bar to edit that task | New | Missing | Context menu / direct open of the edit modal for that task. Faster than finding the row in the panel. |
 | E10 | Prev / next (‹ ›) navigation inside the edit modal | New | Missing | Step through tasks without closing the modal. Order follows current sort. |
+| E11 | Add Task should open the task editor immediately instead of silently appending a row | Enhancement | Partial | Current behavior adds a task directly to the list. Desired flow is to create/open the same modal used by right-click/edit so the user can set dates and labels before the new task lands in the board. |
 | E5 | Task panel: filter tasks by text | Enhancement | Partial | Filter input exists; needs to also filter by hex code (see C3) and work reliably across all fields. |
 | E6 | Task panel: click column headers to sort + drag to reorder | Enhancement | Partial | Click any column header to sort (click again to reverse), with a ▲/▼ indicator on the active column. Covers Phase, Phase HEX, Category, Cat HEX, Task, Start, End, Order, Line Padding. Replaces the sort dropdown. Drag handle (⠿) reorders rows manually; dragging resets to manual order. |
 | E7 | Task panel: collapsible section below the timeline | Design | Missing | Timeline at top (never moves). Task panel below it — collapses to a thin bar, expands downward adding page height. No overlap. One scroll direction (vertical). Screenshot workflow: timeline always at top of page, panel below it and out of frame. |
@@ -78,6 +79,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 | I2 | Line padding: export includes padding values, but import doesn't re-apply them | Bug | Broken | Round-trip fidelity issue; padding is lost on re-import. |
 | I3 | Keep import flexible — do not add strict validation | Guardrail | Working | Spreadsheet paste is a primary workflow. Don't break it for edge cases. |
 | I4 | Import must accept ALL export columns (lossless round-trip) | Bug | Done | Export emits: Phase, Phase Hex, Category, Category HEX, Task, Sub-Task, Owner, Week, Date Start, Date End, **Display Order**, **Line Padding**. v2 import now maps Line Padding (I2) and Display Order, so export → re-import reproduces the same board including manual order. When Display Order is absent (fresh Excel paste), it still falls back to row order. See `docs/code-review-findings.md` #2. |
+| I5 | Two-digit import years should resolve to the active century, not 19xx | Bug | Broken | Importing dates like `mm/dd/26` currently resolves to 1926 instead of 2026. Fix needs to preserve forgiving spreadsheet import behavior (I3) while normalizing common Excel-style two-digit years to the expected modern date. |
 
 ### Timeline Views & Display
 
@@ -106,6 +108,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 | S1 | Legend / category key: must fit cleanly below timeline when included in screenshot | Enhancement | Partial | Needs to fit on a slide that already has a header and footer. Currently may require scrolling to include. |
 | S2 | CSV export round-trip fidelity (line padding) | Bug | Broken | See I2 above. |
 | S3 | Export: let user name the file and choose the save location | Enhancement | Missing | v1 auto-downloads `roadmap-tasks-<date>.csv` to the default downloads folder. v2 should prompt for filename + location. Use the File System Access API (`showSaveFilePicker`) where supported, with a graceful fallback to the current auto-download (prefilled editable filename) in browsers that lack it. |
+| S4 | Remove the frame/border around the bottom legend | Enhancement | Partial | The legend content stays, but the surrounding border/frame should be removed so the screenshot reads cleaner and lighter. |
 
 ### Navigation & Range
 
@@ -206,7 +209,7 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 
 ---
 
-## Implementation Status — Updated 2026-06-16
+## Implementation Status — Updated 2026-06-17
 
 ### Phase 0 — Bug Fixes ✅ Complete
 
@@ -255,7 +258,7 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **L1 — Presentation mode** | ✅ Complete | Ctrl/Cmd+P toggle or 🎬 button. Hides header, settings, import modal, task panel. Shows timeline + legend only. Dark overlay banner guides exit. Screenshot-ready. |
+| **L1 — Presentation mode** | ✅ Complete | Ctrl/Cmd+P toggle or presentation button. Timeline + legend remain visible. Presentation mode preserves the normal top spacing so the roadmap does not shift, and uses a reduced header that appears on entry or pointer movement, shows an exit hint, and auto-hides after 2 seconds of idle time. |
 | **E6 — Column sorting** | ✅ Complete | Column headers clickable for sort. ▲/▼ indicators visible. All columns covered (Phase, Category, Task, Start, End, Order, Line Padding, etc.). Drag handle for manual reorder. |
 | **E7 — Task panel layout** | ✅ Complete | Refactored from overlay to structural layout below timeline using flexbox. `.app` uses flex column layout (height: 100vh). `.v2-content-area` wrapper provides scrollable region. Task panel tab/panel use flex-shrink: 0. Single scroll direction (vertical). Timeline stays pinned at top via sticky header. |
 | L2 — Control area redesign | ⏭️ Future | View selector needs visual hierarchy (most important choice, not equal weight with toggles). Design work required. |

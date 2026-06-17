@@ -325,6 +325,8 @@ function App() {
 
   // L1: Presentation mode (hide all controls)
   const [presentationMode, setPresentationMode] = useState(false);
+  const [presentationHeaderVisible, setPresentationHeaderVisible] = useState(false);
+  const presentationHeaderTimeoutRef = useRef<number | null>(null);
 
   // Compute unique phases and categories from tasks
   const phases = Array.from(new Set(tasks.map((t) => t.phase).filter(Boolean))) as string[];
@@ -357,6 +359,37 @@ function App() {
       setShowImportModal(false);
       setShowTaskPanel(false);
     }
+  }, [presentationMode]);
+
+  useEffect(() => {
+    const clearPresentationHeaderTimeout = () => {
+      if (presentationHeaderTimeoutRef.current !== null) {
+        window.clearTimeout(presentationHeaderTimeoutRef.current);
+        presentationHeaderTimeoutRef.current = null;
+      }
+    };
+
+    if (!presentationMode) {
+      clearPresentationHeaderTimeout();
+      setPresentationHeaderVisible(false);
+      return;
+    }
+
+    const showPresentationHeader = () => {
+      setPresentationHeaderVisible(true);
+      clearPresentationHeaderTimeout();
+      presentationHeaderTimeoutRef.current = window.setTimeout(() => {
+        setPresentationHeaderVisible(false);
+      }, 2000);
+    };
+
+    showPresentationHeader();
+    window.addEventListener("pointermove", showPresentationHeader);
+
+    return () => {
+      clearPresentationHeaderTimeout();
+      window.removeEventListener("pointermove", showPresentationHeader);
+    };
   }, [presentationMode]);
 
   useEffect(() => {
@@ -1989,92 +2022,85 @@ function App() {
   const activeTab = view === "weeks" ? "weekly" : "monthly";
 
   return (
-    <div className="app" style={{ paddingTop: presentationMode ? "40px" : "0" }}>
+    <div className="app">
 
       {/* ─── v2 HEADER ─── */}
-      {!presentationMode && (
-        <header className="v2-header">
+      <header
+        className={`v2-header${presentationMode ? " v2-header--presentation" : ""}${
+          presentationMode && !presentationHeaderVisible ? " v2-header--hidden" : ""
+        }`}
+      >
           <span className="v2-logo">Roadmap</span>
-          <div className="v2-view-tabs">
-            <button
-              className={`v2-tab${activeTab === "weekly" ? " active" : ""}`}
-              onClick={() => setView("weeks")}
-            >
-              Weekly
-            </button>
-            <button
-              className={`v2-tab${activeTab === "monthly" ? " active" : ""}`}
-              onClick={() => setView("months")}
-            >
-              Monthly
-            </button>
-          </div>
+          {presentationMode ? (
+            <div className="v2-presentation-indicator">
+              Presentation mode. Press Ctrl/Cmd+P or the screen button to exit.
+            </div>
+          ) : (
+            <div className="v2-view-tabs">
+              <button
+                className={`v2-tab${activeTab === "weekly" ? " active" : ""}`}
+                onClick={() => setView("weeks")}
+              >
+                Weekly
+              </button>
+              <button
+                className={`v2-tab${activeTab === "monthly" ? " active" : ""}`}
+                onClick={() => setView("months")}
+              >
+                Monthly
+              </button>
+            </div>
+          )}
           <div className="v2-header-actions">
+            {!presentationMode && (
+              <>
+                <button
+                  className="v2-btn v2-btn-ghost"
+                  onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
+                >
+                  Import
+                </button>
+                <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
+                  Export CSV
+                </button>
+              </>
+            )}
             <button
-              className="v2-btn v2-btn-ghost"
-              onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
-            >
-              Import
-            </button>
-            <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
-              Export CSV
-            </button>
-            <button
-              className="v2-btn v2-btn-ghost v2-btn-icon"
-              onClick={() => setPresentationMode(true)}
-              title="Presentation mode (Ctrl+P)"
+              className={`v2-btn v2-btn-ghost${presentationMode ? "" : " v2-btn-icon"}`}
+              onClick={() => setPresentationMode((prev) => !prev)}
+              title={presentationMode ? "Exit presentation mode (Ctrl+P)" : "Presentation mode (Ctrl+P)"}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="3" width="20" height="14" rx="2"/>
                 <line x1="8" y1="21" x2="16" y2="21"/>
                 <line x1="12" y1="17" x2="12" y2="21"/>
               </svg>
+              {presentationMode && <span style={{ marginLeft: "8px" }}>Exit Presentation</span>}
             </button>
-            <button
-              ref={settingsPanelAnchorRef}
-              className={`v2-btn v2-btn-ghost v2-btn-icon${showSettingsPanel ? " v2-btn-active" : ""}`}
-              onClick={() => {
-                const rect = settingsPanelAnchorRef.current?.getBoundingClientRect();
-                if (rect) {
-                  setSettingsPanelPos({
-                    top: rect.bottom + 6,
-                    right: window.innerWidth - rect.right,
-                  });
-                }
-                setShowSettingsPanel((p) => !p);
-              }}
-              title="Settings"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-              </svg>
-            </button>
+            {!presentationMode && (
+              <button
+                ref={settingsPanelAnchorRef}
+                className={`v2-btn v2-btn-ghost v2-btn-icon${showSettingsPanel ? " v2-btn-active" : ""}`}
+                onClick={() => {
+                  const rect = settingsPanelAnchorRef.current?.getBoundingClientRect();
+                  if (rect) {
+                    setSettingsPanelPos({
+                      top: rect.bottom + 6,
+                      right: window.innerWidth - rect.right,
+                    });
+                  }
+                  setShowSettingsPanel((p) => !p);
+                }}
+                title="Settings"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </button>
+            )}
           </div>
-        </header>
-      )}
-
-      {/* ─── PRESENTATION MODE OVERLAY ─── */}
-      {presentationMode && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 9999,
-            padding: "8px",
-            backgroundColor: "rgba(0,0,0,0.7)",
-            color: "white",
-            fontSize: "12px",
-            cursor: "pointer",
-            textAlign: "center",
-          }}
-          onClick={() => setPresentationMode(false)}
-        >
-          Presentation mode (Ctrl+P to exit)
-        </div>
-      )}
+      </header>
 
       {/* ─── SETTINGS PANEL ─── */}
       {!presentationMode && showSettingsPanel && (
@@ -2607,7 +2633,7 @@ function App() {
       )}
 
       {/* ─── CONTENT AREA (scrollable) ─── */}
-      <div className="v2-content-area">
+      <div className="v2-content-area" style={{ paddingTop: presentationMode ? "48px" : "0" }}>
         {/* ─── TIMELINE CANVAS ─── */}
         <div className="v2-canvas">
         <div>
