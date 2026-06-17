@@ -93,7 +93,7 @@
  */
 
 // React imports
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 // Third-party component for date selection
 import DatePicker from "react-datepicker";
@@ -868,6 +868,16 @@ function App() {
     return (targetMonth.getFullYear() - firstTaskMonth.getFullYear()) * 12
       + (getMonth(targetMonth) - getMonth(firstTaskMonth))
       + 1;
+  };
+
+  const formatCompactMonthRange = (start: Date, end: Date) => {
+    const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
+
+    if (sameMonth) {
+      return `${format(start, "MMM d")} – ${end.getDate()}`;
+    }
+
+    return `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
   };
 
   const getWeeklyPeriodEnd = () => addDays(currentWeek, weekSpan * 7 - 1);
@@ -1649,7 +1659,7 @@ function App() {
     showInnerUnitGridlines = true,
   }: {
     periodKey: string;
-    title: string;
+    title: ReactNode;
     units: TimelineUnit[];
     periodStart: Date;
     periodEnd: Date;
@@ -1694,10 +1704,12 @@ function App() {
                     style={{
                       gridColumn: `span ${group.span}`,
                       borderRight: index < headerGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
+                      fontWeight: 500,
+                      color: "var(--text-secondary)",
                     }}
                     title={group.title}
                   >
-                    {group.label}
+                    ({group.label})
                   </div>
                 ))
                 : units.map((unit, index) => {
@@ -3177,9 +3189,24 @@ function App() {
 
                   return renderStackedTimelineBoard({
                     periodKey: `month-${month.toISOString()}`,
-                    title: showMonthNumbers
-                      ? `Month ${getRelativeMonthNumber(month, tasks)}`
-                      : `${format(periodStart, "MMM d")} - ${format(periodEnd, "MMM d, yyyy")}`,
+                    title: (
+                      <>
+                        <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>
+                          {showMonthNumbers
+                            ? `Month ${getRelativeMonthNumber(month, tasks)}`
+                            : `${formatCompactMonthRange(periodStart, periodEnd)}, ${format(periodEnd, "yyyy")}`}
+                        </span>
+                        <span
+                          style={{
+                            marginLeft: "12px",
+                            fontWeight: 400,
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          weeks {getRelativeWeekNumber(periodStart, timelineTasks)} – {getRelativeWeekNumber(periodEnd, timelineTasks)}
+                        </span>
+                      </>
+                    ),
                     units,
                     periodStart,
                     periodEnd,
