@@ -313,7 +313,7 @@ User-reported issues and refinements for screenshot workflow and general usabili
 | TL2 | Remove "Show phases" toggle | UX | Medium | If phase headers are removed from timeline, remove the settings toggle as well (currently rarely used). |
 | TL3 | Consistent day column widths across months | Design | Medium | Currently, months with fewer days (e.g., February) are narrower than months with more days (e.g., March) because column width is calculated per-month. Design decision: should all days be uniform width (so Feb naturally spans less)? Requires refactoring position calculations if yes. |
 | TL4 | Week labels in monthly view header | Enhancement | Medium | Add week number labels (Week 1, Week 2, etc.) spanning their respective day columns in monthly view. Month callout remains unchanged. Week labels persist even if day numbers are toggled off. |
-| TL5 | Day headers change with "Show week/month #" toggle | UX | Low | When "Show week / month #" is ON, day column headers should show only the day number (e.g., "6" "7" "8"), not "Mon 6" "Tue 7". Reduces visual clutter in week/month # view. |
+| TL5 | Day headers with "Show week/month #" toggle | Design | Low | When "Show week / month #" is ON, should day headers show only numbers (e.g., "6" "7" "8") or keep day-of-week (e.g., "Mon 6" "Tue 7")? Trade-off: space/clutter vs. day-of-week context. **Undecided.** |
 
 ### Settings Panel Organization
 
