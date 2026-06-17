@@ -327,7 +327,7 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 | # | Item | Type | Notes |
 |---|------|------|-------|
-| TL4 | Week labels in monthly view header | Enhancement | Add week-number labels (Week 1, 2, …) spanning their day columns in monthly view; month callout unchanged; labels persist when day numbers are toggled off. Render work on monthly header groups — not a Haiku quick win. |
+| TL4 | Week labels in monthly view header | Enhancement | ✅ Complete. Monthly view now shows week-number labels spanning the visible day columns above the month callout; labels persist independently of the month label toggle. |
 
 ### Deferred — Design-Needed (not yet scoped)
 
@@ -341,7 +341,7 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 **Phase 5 — Sonnet/Opus:** ✅ TL1, TL2 (phase header removal) complete  
 **Phase 6 — Haiku, rock-solid:** LY1, LY2, HD1, TP1, TP4, DF1, DF2  
 **Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2  
-**Needs scoping (Sonnet):** TL4 (week labels in monthly header)  
+**Needs scoping (Sonnet):** none  
 **Deferred (design-needed):** TL3, TL5  
 
-**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → TL4 → revisit TL3/TL5 once decisions are made.
+**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → revisit TL3/TL5 once decisions are made.

@@ -965,6 +965,39 @@ function App() {
     });
   };
 
+  const getWeekHeaderGroupsForDays = (days: Date[]): TimelineHeaderGroup[] => {
+    const groups: TimelineHeaderGroup[] = [];
+
+    days.forEach((day) => {
+      const weekKey = startOfWeek(day).toISOString();
+      const existingGroup = groups[groups.length - 1];
+
+      if (!existingGroup || existingGroup.key !== weekKey) {
+        groups.push({
+          key: weekKey,
+          label: "",
+          title: "",
+          span: 1,
+        });
+        return;
+      }
+
+      existingGroup.span += 1;
+    });
+
+    return groups.map((group, index) => {
+      const groupDays = days.filter((day) => startOfWeek(day).toISOString() === group.key);
+      const firstDay = groupDays[0];
+      const lastDay = groupDays[groupDays.length - 1];
+
+      return {
+        ...group,
+        label: `Week ${index + 1}`,
+        title: `${format(firstDay, "MMM dd, yyyy")} - ${format(lastDay, "MMM dd, yyyy")}`,
+      };
+    });
+  };
+
   const getTaskPositionForUnits = (
     task: Task,
     units: TimelineUnit[],
@@ -2853,10 +2886,11 @@ function App() {
                 // ========== TASK HEIGHT CALCULATION ==========
                 // Calculate dynamic heights based on text wrapping to ensure text fits
                 const taskHeights = new Map<number, number>();
-                const debugInfo = new Map<number, string>();
-                visibleTasks.forEach((task) => {
-                  const position = getMonthTaskPosition(task);
-                  if (!position) return;
+                  const debugInfo = new Map<number, string>();
+                  const weekHeaderGroups = getWeekHeaderGroupsForDays(visibleMonthlyDays);
+                  visibleTasks.forEach((task) => {
+                    const position = getMonthTaskPosition(task);
+                    if (!position) return;
                   const { width } = position;
                   const actualWidth = (width / 100) * 1800; // Approximate pixel width
                   const textWidth = actualWidth - 16; // Account for padding (increased from 10 to 16)
@@ -2910,27 +2944,54 @@ function App() {
                     <div 
                       className="board-header"
                       style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
+                        display: "flex",
+                        flexDirection: "column",
                       }}
                     >
-                      {monthColumns.map((month, index) => {
-                        // Calculate month number relative to first task or just use index
-                        const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
-                        
-                        return (
-                          <div 
-                            key={index} 
-                            className="day-header"
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: `repeat(${weekHeaderGroups.length}, 1fr)`,
+                        }}
+                      >
+                        {weekHeaderGroups.map((group, index) => (
+                          <div
+                            key={`month-week-${group.key}`}
+                            className="day-header day-header--compact"
                             style={{
-                              borderRight: index < monthColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
+                              borderRight: index < weekHeaderGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
+                              fontSize: "0.75rem",
+                              color: "var(--text-secondary)",
                             }}
-                            title={`${format(month, "MMM dd, yyyy")} – ${format(endOfMonth(month), "MMM dd, yyyy")}`}
+                            title={group.title}
                           >
-                            {showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMM yyyy")}
+                            {group.label}
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
+                        }}
+                      >
+                        {monthColumns.map((month, index) => {
+                          const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
+
+                          return (
+                            <div
+                              key={index}
+                              className="day-header"
+                              style={{
+                                borderRight: index < monthColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
+                              }}
+                              title={`${format(month, "MMM dd, yyyy")} – ${format(endOfMonth(month), "MMM dd, yyyy")}`}
+                            >
+                              {showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMM yyyy")}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* ========== PHASE SECTIONS ========== */}
