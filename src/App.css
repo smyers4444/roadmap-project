@@ -707,7 +707,7 @@
 }
 
 .v2-task-table td {
-  padding: 4px 6px;
+  padding: 4px 3px;
   border-bottom: 1px solid #f0f0f0;
   border-right: 1px solid var(--task-grid-line);
   color: #333;

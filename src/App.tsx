@@ -3385,7 +3385,7 @@ function App() {
                       )}
                     </th>
                   ))}
-                  <th style={{ width: "84px" }}>Actions</th>
+                  <th style={{ width: "130px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
