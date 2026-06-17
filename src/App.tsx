@@ -127,6 +127,21 @@ interface Task {
 
 const TASKS_STORAGE_KEY = "roadmap-project.tasks.v1";
 
+const getTaskDateBounds = (taskList: Task[]) => {
+  if (taskList.length === 0) {
+    return null;
+  }
+
+  const allDates = taskList.flatMap((task) => [task.startDate, task.endDate]);
+  const start = new Date(Math.min(...allDates.map((date) => date.getTime())));
+  const end = new Date(Math.max(...allDates.map((date) => date.getTime())));
+
+  return {
+    start: new Date(start.getFullYear(), start.getMonth(), start.getDate()),
+    end: new Date(end.getFullYear(), end.getMonth(), end.getDate()),
+  };
+};
+
 interface StoredTask {
   id: number;
   phase?: string;
@@ -289,6 +304,41 @@ function App() {
       // Ignore storage write failures so task editing still works in restricted browsers.
     }
   }, [tasks]);
+
+  useEffect(() => {
+    if (view !== "months") {
+      return;
+    }
+
+    if (rangeMode === "rolling") {
+      setUseCustomMonthRange(false);
+      setCustomMonthStart(null);
+      setCustomMonthEnd(null);
+      return;
+    }
+
+    const bounds = getTaskDateBounds(tasks);
+
+    if (!bounds) {
+      if (rangeMode === "fit") {
+        setUseCustomMonthRange(false);
+        setCustomMonthStart(null);
+        setCustomMonthEnd(null);
+      }
+      return;
+    }
+
+    setUseCustomMonthRange(true);
+
+    if (rangeMode === "fit") {
+      setCustomMonthStart(bounds.start);
+      setCustomMonthEnd(bounds.end);
+      return;
+    }
+
+    setCustomMonthStart((currentStart) => currentStart ?? bounds.start);
+    setCustomMonthEnd((currentEnd) => currentEnd ?? bounds.end);
+  }, [rangeMode, tasks, view]);
 
   // ==================== TASK MANAGEMENT FUNCTIONS ====================
 
@@ -699,6 +749,18 @@ function App() {
     const targetWeek = startOfWeek(date);
 
     return Math.round((targetWeek.getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  };
+
+  const getRelativeMonthNumber = (date: Date, taskList: Task[]) => {
+    if (taskList.length === 0) return 1;
+
+    const firstTaskDate = new Date(Math.min(...taskList.map((task) => task.startDate.getTime())));
+    const firstTaskMonth = startOfMonth(firstTaskDate);
+    const targetMonth = startOfMonth(date);
+
+    return (targetMonth.getFullYear() - firstTaskMonth.getFullYear()) * 12
+      + (getMonth(targetMonth) - getMonth(firstTaskMonth))
+      + 1;
   };
 
   const getWeeklyPeriodEnd = () => addDays(currentWeek, weekSpan * 7 - 1);
@@ -1752,18 +1814,14 @@ function App() {
                   checked={rangeMode === "fit"}
                   onChange={() => {
                     setRangeMode("fit");
-                    if (tasks.length > 0) {
-                      const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
-                      const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-                      const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
-                      if (view === "weeks") {
-                        setCurrentWeek(startOfWeek(minDate));
-                        setWeekSpan(Math.max(1, Math.ceil((maxDate.getTime() - startOfWeek(minDate).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1));
-                      } else {
-                        setUseCustomMonthRange(true);
-                        setCustomMonthStart(minDate);
-                        setCustomMonthEnd(maxDate);
+                    if (view === "weeks") {
+                      const bounds = getTaskDateBounds(tasks);
+                      if (!bounds) {
+                        return;
                       }
+
+                      setCurrentWeek(startOfWeek(bounds.start));
+                      setWeekSpan(Math.max(1, Math.ceil((bounds.end.getTime() - startOfWeek(bounds.start).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1));
                     }
                   }}
                 />
@@ -1774,17 +1832,7 @@ function App() {
                   type="radio"
                   name="rangemode"
                   checked={rangeMode === "range"}
-                  onChange={() => {
-                    setRangeMode("range");
-                    if (view !== "weeks") {
-                      setUseCustomMonthRange(true);
-                      if (!customMonthStart && tasks.length > 0) {
-                        const allDates = tasks.flatMap((t) => [t.startDate, t.endDate]);
-                        setCustomMonthStart(new Date(Math.min(...allDates.map((d) => d.getTime()))));
-                        setCustomMonthEnd(new Date(Math.max(...allDates.map((d) => d.getTime()))));
-                      }
-                    }
-                  }}
+                  onChange={() => setRangeMode("range")}
                 />
                 {" "}Specific date range
               </label>
@@ -2806,14 +2854,7 @@ function App() {
                     >
                       {monthColumns.map((month, index) => {
                         // Calculate month number relative to first task or just use index
-                        let monthNumber = index + 1;
-                        if (showMonthNumbers && tasks.length > 0) {
-                          const allDates = tasks.map((t) => t.startDate);
-                          const firstTaskDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-                          const firstTaskMonth = startOfMonth(firstTaskDate);
-                          const monthsDiff = (month.getFullYear() - firstTaskMonth.getFullYear()) * 12 + (getMonth(month) - getMonth(firstTaskMonth));
-                          monthNumber = monthsDiff + 1;
-                        }
+                        const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
                         
                         return (
                           <div 
@@ -3182,23 +3223,24 @@ function App() {
 
                   return renderStackedTimelineBoard({
                     periodKey: `month-${month.toISOString()}`,
-                    title: `${format(periodStart, "MMM d")} - ${format(periodEnd, "MMM d, yyyy")}`,
+                    title: showMonthNumbers
+                      ? `Month ${getRelativeMonthNumber(month, tasks)}`
+                      : `${format(periodStart, "MMM d")} - ${format(periodEnd, "MMM d, yyyy")}`,
                     units,
                     periodStart,
                     periodEnd,
                     visibleTasks: periodTasks,
                     phaseRangeLabel: (phaseStart, phaseEnd) => {
+                      if (!showMonthNumbers) {
+                        return `${format(phaseStart, "MMM d")} - ${format(phaseEnd, "MMM d, yyyy")}`;
+                      }
+
                       if (tasks.length === 0) {
                         return format(phaseStart, "MMM yyyy");
                       }
 
-                      const allDates = tasks.map((task) => task.startDate);
-                      const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
-                      const firstTaskMonth = startOfMonth(firstTaskDate);
-                      const startMonthNum = (startOfMonth(phaseStart).getFullYear() - firstTaskMonth.getFullYear()) * 12
-                        + (getMonth(startOfMonth(phaseStart)) - getMonth(firstTaskMonth)) + 1;
-                      const endMonthNum = (startOfMonth(phaseEnd).getFullYear() - firstTaskMonth.getFullYear()) * 12
-                        + (getMonth(startOfMonth(phaseEnd)) - getMonth(firstTaskMonth)) + 1;
+                      const startMonthNum = getRelativeMonthNumber(phaseStart, tasks);
+                      const endMonthNum = getRelativeMonthNumber(phaseEnd, tasks);
                       return startMonthNum === endMonthNum ? `Month ${startMonthNum}` : `Months ${startMonthNum}-${endMonthNum}`;
                     },
                     compactSpacing: true,

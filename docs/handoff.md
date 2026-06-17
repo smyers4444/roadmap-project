@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 1 layout shell complete; build clean, browser-verified)
+Last updated: 2026-06-16 (Phase 2 settings wiring landed; build and App.tsx lint clean)
 
 ## Current Snapshot
 
@@ -21,7 +21,7 @@ The repository is now on the `v2` branch. This is a ground-up redesign effort dr
 
 **v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete and Phase 1 (v2 layout shell) is complete. The app now runs the full v2 shell on branch `feat/phase-1-layout`.
+The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and the Phase 2 settings wiring pass is now in place on branch `feat/phase-2-settings`.
 
 ## What v1 Has (all still in the codebase)
 
@@ -56,7 +56,7 @@ See `docs/product-brief.md` for the full brief. Key points:
 ## Branch and Working Tree
 
 - `master` — v1 baseline, tagged as `v1`
-- `feat/phase-1-layout` — active development branch (current); Phase 1 complete
+- `feat/phase-2-settings` — active development branch (current); Phase 1 complete, Phase 2 settings wiring implemented and locally verified
 - `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
 
 ## How to Run
@@ -110,13 +110,10 @@ New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compa
 
 ## Recommended Next Task
 
-**Phase 2** — Wire the settings panel controls to actual app behavior:
-- Range mode radio → connect to `useCustomMonthRange` / `customMonthStart` / `customMonthEnd`
-- Layout toggles → wire compactTaskSpacing, showWeekends, showPhases, showWeekNumbers
-- Display toggles → wire hex column visibility in task panel table
-- Danger → confirm-then-clear all tasks
-
-Read `docs/product-brief.md` Phase 2 build order and `docs/mockups/v2-layout-mockup.html` States 4–6 before starting.
+Finish verification on the Phase 2 settings slice, then move to the next Phase 2/3 behavior gap with the highest screenshot impact:
+- Browser-check range mode switching in monthly views (`fit` / `range` / `rolling`)
+- Browser-check stacked monthly titles + phase labels when `Show week / month #` is toggled
+- If verification is clean, pick the next net-new feature from the brief such as presentation / clean mode (L1) or the edit modal flow (E8/E10)
 
 ## New Chat Start
 
