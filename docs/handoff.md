@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 3 edit modal committed; color/label source, right-click edit, and hex filter smoke-tested; build/lint/diff clean)
+Last updated: 2026-06-16 (Phase 3 C2 palette management: state structure, auto-assign on import, settings panel display; build clean)
 
 ## Current Snapshot
 
@@ -140,11 +140,27 @@ New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compa
 - The task filter now matches `phaseHex` and `categoryHex` values, including entries typed with or without a leading `#`.
 - This keeps the task panel search aligned with the color-source controls and makes it easier to find tasks by exact color value.
 
+## Phase 3 Hex Palette (C2) — In Progress
+
+**Completed (2026-06-16):**
+- Palette state: `colorPalette` (8 default colors), `categoryColorMap` (category → palette index)
+- Rendering: `getTaskBarColorHex` checks palette mapping first before falling back to explicit categoryHex
+- Auto-assign on import: new categories automatically get next unused palette color
+- Settings panel display: shows palette swatches + which categories are mapped
+
+**Remaining C2 work:**
+- Per-category override UI: allow manual reassignment of a category to a different palette index (edit buttons in settings)
+- Lighter/darker variants support (for priority-period column shading)
+
+**Other Phase 3 items:**
+- `N4` Relative timeline mode (generic Week 1 / Month 1 labels) — not started
+
 ## Recommended Next Task
 
-Pick the next Phase 3 candidate from `docs/product-brief.md`:
-- `C2` hex palette management is now the cleanest next follow-on if you want to keep advancing Phase 3
-- `E4` duplicate task is already present, so it is no longer a useful follow-on slice
+Choose one:
+- **Continue C2**: Add per-category override UI in settings (small slice, finishes the feature)
+- **Jump to N4**: Relative timeline mode (medium complexity)
+- **Move to Phase 4**: Next big item (presentation mode, L1)
 
 ## New Chat Start
 
