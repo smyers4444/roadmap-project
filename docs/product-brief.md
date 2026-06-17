@@ -66,7 +66,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 | E8 | Edit task via modal with real form inputs | New | Missing | Replaces broken in-cell editing. Proper text fields, date pickers, color swatch + hex inputs. Reachable from row "Edit" button. |
 | E9 | Right-click a timeline bar to edit that task | New | Missing | Context menu / direct open of the edit modal for that task. Faster than finding the row in the panel. |
 | E10 | Prev / next (‹ ›) navigation inside the edit modal | New | Missing | Step through tasks without closing the modal. Order follows current sort. |
-| E11 | Add Task should open the task editor immediately instead of silently appending a row | Enhancement | Partial | Current behavior adds a task directly to the list. Desired flow is to create/open the same modal used by right-click/edit so the user can set dates and labels before the new task lands in the board. |
+| E11 | Add Task should open the task editor immediately instead of silently appending a row | Enhancement | Working | Add Task now creates a blank task and opens the same modal used by right-click/edit so the user can set dates and labels before the new task lands in the board. |
 | E5 | Task panel: filter tasks by text | Enhancement | Partial | Filter input exists; needs to also filter by hex code (see C3) and work reliably across all fields. |
 | E6 | Task panel: click column headers to sort + drag to reorder | Enhancement | Partial | Click any column header to sort (click again to reverse), with a ▲/▼ indicator on the active column. Covers Phase, Phase HEX, Category, Cat HEX, Task, Start, End, Order, Line Padding. Replaces the sort dropdown. Drag handle (⠿) reorders rows manually; dragging resets to manual order. |
 | E7 | Task panel: collapsible section below the timeline | Design | Missing | Timeline at top (never moves). Task panel below it — collapses to a thin bar, expands downward adding page height. No overlap. One scroll direction (vertical). Screenshot workflow: timeline always at top of page, panel below it and out of frame. |
@@ -79,7 +79,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 | I2 | Line padding: export includes padding values, but import doesn't re-apply them | Bug | Broken | Round-trip fidelity issue; padding is lost on re-import. |
 | I3 | Keep import flexible — do not add strict validation | Guardrail | Working | Spreadsheet paste is a primary workflow. Don't break it for edge cases. |
 | I4 | Import must accept ALL export columns (lossless round-trip) | Bug | Done | Export emits: Phase, Phase Hex, Category, Category HEX, Task, Sub-Task, Owner, Week, Date Start, Date End, **Display Order**, **Line Padding**. v2 import now maps Line Padding (I2) and Display Order, so export → re-import reproduces the same board including manual order. When Display Order is absent (fresh Excel paste), it still falls back to row order. See `docs/code-review-findings.md` #2. |
-| I5 | Two-digit import years should resolve to the active century, not 19xx | Bug | Broken | Importing dates like `mm/dd/26` currently resolves to 1926 instead of 2026. Fix needs to preserve forgiving spreadsheet import behavior (I3) while normalizing common Excel-style two-digit years to the expected modern date. |
+| I5 | Two-digit import years should resolve to the active century, not 19xx | Bug | Working | Importing dates like `mm/dd/26` now resolves to 2026 instead of 1926. Import stays forgiving and normalizes common Excel-style two-digit years to the expected modern date. |
 
 ### Timeline Views & Display
 
@@ -108,7 +108,7 @@ Grouped by area. **Type:** Bug = broken, Fix = works but wrong, Enhancement = ex
 | S1 | Legend / category key: must fit cleanly below timeline when included in screenshot | Enhancement | Partial | Needs to fit on a slide that already has a header and footer. Currently may require scrolling to include. |
 | S2 | CSV export round-trip fidelity (line padding) | Bug | Broken | See I2 above. |
 | S3 | Export: let user name the file and choose the save location | Enhancement | Missing | v1 auto-downloads `roadmap-tasks-<date>.csv` to the default downloads folder. v2 should prompt for filename + location. Use the File System Access API (`showSaveFilePicker`) where supported, with a graceful fallback to the current auto-download (prefilled editable filename) in browsers that lack it. |
-| S4 | Remove the frame/border around the bottom legend | Enhancement | Partial | The legend content stays, but the surrounding border/frame should be removed so the screenshot reads cleaner and lighter. |
+| S4 | Remove the frame/border around the bottom legend | Enhancement | Partial | The legend content stays, but the surrounding border/frame should be removed so the screenshot reads cleaner and lighter. This is the only remaining item in the current UI polish queue. |
 
 ### Navigation & Range
 

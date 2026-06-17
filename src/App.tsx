@@ -463,10 +463,9 @@ function App() {
    * Generates unique ID and display order
    */
   const addTask = () => {
-    const newId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
-    const newDisplayOrder = tasks.length > 0 ? Math.max(...tasks.map((t) => t.displayOrder || 0)) + 1 : 1;
-    setTasks([
-      ...tasks,
+    const { newId, newDisplayOrder } = getNextTaskIdentity();
+    setTasks((prev) => [
+      ...prev,
       {
         id: newId,
         phase: "",
@@ -482,6 +481,8 @@ function App() {
         lineHeightAdjust: 0,
       },
     ]);
+    setEditingTaskId(newId);
+    setShowTaskPanel(true);
   };
 
   const addTestTask = () => {
@@ -703,6 +704,18 @@ function App() {
     let nextId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
     let nextDisplayOrder = tasks.length > 0 ? Math.max(...tasks.map((t) => t.displayOrder || 0)) + 1 : 1;
 
+    const parseImportedDate = (value: string) => {
+      const dateParts = value.split("/");
+      if (dateParts.length === 3) {
+        const [month, day, year] = dateParts;
+        const parsedYear = parseInt(year, 10);
+        const normalizedYear = year.trim().length === 2 ? 2000 + parsedYear : parsedYear;
+        return new Date(normalizedYear, parseInt(month, 10) - 1, parseInt(day, 10));
+      }
+
+      return new Date(value);
+    };
+
     importData.forEach((row) => {
       const taskData: Partial<Omit<Task, "id">> = {};
 
@@ -739,13 +752,7 @@ function App() {
           case "start":
             if (value) {
               // Try to parse MM/DD/YYYY format
-              const dateParts = value.split("/");
-              if (dateParts.length === 3) {
-                const [month, day, year] = dateParts;
-                taskData.startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-              } else {
-                taskData.startDate = new Date(value);
-              }
+              taskData.startDate = parseImportedDate(value);
             } else {
               taskData.startDate = new Date();
             }
@@ -755,13 +762,7 @@ function App() {
           case "end":
             if (value) {
               // Try to parse MM/DD/YYYY format
-              const dateParts = value.split("/");
-              if (dateParts.length === 3) {
-                const [month, day, year] = dateParts;
-                taskData.endDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-              } else {
-                taskData.endDate = new Date(value);
-              }
+              taskData.endDate = parseImportedDate(value);
             } else {
               taskData.endDate = new Date();
             }

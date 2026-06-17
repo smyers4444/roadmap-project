@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (ui-polish branch: presentation-mode idle header, brief synced, pending user-reviewed UI polish queue)
+Last updated: 2026-06-17 (ui-polish branch: import-year fix landed, Add Task now opens editor, legend border removal still pending)
 
 ## Current Snapshot
 
@@ -64,13 +64,13 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 
 Work these one at a time. After each change: review with user, wait for approval, and do not commit unless explicitly requested.
 
-1. Import date bug: `mm/dd/26` currently imports as 1926 instead of 2026.
-2. Add task flow: opening Add Task should launch the same task editor used by right-click/edit instead of silently appending a row to the bottom list.
-3. Legend styling: remove the frame/border around the key legend at the bottom.
+1. Legend styling: remove the frame/border around the key legend at the bottom.
 
 ### Awaiting user review
 
 - Presentation mode now preserves the normal top spacing so the roadmap does not jump, and uses a reduced presentation header that appears on entry or pointer movement, states that presentation mode is active, explains how to exit (`Ctrl/Cmd+P` or the button), and auto-hides after 2 seconds of pointer inactivity. Verified with `npm run build` and `npx eslint src/App.tsx`. User-reviewed and ready to keep.
+- Import parsing now treats two-digit years in `Date Start` and `Date End` as `20xx` values, so `mm/dd/26` resolves to 2026 instead of 1926.
+- `+ Add task` now creates a blank task and opens the same edit modal used by row edit and right-click edit.
 - `docs/product-brief.md` now matches the current presentation-mode behavior and records the remaining queued items (`I5` two-digit import year bug, `E11` Add Task should open the editor, `S4` legend border removal).
 
 ## Key Architecture Notes
@@ -85,7 +85,7 @@ Work these one at a time. After each change: review with user, wait for approval
 
 ## Next Steps
 
-**Technical:** Continue with the remaining queued items one at a time: two-digit import-year handling, Add Task opening the editor, and legend border removal. The branch is build-verified after the presentation-mode refinement.
+**Technical:** Continue with the remaining queued item one at a time: legend border removal. The branch is build-verified after the presentation-mode refinement and this slice, and the first two UI polish items are now closed out.
 
 **Practical:** Open the app, expand the Tasks panel, and work through the remaining list items one at a time.
 
@@ -98,4 +98,4 @@ Work these one at a time. After each change: review with user, wait for approval
 - `CLAUDE.md` — project guidance and conventions
 - `docs/handoff.md` — this file
 
-**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with a ready-to-commit follow-up that refines presentation mode so the roadmap keeps its top spacing and a reduced presentation header appears on entry or pointer movement with an exit hint before auto-hiding. `npm run build` and `npx eslint src/App.tsx` both pass. Remaining queue is the import-year bug, Add Task opening the task editor, and legend border removal.
+**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix and Add Task editor flow; the only remaining queue item is the legend border removal. `npm run build` and `npx eslint src/App.tsx` pass on this slice.

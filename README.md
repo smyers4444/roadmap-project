@@ -5,6 +5,7 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 ## What It Does
 
 - Create and edit roadmap tasks with phase, category, owner, start date, end date, and manual line-height padding.
+- Add a new task from the task panel and open the editor immediately to fill in details.
 - Reorder tasks by dragging rows in the task table.
 - Filter and sort tasks directly in the editor, with the timeline and legends following the filtered task set.
 - Filter tasks by text, `Phase HEX`, or `Category HEX` in the task panel search.
@@ -70,6 +71,7 @@ Each task supports these fields:
 ## Import and Export
 
 The import tool accepts tab-separated values, which makes it easy to paste from Excel or Google Sheets. After parsing, you can review and edit the imported rows before adding them to the board.
+Two-digit years in `Date Start` and `Date End` import as `20xx` values, so `mm/dd/26` resolves to 2026 instead of 1926.
 
 Recognized columns include:
 
