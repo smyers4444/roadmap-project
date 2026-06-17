@@ -298,6 +298,12 @@ function App() {
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [compactTaskSpacing, setCompactTaskSpacing] = useState(true);
   const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("rolling");
+
+  // C2: Hex palette management
+  const [colorPalette] = useState<string[]>([
+    "FF6B6B", "4ECDC4", "45B7D1", "FFA07A", "98D8C8", "F7DC6F", "BB8FCE", "85C1E2",
+  ]); // Palette of hex codes without # prefix
+  const [categoryColorMap] = useState<Record<string, string>>({}); // category name -> palette index
   const [showHexColumns, setShowHexColumns] = useState(true);
 
   useEffect(() => {
@@ -1277,7 +1283,19 @@ function App() {
     return ["vacation", "holiday", "ooo"].some((keyword) => phase.includes(keyword) || category.includes(keyword));
   };
 
-  const getTaskBarColorHex = (task: Task) => (barColorSource === "phase" ? task.phaseHex : task.categoryHex);
+  const getTaskBarColorHex = (task: Task) => {
+    if (barColorSource === "phase") {
+      return task.phaseHex;
+    }
+    // For category: check if category is mapped to palette, fall back to explicit categoryHex
+    if (task.category && categoryColorMap[task.category]) {
+      const paletteIndex = parseInt(categoryColorMap[task.category], 10);
+      if (paletteIndex >= 0 && paletteIndex < colorPalette.length) {
+        return colorPalette[paletteIndex];
+      }
+    }
+    return task.categoryHex;
+  };
 
   const getTaskBarColorValue = (task: Task) => {
     const colorHex = getTaskBarColorHex(task);
