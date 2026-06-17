@@ -134,19 +134,19 @@ git diff --check
 
 ## Next Steps
 
-**Option A: Merge L1 to master**
+**Option A: Merge Phase 4 to master**
 - `git checkout master`
 - `git merge feat/phase-4-presentation-mode`
-- Creates PR or direct merge
 - Clears the feature branch
+- Phase 4 (L1 + E6 + E7) all complete and tested
 
-**Option B: Start Phase 5 work**
+**Option B: Start Phase 5 work on new branch**
 - Create new branch `feat/phase-5-ux-polish`
-- Batch quick wins first (7–8 items, ~1–2 hours)
-- Then medium-lift refinements
-- Leave design-needed items for later decision
+- Batch quick wins first (7–8 items, ~1–2 hours): LY1 (white bg), LY2 (100% width), HD1 (icon), TP1 (lines), TP4 (buttons), TL1/TL2 (phase headers), DF1/DF2 (defaults)
+- Then medium-lift refinements (TP2/TP3/TP5/ST1/ST2)
+- Leave design-needed items (TL3/TL5) for later decision
 
-**Recommended:** Merge L1 first (clean state), then start Phase 5 on a fresh branch.
+**Recommended:** Merge Phase 4 first (clean state), then start Phase 5 on a fresh branch.
 
 ## New Chat Start
 
