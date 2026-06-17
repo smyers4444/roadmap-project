@@ -292,6 +292,7 @@ function App() {
 
   // v2 layout shell state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showColorsPanel, setShowColorsPanel] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -306,10 +307,16 @@ function App() {
     "FF6B6B", "4ECDC4", "45B7D1", "FFA07A", "98D8C8", "F7DC6F", "BB8FCE", "85C1E2",
   ]); // Palette of hex codes without # prefix
   const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({}); // category name -> palette index
+  const [phaseHexMap, setPhaseHexMap] = useState<Record<string, string>>({}); // phase name -> hex color
+  const [categoryHexMap, setCategoryHexMap] = useState<Record<string, string>>({}); // category name -> hex color
   const [showHexColumns, setShowHexColumns] = useState(true);
 
   // L1: Presentation mode (hide all controls)
   const [presentationMode, setPresentationMode] = useState(false);
+
+  // Compute unique phases and categories from tasks
+  const phases = Array.from(new Set(tasks.map((t) => t.phase).filter(Boolean))) as string[];
+  const categories = Array.from(new Set(tasks.map((t) => t.category).filter(Boolean))) as string[];
 
   useEffect(() => {
     try {
@@ -3339,6 +3346,14 @@ function App() {
               </span>
             )}
             <button
+              className="v2-btn v2-btn-ghost v2-btn-sm"
+              onClick={(e) => { e.stopPropagation(); setShowColorsPanel((p) => !p); }}
+              title="Color settings"
+              style={{ fontSize: "11px", marginLeft: "8px" }}
+            >
+              🎨 Colors
+            </button>
+            <button
               className="v2-toggle"
               style={{ marginLeft: "8px", width: "20px", height: "12px" }}
               title={showHexColumns ? "Hide hex columns" : "Show hex columns"}
@@ -3493,66 +3508,60 @@ function App() {
               </tbody>
             </table>
           </div>
-          <details style={{ padding: "8px 12px", borderTop: "1px solid #eee", fontSize: "11px" }}>
-            <summary style={{ cursor: "pointer", fontWeight: 500, marginBottom: "8px" }}>Color Palette</summary>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "10px", marginTop: "8px" }}>
-              {colorPalette.map((hex, idx) => (
-                <div
-                  key={idx}
-                  title={hex}
-                  style={{
-                    width: "100%",
-                    aspectRatio: "1",
-                    backgroundColor: `#${hex}`,
-                    borderRadius: "4px",
-                    border: "1px solid #ddd",
-                    cursor: "default",
-                  }}
-                />
-              ))}
-            </div>
-            <div style={{ color: "#666", lineHeight: "1.4" }}>
-              <strong>Categories mapped:</strong>
-              <br />
-              {Object.entries(categoryColorMap).length > 0 ? (
-                <div style={{ marginTop: "8px" }}>
-                  {Object.entries(categoryColorMap).map(([cat, idx]) => {
-                    const paletteIdx = parseInt(idx, 10);
-                    return (
-                      <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                        <span style={{ fontSize: "11px", flex: 1 }}>{cat}</span>
-                        <select
-                          value={paletteIdx}
-                          onChange={(e) => {
-                            const newIdx = parseInt(e.target.value, 10);
-                            setCategoryColorMap({ ...categoryColorMap, [cat]: String(newIdx) });
-                          }}
-                          style={{
-                            padding: "2px 4px",
-                            fontSize: "10px",
-                            border: "1px solid #ddd",
-                            borderRadius: "3px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {colorPalette.map((_, i) => (
-                            <option key={i} value={i}>
-                              {i + 1}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <em style={{ color: "#999", fontSize: "11px" }}>No categories yet</em>
-              )}
-            </div>
-          </details>
           <div className="v2-panel-footer">
             {tasks.length} task{tasks.length !== 1 ? "s" : ""} · drag ⠇ to reorder · click a header to sort
             <span style={{ marginLeft: "10px" }}>Saved in this browser only.</span>
+          </div>
+        </div>
+      )}
+
+      {!presentationMode && showColorsPanel && (
+        <div className="v2-task-panel" style={{ maxWidth: "400px" }}>
+          <div className="v2-panel-toolbar">
+            <span style={{ fontWeight: 500, fontSize: "12px" }}>Color Settings</span>
+            <button className="v2-btn v2-btn-ghost v2-btn-sm" onClick={(e) => { e.stopPropagation(); setShowColorsPanel(false); }} style={{ marginLeft: "auto", padding: "2px 6px" }}>✕</button>
+          </div>
+          <div style={{ overflowX: "auto", overflowY: "auto", flex: 1, padding: "12px", fontSize: "11px" }}>
+            <div style={{ marginBottom: "16px" }}>
+              <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Phases</h4>
+              {phases.length === 0 ? (
+                <em style={{ color: "#999" }}>No phases yet</em>
+              ) : (
+                phases.map((phase) => (
+                  <div key={phase} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                    <span style={{ flex: 1 }}>{phase}</span>
+                    <input
+                      type="text"
+                      value={phaseHexMap[phase] || ""}
+                      onChange={(e) => setPhaseHexMap({ ...phaseHexMap, [phase]: e.target.value })}
+                      placeholder="hex"
+                      maxLength={7}
+                      style={{ width: "80px", padding: "4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+            <div>
+              <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Categories</h4>
+              {categories.length === 0 ? (
+                <em style={{ color: "#999" }}>No categories yet</em>
+              ) : (
+                categories.map((cat) => (
+                  <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                    <span style={{ flex: 1 }}>{cat}</span>
+                    <input
+                      type="text"
+                      value={categoryHexMap[cat] || ""}
+                      onChange={(e) => setCategoryHexMap({ ...categoryHexMap, [cat]: e.target.value })}
+                      placeholder="hex"
+                      maxLength={7}
+                      style={{ width: "80px", padding: "4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
