@@ -1256,7 +1256,8 @@ button:hover {
 .category-key-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
 }
 
 .category-key-item {
