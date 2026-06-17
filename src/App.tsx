@@ -277,7 +277,6 @@ function App() {
   const [monthStackSplit, setMonthStackSplit] = useState<"day" | "week">("day");
   
   // Toggle for showing/hiding phase labels and colors
-  const [showPhaseLabels, setShowPhaseLabels] = useState(true);
   const [barColorSource, setBarColorSource] = useState<"category" | "phase">("category");
   const [barLabelSource, setBarLabelSource] = useState<"task" | "category" | "phase">("task");
 
@@ -1147,7 +1146,6 @@ function App() {
   const calendarGridEnd = endOfWeek(calendarPeriodEnd);
   const calendarDays = eachDayOfInterval({ start: calendarGridStart, end: calendarGridEnd });
   const calendarWeeks = Array.from({ length: Math.ceil(calendarDays.length / 7) }, (_, index) => calendarDays.slice(index * 7, index * 7 + 7));
-  const phases = [...new Set(timelineTasks.map((t) => t.phase).filter((c) => c && c.trim()))];
   const legendPeriodStart = view === "weeks"
     ? currentWeek
     : view === "calendar"
@@ -1168,7 +1166,6 @@ function App() {
     }
     return true;
   });
-  const visibleLegendPhases = phases.filter((phase) => visibleLegendTasks.some((task) => task.phase === phase));
 
   const toggleTimelineTaskSelection = (taskId: number) => {
     setSelectedTimelineTaskId((currentId) => (currentId === taskId ? null : taskId));
@@ -1605,7 +1602,6 @@ function App() {
     periodStart,
     periodEnd,
     visibleTasks,
-    phaseRangeLabel,
     compactSpacing = false,
     compactHeaderPadding = false,
     compactTaskSpacing = false,
@@ -1618,7 +1614,6 @@ function App() {
     periodStart: Date;
     periodEnd: Date;
     visibleTasks: Task[];
-    phaseRangeLabel: (phaseStart: Date, phaseEnd: Date) => string;
     compactSpacing?: boolean;
     compactHeaderPadding?: boolean;
     compactTaskSpacing?: boolean;
@@ -1629,12 +1624,7 @@ function App() {
       return null;
     }
 
-    const phasesForBoard = showPhaseLabels
-      ? [...new Set(visibleTasks.map((task) => task.phase).filter((phase): phase is string => Boolean(phase && phase.trim())))]
-      : [""];
-
     const getPosition = (task: Task) => getTaskPositionForUnits(task, units, periodStart, periodEnd);
-    const visiblePhaseTasks = phasesForBoard.length > 0 ? phasesForBoard : [""];
 
     return (
       <div key={periodKey} className={`stacked-period-card${compactSpacing ? " stacked-period-card--compact" : ""}`}>
@@ -1700,10 +1690,8 @@ function App() {
                 })}
             </div>
 
-            {visiblePhaseTasks.map((phase) => {
-              const phaseTasks = showPhaseLabels
-                ? visibleTasks.filter((task) => task.phase === phase)
-                : visibleTasks;
+            {(() => {
+              const phaseTasks = visibleTasks;
 
               if (phaseTasks.length === 0) {
                 return null;
@@ -1738,13 +1726,6 @@ function App() {
                 topPadding: phaseTopPadding,
                 compactRows: compactTaskSpacing,
               });
-              const phaseStart = normalizeDate(new Date(Math.min(...phaseTasks.map((task) => task.startDate.getTime()))));
-              const phaseEnd = normalizeDate(new Date(Math.max(...phaseTasks.map((task) => task.endDate.getTime()))));
-              const phaseBarPosition = getPosition({
-                ...phaseTasks[0],
-                startDate: phaseStart,
-                endDate: phaseEnd,
-              });
               const specialPriorityColumnColors = new Map<number, string>();
 
               phaseTasks
@@ -1763,72 +1744,7 @@ function App() {
                 });
 
               return (
-                <div key={`${periodKey}-phase-${phase || "all"}`} style={{ position: "relative" }}>
-                  {showPhaseLabels && phaseBarPosition && (
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
-                        minHeight: "34px",
-                        position: "relative",
-                        borderTop: "2px solid var(--border-medium)",
-                        overflow: "hidden",
-                        backgroundColor: "var(--bg-primary)",
-                      }}
-                    >
-                      {units.map((_, index) => {
-                        const columnPercent = (index / units.length) * 100;
-                        const isWithinPhase = columnPercent >= phaseBarPosition.start
-                          && columnPercent < (phaseBarPosition.start + phaseBarPosition.width);
-
-                        return (
-                          <div
-                            key={`${periodKey}-phase-grid-${phase}-${index}`}
-                            style={{
-                              position: "relative",
-                              borderRight: !isWithinPhase && index < units.length - 1
-                                ? "1px solid var(--border-medium)"
-                                : "none",
-                            }}
-                          />
-                        );
-                      })}
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: `${phaseBarPosition.start}%`,
-                          width: `${phaseBarPosition.width}%`,
-                          top: 0,
-                          height: "100%",
-                          backgroundColor: "var(--color-gray-900)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          color: "var(--color-white)",
-                          fontWeight: 600,
-                          fontSize: "1rem",
-                          letterSpacing: "0.05em",
-                          boxSizing: "border-box",
-                          zIndex: 1,
-                          paddingLeft: "4px",
-                          paddingRight: "4px",
-                        }}
-                      >
-                        {phaseStart < periodStart ? (
-                          <span style={{ marginRight: "8px", fontWeight: "bold", fontSize: "1.1em", paddingLeft: "5px" }}>◀</span>
-                        ) : (
-                          <span style={{ width: "1.1em", marginRight: "8px" }}></span>
-                        )}
-                        <span style={{ flex: 1, textAlign: "center" }}>{phaseRangeLabel(phaseStart, phaseEnd)}: {phase}</span>
-                        {phaseEnd > periodEnd ? (
-                          <span style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "1.1em", paddingRight: "5px" }}>▶</span>
-                        ) : (
-                          <span style={{ width: "1.1em", marginLeft: "8px" }}></span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
+                <div key={`${periodKey}-board`} style={{ position: "relative" }}>
                   <div style={{ position: "relative", minHeight: `${Math.max(compactTaskSpacing ? 28 : 40, phaseTotalHeight + (compactTaskSpacing ? 2 : 0))}px` }}>
                     <div
                       style={{
@@ -1842,10 +1758,6 @@ function App() {
                       }}
                     >
                       {units.map((_, index) => {
-                        const columnPercent = (index / units.length) * 100;
-                        const isWithinPhase = !showPhaseLabels || !phaseBarPosition
-                          ? true
-                          : columnPercent >= phaseBarPosition.start && columnPercent < (phaseBarPosition.start + phaseBarPosition.width);
                         const nextUnit = units[index + 1];
                         const isWeekBoundary = nextUnit
                           ? startOfWeek(units[index].start).getTime() !== startOfWeek(nextUnit.start).getTime()
@@ -1865,12 +1777,11 @@ function App() {
 
                         return (
                           <div
-                            key={`${periodKey}-day-cell-${phase}-${index}`}
+                            key={`${periodKey}-day-cell-${index}`}
                             className="day-cell"
                             style={{
                               borderRight,
                               backgroundColor: specialPriorityColumnColors.get(index),
-                              ...(!isWithinPhase && index < units.length - 1 && borderRight !== "none" && !isWeekendGap ? { borderRight: "1px solid var(--border-medium)" } : {}),
                             }}
                           />
                         );
@@ -1955,7 +1866,7 @@ function App() {
                   </div>
                 </div>
               );
-            })}
+            })()}
           </div>
         </div>
       </div>
@@ -2186,13 +2097,6 @@ function App() {
                 <div
                   className={`v2-toggle${showWeekends ? " on" : ""}`}
                   onClick={() => setShowWeekends((p) => !p)}
-                />
-              </div>
-              <div className="v2-toggle-row">
-                <span className="v2-toggle-label">Show phases</span>
-                <div
-                  className={`v2-toggle${showPhaseLabels ? " on" : ""}`}
-                  onClick={() => setShowPhaseLabels((p) => !p)}
                 />
               </div>
               <div className="v2-toggle-row">
@@ -2785,30 +2689,12 @@ function App() {
                     {/* ========== PHASE SECTIONS ========== */}
                     {/* Each phase gets its own section with a header bar and task area */}
                     {/* When phase grouping is disabled, treat all tasks as a single group */}
-                    {(showPhaseLabels ? phases : [""]).map((phase) => {
-                      const phaseTasks = showPhaseLabels 
-                        ? visibleTasks.filter((t) => t.phase === phase)
-                        : visibleTasks; // All tasks in one group when not grouped by phase
-                      if (phaseTasks.length === 0) return null; // Skip empty phases
+                    {[""].map((phase) => {
+                      const phaseTasks = visibleTasks; // Phases removed: all tasks render in one combined board
+                      if (phaseTasks.length === 0) return null;
 
-                      // Calculate phase start/end dates from all tasks in this phase
-                      const phaseStart = normalizeDate(new Date(Math.min(...phaseTasks.map((t) => t.startDate.getTime()))));
-                      const phaseEnd = normalizeDate(new Date(Math.max(...phaseTasks.map((t) => t.endDate.getTime()))));
-
-                      // Get phase color from first task in phase
-                      const phaseTask = phaseTasks[0];
-
-                      // Calculate phase header position based on earliest and latest task dates
-                      const phasePosition = getTaskPosition({
-                        ...phaseTask,
-                        startDate: phaseStart,
-                        endDate: phaseEnd,
-                      });
-                      if (!phasePosition) return null;
-                      const { start, width } = phasePosition;
-
-                      // ========== PHASE TASK POSITIONING ==========
-                      // Apply same packing algorithm within this phase
+                      // ========== TASK POSITIONING ==========
+                      // Apply the packing algorithm across all tasks
                       const phaseTaskPositions = new Map<number, number>();
                       const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
                       const phaseTopPadding = 8;
@@ -2854,108 +2740,12 @@ function App() {
                             position: "relative",
                           }}
                         >
-                          {/* ========== PHASE HEADER BAR ========== */}
-                          {/* Background grid for phase header with light background matching task area */}
-                          {showPhaseLabels && (
-                            <div
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns: `repeat(${weekSpan}, 1fr)`,
-                                minHeight: "34px",
-                                position: "relative",
-                                borderTop: "2px solid var(--border-medium)",
-                                overflow: "hidden",
-                                backgroundColor: "var(--bg-primary)" /* White background to match task grid below */
-                              }}
-                            >
-                              {/* Grid cells to create column structure with visible borders in greyed areas */}
-                              {weekColumns.map((_, index) => {
-                                // Calculate if this column is within the phase boundaries
-                                const columnPercent = (index / weekSpan) * 100;
-                                const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
-                                
-                                return (
-                                  <div 
-                                    key={index} 
-                                    style={{ 
-                                      position: "relative",
-                                      // Show border only in greyed areas (outside phase) and not on last column
-                                      borderRight: !isWithinPhase && index < weekColumns.length - 1 
-                                        ? "1px solid var(--border-medium)" 
-                                        : "none",
-                                    }}
-                                  >
-                                  </div>
-                                );
-                              })}
-                              {/* Absolute positioned phase label bar spanning phase duration */}
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  left: `${start}%`,
-                                  width: `${width}%`,
-                                  top: "0px",
-                                  height: "100%",
-                                  // backgroundColor: "#5C4D43",
-                                  backgroundColor: "var(--color-gray-900)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  color: "var(--color-white)",
-                                  fontWeight: 600,
-                                  fontSize: "1rem",
-                                  letterSpacing: "0.05em",
-                                  boxSizing: "border-box",
-                                  zIndex: 1,
-                                  paddingLeft: "4px",
-                                  paddingRight: "4px",
-                                }}
-                              >
-                                {phaseStart < periodStart ? (
-                                  <span style={{ marginRight: "8px", fontWeight: "bold", fontSize: "1.1em", paddingLeft: "5px" }}>◀</span>
-                                ) : (
-                                  <span style={{ width: "1.1em", marginRight: "8px" }}></span>
-                                )}
-                                <span style={{ flex: 1, textAlign: "center" }}>
-                                  {(() => {
-                                    if (tasks.length === 0) {
-                                      return phase;
-                                    }
-                                    
-                                    const allDates = tasks.map((t) => t.startDate);
-                                    const firstTaskDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-                                    const firstTaskWeek = startOfWeek(firstTaskDate);
-                                    
-                                    const phaseStartWeek = startOfWeek(phaseStart);
-                                    const phaseEndWeek = startOfWeek(phaseEnd);
-                                    
-                                    const startWeekNum = Math.round((phaseStartWeek.getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
-                                    const endWeekNum = Math.round((phaseEndWeek.getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
-                                    
-                                    const weekRange = startWeekNum === endWeekNum 
-                                      ? `Week ${startWeekNum}`
-                                      : `Weeks ${startWeekNum}-${endWeekNum}`;
-                                    
-                                    return `${weekRange}: ${phase}`;
-                                  })()}
-                                </span>
-                                {phaseEnd > periodEnd ? (
-                                  <span style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "1.1em", paddingRight: "5px" }}>▶</span>
-                                ) : (
-                                  <span style={{ width: "1.1em", marginLeft: "8px" }}></span>
-                                )}
-                              </div>
-                              
-                              {/* Remove the percentage-based divider lines - using grid cell borders instead */}
-                            </div>
-                          )}
-
                           {/* ========== TASK AREA ========== */}
-                          {/* Container for all task bars within this phase */}
+                          {/* Container for all task bars in the combined board */}
                           <div style={{ position: "relative", minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
                             {/* Grid for column structure */}
                             <div
-                              style={{ 
+                              style={{
                                 width: "100%",
                                 position: "relative",
                                 display: "grid",
@@ -2966,43 +2756,16 @@ function App() {
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
-                              {weekColumns.map((_, index) => {
-                                // Calculate if this column is within the phase boundaries
-                                const columnPercent = (index / weekSpan) * 100;
-                                const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
-                                
-                                return (
-                                  <div
-                                    key={index}
-                                    className="day-cell"
-                                    style={{
-                                      backgroundColor: specialPriorityColumnColors.get(index),
-                                      ...(index === weekColumns.length - 1 ? { borderRight: "none" } : {}),
-                                      // Dim the border if outside phase boundaries
-                                      ...(!isWithinPhase && index < weekColumns.length - 1 ? { borderRight: "1px solid var(--border-medium)" } : {}),
-                                    }}
-                                  ></div>
-                                );
-                              })}
-
-                              {/* Phase background bar - semi-transparent overlay */}
-                              {showPhaseLabels && (
+                              {weekColumns.map((_, index) => (
                                 <div
+                                  key={index}
+                                  className="day-cell"
                                   style={{
-                                    position: "absolute",
-                                    left: `${start}%`,
-                                    width: `${width}%`,
-                                    top: "-2px",
-                                    height: "calc(100% + 2px)",
-                                    // backgroundColor: bgColorSectionLight,
-                                    opacity: 0.6,
-                                    zIndex: 0,
-                                    pointerEvents: "none",
+                                    backgroundColor: specialPriorityColumnColors.get(index),
+                                    ...(index === weekColumns.length - 1 ? { borderRight: "none" } : {}),
                                   }}
-                                />
-                              )}
-
-                              {/* Grey overlays REMOVED for consistent light background throughout */}
+                                ></div>
+                              ))}
 
                               {/* Individual task bars with calculated positions */}
                               {phaseTasks.map((task) => {
@@ -3112,18 +2875,6 @@ function App() {
                       periodStart,
                       periodEnd,
                       visibleTasks: [],
-                      phaseRangeLabel: (phaseStart, phaseEnd) => {
-                        if (tasks.length === 0) {
-                          return `${format(phaseStart, "MMM dd")} - ${format(phaseEnd, "MMM dd")}`;
-                        }
-
-                        const allDates = tasks.map((task) => task.startDate);
-                        const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
-                        const firstTaskWeek = startOfWeek(firstTaskDate);
-                        const startWeekNum = Math.round((startOfWeek(phaseStart).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
-                        const endWeekNum = Math.round((startOfWeek(phaseEnd).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
-                        return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
-                      },
                       compactSpacing: true,
                       compactTaskSpacing,
                     });
@@ -3145,18 +2896,6 @@ function App() {
                     periodStart,
                     periodEnd,
                     visibleTasks: periodTasks,
-                    phaseRangeLabel: (phaseStart, phaseEnd) => {
-                      if (tasks.length === 0) {
-                        return `${format(phaseStart, "MMM dd")} - ${format(phaseEnd, "MMM dd")}`;
-                      }
-
-                      const allDates = tasks.map((task) => task.startDate);
-                      const firstTaskDate = new Date(Math.min(...allDates.map((date) => date.getTime())));
-                      const firstTaskWeek = startOfWeek(firstTaskDate);
-                      const startWeekNum = Math.round((startOfWeek(phaseStart).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
-                      const endWeekNum = Math.round((startOfWeek(phaseEnd).getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
-                      return startWeekNum === endWeekNum ? `Week ${startWeekNum}` : `Weeks ${startWeekNum}-${endWeekNum}`;
-                    },
                     compactSpacing: true,
                     compactTaskSpacing,
                   });
@@ -3266,31 +3005,12 @@ function App() {
                     {/* ========== PHASE SECTIONS ========== */}
                     {/* Each phase gets its own section with a header bar and task area */}
                     {/* When phase grouping is disabled, treat all tasks as a single group */}
-                    {(showPhaseLabels ? phases : [""]).map((phase) => {
-                      const phaseTasks = showPhaseLabels 
-                        ? visibleTasks.filter((t) => t.phase === phase)
-                        : visibleTasks; // All tasks in one group when not grouped by phase
-                      if (phaseTasks.length === 0) return null; // Skip empty phases
+                    {[""].map((phase) => {
+                      const phaseTasks = visibleTasks; // Phases removed: all tasks render in one combined board
+                      if (phaseTasks.length === 0) return null;
 
-                      // Calculate phase start/end dates from all tasks in this phase
-                      const normalizeToMidnight = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                      const phaseStart = normalizeToMidnight(new Date(Math.min(...phaseTasks.map((t) => t.startDate.getTime()))));
-                      const phaseEnd = normalizeToMidnight(new Date(Math.max(...phaseTasks.map((t) => t.endDate.getTime()))));
-
-                      // Get phase color from first task in phase
-                      const phaseTask = phaseTasks[0];
-
-                      // Calculate phase header position based on earliest and latest task dates
-                      const phasePosition = getMonthTaskPosition({
-                        ...phaseTask,
-                        startDate: phaseStart,
-                        endDate: phaseEnd,
-                      });
-                      if (!phasePosition) return null;
-                      const { start, width } = phasePosition;
-
-                      // ========== PHASE TASK POSITIONING ==========
-                      // Apply same packing algorithm within this phase
+                      // ========== TASK POSITIONING ==========
+                      // Apply the packing algorithm across all tasks
                       const phaseTaskPositions = new Map<number, number>();
                       const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
                       const phaseTopPadding = 8;
@@ -3336,106 +3056,12 @@ function App() {
                             position: "relative",
                           }}
                         >
-                          {/* ========== PHASE HEADER BAR ========== */}
-                          {/* Background grid for phase header with light background matching task area */}
-                          {showPhaseLabels && (
-                            <div
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
-                                minHeight: "35px",
-                                position: "relative",
-                                borderTop: "5px solid var(--border-medium)",
-                                overflow: "hidden",
-                                backgroundColor: "var(--bg-primary)" /* White background to match task grid below */
-                              }}
-                            >
-                              {/* Grid cells to create column structure with visible borders in greyed areas */}
-                              {monthColumns.map((_, index) => {
-                                // Calculate if this column is within the phase boundaries
-                                const columnPercent = (index / monthColumns.length) * 100;
-                                const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
-                                
-                                return (
-                                  <div 
-                                    key={index} 
-                                    style={{ 
-                                      position: "relative",
-                                      // Show border only in greyed areas (outside phase) and not on last column
-                                      borderRight: !isWithinPhase && index < monthColumns.length - 1 
-                                        ? "1px solid rgba(0, 0, 0, 0.15)" 
-                                        : "none",
-                                    }}
-                                  >
-                                  </div>
-                                );
-                              })}
-                              {/* Absolute positioned phase label bar spanning phase duration */}
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  left: `${start}%`,
-                                  width: `${width}%`,
-                                  top: "0px",
-                                  height: "100%",
-                                  backgroundColor: "var(--color-gray-900)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  color: "var(--color-white)",
-                                  fontWeight: 600,
-                                  fontSize: "1rem",
-                                  letterSpacing: "0.05em",
-                                  boxSizing: "border-box",
-                                  zIndex: 1,
-                                  paddingLeft: "4px",
-                                  paddingRight: "4px",
-                                }}
-                              >
-                                {phaseStart < periodStart ? (
-                                  <span style={{ marginRight: "8px", fontWeight: "bold", fontSize: "1.1em", paddingLeft: "5px" }}>◀</span>
-                                ) : (
-                                  <span style={{ width: "1.1em", marginRight: "8px" }}></span>
-                                )}
-                                <span style={{ flex: 1, textAlign: "center" }}>
-                                  {(() => {
-                                    if (tasks.length === 0) {
-                                      return phase;
-                                    }
-                                    
-                                    // Calculate month numbers for phase start and end
-                                    const allDates = tasks.map((t) => t.startDate);
-                                    const firstTaskDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
-                                    const firstTaskMonth = startOfMonth(firstTaskDate);
-                                    
-                                    const phaseStartMonth = startOfMonth(phaseStart);
-                                    const phaseEndMonth = startOfMonth(phaseEnd);
-                                    
-                                    const startMonthNum = (phaseStartMonth.getFullYear() - firstTaskMonth.getFullYear()) * 12 + (getMonth(phaseStartMonth) - getMonth(firstTaskMonth)) + 1;
-                                    const endMonthNum = (phaseEndMonth.getFullYear() - firstTaskMonth.getFullYear()) * 12 + (getMonth(phaseEndMonth) - getMonth(firstTaskMonth)) + 1;
-                                    
-                                    const monthRange = startMonthNum === endMonthNum 
-                                      ? `Month ${startMonthNum}`
-                                      : `Months ${startMonthNum}-${endMonthNum}`;
-                                    
-                                    return `${monthRange}: ${phase}`;
-                                  })()}
-                                </span>
-                                {phaseEnd > periodEnd ? (
-                                  <span style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "1.1em", paddingRight: "5px" }}>▶</span>
-                                ) : (
-                                  <span style={{ width: "1.1em", marginLeft: "8px" }}></span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
                           {/* ========== TASK AREA ========== */}
-                          {/* Container for all task bars within this phase */}
+                          {/* Container for all task bars in the combined board */}
                           <div style={{ position: "relative", minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
                             {/* Grid for column structure */}
                             <div
-                              style={{ 
+                              style={{
                                 width: "100%",
                                 position: "relative",
                                 display: "grid",
@@ -3446,42 +3072,16 @@ function App() {
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
-                              {monthColumns.map((_, index) => {
-                                // Calculate if this column is within the phase boundaries
-                                const columnPercent = (index / monthColumns.length) * 100;
-                                const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
-                                
-                                return (
-                                  <div
-                                    key={index}
-                                    className="day-cell"
-                                    style={{
-                                      backgroundColor: specialPriorityColumnColors.get(index),
-                                      ...(index === monthColumns.length - 1 ? { borderRight: "none" } : {}),
-                                      // Dim the border if outside phase boundaries
-                                      ...(!isWithinPhase && index < monthColumns.length - 1 ? { borderRight: "1px solid var(--border-medium)" } : {}),
-                                    }}
-                                  ></div>
-                                );
-                              })}
-
-                              {/* Phase background bar - semi-transparent overlay */}
-                              {showPhaseLabels && (
+                              {monthColumns.map((_, index) => (
                                 <div
+                                  key={index}
+                                  className="day-cell"
                                   style={{
-                                    position: "absolute",
-                                    left: `${start}%`,
-                                    width: `${width}%`,
-                                    top: "-2px",
-                                    height: "calc(100% + 2px)",
-                                    opacity: 0.6,
-                                    zIndex: 0,
-                                    pointerEvents: "none",
+                                    backgroundColor: specialPriorityColumnColors.get(index),
+                                    ...(index === monthColumns.length - 1 ? { borderRight: "none" } : {}),
                                   }}
-                                />
-                              )}
-
-                              {/* Grey overlays REMOVED for consistent light background throughout */}
+                                ></div>
+                              ))}
 
                               {/* Individual task bars with calculated positions */}
                               {phaseTasks.map((task) => {
@@ -3591,19 +3191,6 @@ function App() {
                     periodStart,
                     periodEnd,
                     visibleTasks: periodTasks,
-                    phaseRangeLabel: (phaseStart, phaseEnd) => {
-                      if (!showMonthNumbers) {
-                        return `${format(phaseStart, "MMM d")} - ${format(phaseEnd, "MMM d, yyyy")}`;
-                      }
-
-                      if (tasks.length === 0) {
-                        return format(phaseStart, "MMM yyyy");
-                      }
-
-                      const startMonthNum = getRelativeMonthNumber(phaseStart, tasks);
-                      const endMonthNum = getRelativeMonthNumber(phaseEnd, tasks);
-                      return startMonthNum === endMonthNum ? `Month ${startMonthNum}` : `Months ${startMonthNum}-${endMonthNum}`;
-                    },
                     compactSpacing: true,
                     compactHeaderPadding: isWeekSplit,
                     compactTaskSpacing,
@@ -3771,19 +3358,6 @@ function App() {
             </div>
           );
         })()}
-        {showPhaseLabels && barColorSource !== "phase" && visibleLegendPhases.length > 0 && (
-          <div style={{ marginTop: "1rem", padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
-            <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Phase Key:</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
-              {visibleLegendPhases.map((phase) => (
-                <div key={phase} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                  <div style={{ width: "24px", height: "24px", backgroundColor: "var(--color-gray-900)", borderRadius: "4px", border: "2px solid var(--border-overlay-light)", flexShrink: 0 }} />
-                  <span style={{ color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 500, lineHeight: "24px" }}>{phase}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ─── TASK PANEL ─── */}

@@ -134,7 +134,7 @@ These exist in v1 `src/App.tsx` and are core to how the timeline looks and behav
 | K6 | **Drag/drop in BOTH places** | task-table rows + `.task-bar` draggable | Reorder from the task panel AND directly on timeline bars. Both update `displayOrder`. |
 | K7 | **Hover tooltips on bars** | `title={[...]}` on `.task-bar` | Full task / sub-task / phase / category / owner / start / end / order on hover. |
 | K8 | **Selected-bar highlight** | `selectedTimelineTaskId`, boxShadow | Click a bar → it glows, others dim to ~0.72 opacity, task panel filters to it. Click again clears. |
-| K9 | **Legend shows only visible tasks** | `visibleLegendTasks`, `visibleLegendPhases` | Category/phase key reflects only what's in the current window, not the whole dataset. |
+| K9 | **Legend shows only visible tasks** | `visibleLegendTasks` | Category key reflects only what's in the current window, not the whole dataset. (Phase key removed in Phase 5 with the phase header bars.) |
 | K10 | **Filter feedback** | "Showing X task-list results" | Show count when a text filter or timeline selection is active. |
 | K11 | **CSV week-number auto-compute** | `getRelativeWeekNumber` in `exportTasks` | When a task has no week value, compute it relative to the earliest task on export. |
 | K12 | **Collapsible sections** | `showTaskList`, `showTimeline` | Tasks panel and timeline are independently collapsible. |
@@ -256,8 +256,8 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 | Item | Status | Notes |
 |------|--------|-------|
 | **L1 — Presentation mode** | ✅ Complete | Ctrl/Cmd+P toggle or 🎬 button. Hides header, settings, import modal, task panel. Shows timeline + legend only. Dark overlay banner guides exit. Screenshot-ready. |
-| **E6 — Column sorting** | ✅ Verified | Column headers already clickable for sort. ▲/▼ indicators visible. All columns covered (Phase, Category, Task, Start, End, Order, Line Padding, etc.). Drag handle for manual reorder. No work needed. |
-| **E7 — Task panel layout** | ✅ Complete | Refactored from overlay to structural layout below timeline. Flexbox architecture: timeline stays pinned at top, task panel collapses/expands below. Single scroll direction (vertical), no overlaps. |
+| **E6 — Column sorting** | ✅ Complete | Column headers clickable for sort. ▲/▼ indicators visible. All columns covered (Phase, Category, Task, Start, End, Order, Line Padding, etc.). Drag handle for manual reorder. |
+| **E7 — Task panel layout** | ✅ Complete | Refactored from overlay to structural layout below timeline using flexbox. `.app` uses flex column layout (height: 100vh). `.v2-content-area` wrapper provides scrollable region. Task panel tab/panel use flex-shrink: 0. Single scroll direction (vertical). Timeline stays pinned at top via sticky header. |
 | L2 — Control area redesign | ⏭️ Future | View selector needs visual hierarchy (most important choice, not equal weight with toggles). Design work required. |
 | L3 — Task section redesign | ⏭️ Future | Import + filter layout currently clunky. Needs UX redesign to reduce vertical footprint. |
 | L4 — Configurable priority labels | ⏭️ Future | User-editable list of phase/category values that sort to top + shade columns. Currently hardcoded (Vacation/Holiday/OOO). |
@@ -269,72 +269,73 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 | 1 | Hex palette: auto-assign or manual? | Auto-assign by default + per-category override | ✅ Implemented (C2) |
 | 2 | Calendar view: keep or retire? | Retire (stacked Split-by-Days is superior; calendar underutilized) | ⏭️ Decision made, pending removal |
 | 3 | Relative timeline mode anchor | Week 1 = earliest task's week (user-set start not yet implemented) | ✅ Implemented (N4) |
-| 4 | Phase bars: remove or toggle? | Remove from primary UI (rarely used, too noisy) | ⏭️ Decision made, pending cleanup |
+| 4 | Phase bars: remove or toggle? | Remove from primary UI (rarely used, too noisy) | ✅ Done in Phase 5 (TL1/TL2) |
 
 ### Key Carryover Features — All Preserved
 
-All v1 features (K1–K18 from handoff) remain in the codebase. v2 adds new controls and features without removing functionality. Browser-local persistence, CSV round-trip, flexible import, and drag-drop in both task panel and timeline all working.
+All v1 features (K1–K18) remain in the codebase. v2 adds new controls and features without removing functionality. Browser-local persistence, CSV round-trip, flexible import, and drag-drop in both task panel and timeline all working.
 
 ---
 
-## Phase 5 — UX Polish & Layout Cleanup 🔄 Backlog
+## Phase 5 — Phase Header Removal (render surgery) ✅ Complete
 
-User-reported issues and refinements for screenshot workflow and general usability. Organized by area.
+**Owner: Sonnet/Opus (not Haiku).** Touched the shared render primitive and landed *before* Phase 6, so Haiku reorganizes a stable settings panel. The `showPhaseLabels` flag was load-bearing — it gated task grouping, phase-bar positioning, and the `isWithinPhase` column shading, not just a visual band.
 
-### Layout & Rendering
+| # | Item | Type | Result |
+|---|------|------|--------|
+| TL1 | Remove phase header bars from timeline | UX | ✅ Done. Removed the dark phase bands and per-phase grouping from `renderStackedTimelineBoard` and both inline horizontal boards; all tasks now pack into one combined board per period. Phase remains a **color/label source** (C4/C5). |
+| TL2 | Remove "Show phases" toggle | UX | ✅ Done. Removed the `showPhaseLabels` state, its Settings → Display toggle, the orphaned "Phase Key" legend, and the unused `phases`/`visibleLegendPhases` derivations. |
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| LY1 | Background color: grey → white | Style | High | White background makes screenshots easier to crop and paste into decks. Currently grey. |
-| LY2 | Page 100% width (remove left overhang) | Layout | High | Content currently has left overhang; should render at 100% viewport width. |
-| LY3 | Remove "Stacked" as top-level toggle | Navigation | Medium | "Stacked" appears as a third tab alongside Weekly/Monthly, but it's redundant with "Stacked layout" toggle in settings. Merge or remove from header. |
+**Decision:** Full removal (not default-off). Collapsed onto the existing `showPhaseLabels === false` code path. Build + lint clean; verified in browser (single combined board renders across views).
 
-### Header & Controls
+---
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| HD1 | Settings icon padding reduction | Style | Medium | Settings ⚙ icon is too small relative to button padding. Reduce padding or increase icon size. |
+## Phase 6 — UX Polish & Layout Cleanup 📋 Backlog
 
-### Task Panel Table
+**Owner: Haiku** (after Phase 5 lands). All items below are mechanical and anchored. The settings-reorg cluster (TP3/TP5/ST1/ST2) is the one borderline group — if state wiring breaks on the JSX move, pull that cluster back to Sonnet.
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| TP1 | Remove vertical grid lines | Style | Low | Vertical lines in task table clutter the view. Consider removing or making very light. |
-| TP2 | Expand "Line Padding" column visibility | Layout | Medium | "Line Padding" column not fully visible; need to move "Start" column left or adjust widths so full "Line Padding" label shows. |
-| TP3 | Line padding: +/−0.25 increment buttons | Interaction | Medium | Add increment/decrement buttons (or spinner) so users can adjust by 0.25 without typing. Currently requires manual text input. |
-| TP4 | Restyle row action buttons | Style | Medium | Edit/Copy/Delete buttons should match "Export CSV" style: grey outline with icon, slightly larger hit target. Delete icon: trash can instead of ×. |
-| TP5 | Move "Show hex columns" to task settings | IA | Medium | "Show hex columns" is a task table display toggle but lives in timeline settings. Should move to task panel section. |
+### Rock-solid for Haiku (CSS + default flips)
 
-### Timeline Rendering
+| # | Item | Type | Notes & code anchors |
+|---|------|------|----------------------|
+| LY1 | Background color: grey → white | Style | `#root` and `.app` both set `#f5f5f5` (`src/App.css:48`, `:53`) → white. `body` is already `#ffffff`. |
+| LY2 | Page 100% width (remove left overhang) | Layout | Root cause: `#root { width: 1800px; margin: 0 auto }` (`src/App.css:48`). Change to `width: 100%`. (Note: `index.css:17` also defines `#root`; App.css wins.) |
+| HD1 | Settings icon padding reduction | Style | Settings ⚙ icon too small relative to button padding. CSS-only. |
+| TP1 | Remove vertical grid lines in task table | Style | **Decision: use a CSS variable set to `transparent`** (not white — white couples to background). Add `--task-grid-line: transparent` to `:root`; point `.v2-task-table` cell `border-right` (`src/App.css:655`) at it. Flip the variable to re-enable later. |
+| TP4 | Restyle row action buttons | Style | Edit/Copy/Delete row actions (`src/App.tsx:3877`, `:3884`, + delete) → match the `.v2-panel-export` "Export CSV" style (`:3776`): grey outline, icon, larger hit target. |
+| DF1 | Change view defaults | Config | `view` `"weeks"`→`"months"` (`src/App.tsx:246`); `timelineLayout` `"horizontal"`→`"stacked"` (`:276`); **stacked split = Split by Days** (`isWeekSplit` path off); `showWeekends` `true`→`false` (`:275`). `compactTaskSpacing` is **already** `true` (`:299`) — no change needed. |
+| DF2 | Range Mode default: Fit to data | Config | `rangeMode` default `"rolling"`→`"fit"` (`src/App.tsx:300`). Mode already exists (`:335`) — pure default flip. |
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| TL1 | Remove phase header bars from timeline | UX | Medium | Phase header bars in the timeline (colored bars spanning phase duration) add visual noise. Consider removing or hiding by default. |
-| TL2 | Remove "Show phases" toggle | UX | Medium | If phase headers are removed from timeline, remove the settings toggle as well (currently rarely used). |
-| TL3 | Consistent day column widths across months | Design | Medium | Currently, months with fewer days (e.g., February) are narrower than months with more days (e.g., March) because column width is calculated per-month. Design decision: should all days be uniform width (so Feb naturally spans less)? Requires refactoring position calculations if yes. |
-| TL4 | Week labels in monthly view header | Enhancement | Medium | Add week number labels (Week 1, Week 2, etc.) spanning their respective day columns in monthly view. Month callout remains unchanged. Week labels persist even if day numbers are toggled off. |
-| TL5 | Day headers with "Show week/month #" toggle | Design | Low | When "Show week / month #" is ON, should day headers show only numbers (e.g., "6" "7" "8") or keep day-of-week (e.g., "Mon 6" "Tue 7")? Trade-off: space/clutter vs. day-of-week context. **Undecided.** |
+### Settings reorganization cluster (borderline — verify state wiring)
 
-### Settings Panel Organization
+| # | Item | Type | Notes & code anchors |
+|---|------|------|----------------------|
+| TP2 | Expand "Line Padding" column visibility | Layout | Adjust `.v2-task-table` column widths so "Line Padding" is fully visible. |
+| TP3 | Line padding: +/−0.25 increment buttons | Interaction | Add increment/decrement buttons next to the Line Padding input; round-trips via `lineHeightAdjust` (CSV "Line Padding" column). |
+| TP5 | Move "Show hex columns" to task settings | IA | Move control from timeline settings → task panel section. Keep state wiring intact. |
+| ST1 | Move color palette to task settings | IA | Move hex palette management (`colorPalette`/`categoryColorMap`, `src/App.tsx:306–309`) UI from timeline settings → task panel. |
+| ST2 | Range Mode: radio → dropdown | UX | Convert the three `rangeMode` options (`fit`/`range`/`rolling`) from radios to a dropdown. Do after DF2. |
+| LY3 | Remove "Stacked" as top-level toggle | Navigation | "Stacked" is a third header tab alongside Weekly/Monthly but overlaps the "Stacked layout" settings toggle. Touches header tab JSX + the `activeTab`/`timelineLayout` mapping — needs scoping before handing to Haiku. |
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| ST1 | Move color palette to task settings | IA | Medium | Hex palette management (swatches, category mapping) currently in timeline settings. Should move to task panel section with "Show hex columns" (TP5). |
-| ST2 | Range Mode: radio → dropdown | UX | Medium | Range Mode (Fit to data / Specific date range / Rolling span) uses radio buttons. Dropdowns are more compact and standard for mutually exclusive options. |
+### Needs scoping (render work — likely Sonnet)
 
-### Defaults
+| # | Item | Type | Notes |
+|---|------|------|-------|
+| TL4 | Week labels in monthly view header | Enhancement | Add week-number labels (Week 1, 2, …) spanning their day columns in monthly view; month callout unchanged; labels persist when day numbers are toggled off. Render work on monthly header groups — not a Haiku quick win. |
 
-| # | Item | Type | Priority | Notes |
-|---|------|------|----------|-------|
-| DF1 | Change view defaults | Config | Medium | Current: weekly/horizontal. Desired: monthly/stacked with weekends OFF and compact rows ON. Better matches most common screenshot workflow. |
-| DF2 | Range Mode default: Fit to data | Config | Medium | Current: rolling span. Desired: "Fit to data" (auto-spans earliest → latest task). More intuitive for one-off imports. |
+### Deferred — Design-Needed (not yet scoped)
+
+| # | Item | Type | Notes |
+|---|------|------|-------|
+| TL3 | Consistent day column widths across months | Design | Currently Feb is narrower than March. Decision needed: uniform width or variable? |
+| TL5 | Day headers with "Show week/month #" toggle | Design | When showing numbers, keep day-of-week ("Mon 6") or just number ("6")? Space vs. context. |
 
 ### Summary
 
-**Quick wins (low effort):** LY1 (white bg), LY2 (100% width), HD1 (icon), TP1 (lines), TP4 (buttons), TL1/TL2 (phase header removal), DF1/DF2 (defaults)
+**Phase 5 — Sonnet/Opus:** ✅ TL1, TL2 (phase header removal) complete  
+**Phase 6 — Haiku, rock-solid:** LY1, LY2, HD1, TP1, TP4, DF1, DF2  
+**Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2 (pull back to Sonnet if state wiring breaks); LY3 needs scoping first  
+**Needs scoping (Sonnet):** TL4 (week labels in monthly header)  
+**Deferred (design-needed):** TL3, TL5  
 
-**Medium lift:** TP2 (column widths), TP3 (increment buttons), TP5 (settings reorganization), ST1 (settings IA), ST2 (dropdown)
-
-**Design-needed:** TL3 (consistent day column widths across month boundaries)
-
-**Recommended approach:** Batch quick wins first, then tackle IA/UX refinements (TP5/ST1/ST2) as a cohesive settings panel cleanup. Decide on TL3 approach before implementing.
+**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → scope LY3/TL4 → revisit TL3/TL5 once decisions are made.

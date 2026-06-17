@@ -13,150 +13,90 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 4: L1 complete on feat/phase-4-presentation-mode; Phase 5 backlog documented; product-brief updated with Phases 0-4 status)
+Last updated: 2026-06-16 (Phase 5 complete on branch `phase-5-remove-phase-headers`, PR open)
 
 ## Current Snapshot
 
-Roadmap Project v2 redesign—ground-up rewrite driven by product brief, targeting screenshot-first UX for client deliverables. v1 preserved as tag `v1` and worktree `../Roadmap Project v1/`.
+Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/product-brief.md`), targeting screenshot-first UX for client deliverables. v1 preserved as tag `v1` and worktree `../Roadmap Project v1/`.
 
-**Current branch:** `feat/phase-4-presentation-mode` (11 commits ahead of master)
-- L1 Presentation mode: complete, verified
-- E6 Column sorting: verified working
-- E7 Task panel layout: complete, refactored to collapsible section below timeline
-- Product-brief: updated with Phases 0-4 status + Phase 5 backlog (17 items)
-- Master branch: 1 commit ahead (handoff update from earlier session)
+**Branch:** `phase-5-remove-phase-headers` (off master; Phase 5 committed, PR open for merge)
 
-**Latest commits on feat/phase-4-presentation-mode:**
-- [new] E7: Refactor task panel layout—flexbox structure, scrollable content area, single scroll direction
-- `f1a1ccd` Mark TL5 as design decision: undecided on day-of-week display
-- `c5f0182` Add TL4: Week labels in monthly view header
-- `ec828c6` Fix: Add top padding in presentation mode to prevent banner overlay
-- `4384fb5` Add L1 Presentation mode—hide all controls, show timeline only
+**Latest commits:**
+- `19f6f09` Update handoff: Phase 4 L1 complete, E6 verified, E7 scoped (post-merge on master)
+- [Phase 4 merge] Merged PR #10: Presentation mode + task panel layout refactor
+- `2c56bb3` E7: Refactor task panel layout to structural section below timeline
+- `ab89363` Update handoff: Phase 4 complete, ready for merge or Phase 5 start
 
-**Build:** `npm run build` passes clean. Lint: `npx eslint src/App.tsx` clean.
+**Build:** `npm run build` passes clean. Dev server: `npm run dev` → `http://localhost:5173`.
 
 ## Phases Status
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| 0 | ✅ Complete | C1, I1, I2 fixed; V3 deferred |
-| 1 | ✅ Complete | Layout shell, header, settings, import modal, task panel |
-| 2 | ✅ Complete | Timeline carryover: packing, wrapping, auto-color, special overlays |
-| 3 | ✅ Complete | Edit modal, color/label toggles, hex palette, relative timeline |
-| 4a (L1) | ✅ Complete | Presentation mode: Ctrl+P toggle, hides controls, shows timeline only |
-| 4b (E6) | ✅ Verified | Column header sorting already working; no action needed |
-| 4c (E7) | ✅ Complete | Task panel layout refactor: flexbox structure, scrollable content area, single scroll direction |
-| **5** | 📋 **Backlog** | **17 UX polish items documented; ready for prioritization** |
+| Phase | Task | Status | Notes |
+|-------|------|--------|-------|
+| 0 | Bug fixes (C1, I1, I2, V3) | ✅ Complete | Category colors, import grouping, line padding round-trip fixed |
+| 1 | Layout shell | ✅ Complete | Header, settings panel, import modal, task panel UI |
+| 2 | Timeline carryover | ✅ Complete | Packing, text wrapping, auto-color, special priority shading |
+| 3 | Edit modal + colors | ✅ Complete | Modal editing, color/label source toggles, hex palette, relative timeline |
+| **4a** | **L1 Presentation mode** | **✅ Complete** | Ctrl+P toggle, hides all controls, shows timeline + legend only |
+| **4b** | **E6 Column sorting** | **✅ Complete** | Already implemented; verified working |
+| **4c** | **E7 Task panel layout** | **✅ Complete** | Refactored to flexbox: single scroll direction, timeline pinned, task panel below |
+| **5** | **Phase header removal (TL1, TL2)** | **✅ Complete** | Sonnet/Opus work. Phase bands + `showPhaseLabels` toggle removed; all tasks pack into one combined board per period. Committed on `phase-5-remove-phase-headers`, PR open. |
+| **6** | **UX Polish (Haiku, 12 items)** | **📋 Backlog** | CSS + default flips + settings reorg. Anchored in product-brief.md. Starts after Phase 5 merges. |
 
-## Phase 4 — L1 Presentation Mode ✅ Complete
+## Phase 4 — Complete (L1 + E6 + E7)
 
-**Feature:** Hide all controls (header, settings, import modal, task panel), show timeline + legend only. Screenshot-ready.
+### L1 Presentation Mode ✅
 
-**Implementation:**
-- Keyboard: Ctrl/Cmd+P
-- UI button: 🎬 in header
-- Dark overlay banner shows exit instructions
-- Auto-closes open panels on activation
-- Fixed: added `paddingTop: 40px` to prevent banner overlay on timeline
+- **Keyboard:** Ctrl/Cmd+P
+- **UI button:** 🎬 in header
+- **Behavior:** Hides header, settings, import modal, task panel; shows dark overlay banner with exit instructions
+- **Technical:** Added `paddingTop: 40px` to app when active (prevents banner overlay on timeline)
 
-**Verification:** Build clean, feature tested (presentation mode accessible, banner visible, timeline unobstructed).
+### E6 Column Header Sorting ✅
 
-## Phase 4 — E7 Task Panel Layout Refactor ✅ Complete
+Already implemented and verified working. No changes needed.
+- Column headers clickable for sort (▲/▼ indicators)
+- All columns supported: Phase, Phase HEX, Category, Cat HEX, Task, Start, End, Order, Line Padding
+- Row drag-to-reorder with ⠇ drag handle
 
-**Feature:** Refactor task panel from overlay-based to structural layout below timeline. Single scroll direction (vertical), no overlaps, clean flexbox architecture.
+### E7 Task Panel Layout ✅
 
-**Implementation:**
-- Changed `.app` layout from `position: relative` to `display: flex; flex-direction: column; height: 100vh`
-- Added `.v2-content-area` wrapper: `flex: 1; overflow-y: auto` (scrollable content region)
-- Task panel tab/panel: `flex-shrink: 0` (don't shrink, maintain consistent height)
-- Table wrapper in panel: `flex: 1; overflow-y: auto` (allows panel table to scroll while panel itself doesn't)
-- Header: remains sticky with `z-index: 100` (stays visible during scroll)
-- Single scroll direction: entire page scrolls vertically as one unit
+**Merged to master in PR #10.** Refactored from overlay to structural layout:
+- **Layout:** `.app` uses flexbox column (height: 100vh), new `.v2-content-area` wrapper with `overflow-y: auto` for single scrollable region
+- **Header:** Sticky at top (z-index: 100), doesn't move when scrolling
+- **Timeline + Legends:** Inside scrollable content area
+- **Task Panel:** Below timeline in DOM flow, expands/collapses, adds to page height
+- **Result:** Single scroll direction (vertical), timeline pinned at top, no overlaps
+- **Verification:** All features tested, builds and lints clean
 
-**Verification:** Build clean, lint clean, structure properly separated.
+## Phase 5 — Phase Header Removal (TL1, TL2) ✅
 
-## Phase 5 — UX Polish & Layout Cleanup 📋 Backlog
+**Complete on `phase-5-remove-phase-headers` (PR open).** Sonnet/Opus work — touched the shared render primitive, so it was split out from the Haiku batch and landed first.
 
-17 items documented in `docs/product-brief.md`:
+- **TL1** — Removed the dark phase header bands and per-phase grouping from `renderStackedTimelineBoard` and both inline horizontal boards. All tasks now pack into one combined board per period. Phase remains a color/label source (C4/C5).
+- **TL2** — Removed the `showPhaseLabels` state, its Settings → Display toggle, the orphaned "Phase Key" legend, and the unused `phases`/`visibleLegendPhases` derivations.
+- **Approach:** collapsed onto the existing `showPhaseLabels === false` path (already working) rather than inventing new layout.
+- **Verified:** `npm run build` clean, `npx eslint src/App.tsx` clean, browser render confirmed.
 
-**Quick wins (low effort):**
-- LY1: white background (not grey)
-- LY2: 100% viewport width (remove left overhang)
-- HD1: settings icon padding
-- TP1: remove vertical grid lines in task table
-- TP4: restyle action buttons (grey outline, bigger, trash icon for delete)
-- TL1/TL2: remove phase header bars + toggle
-- DF1/DF2: change defaults (monthly/stacked/weekends-off/compact, fit-to-data range mode)
+## Phase 6 — UX Polish (Haiku) 📋
 
-**Medium lift:**
-- TP2: expand Line Padding column visibility
-- TP3: line padding auto-increment by 0.25
-- TP5: move "Show hex columns" to task settings
-- ST1: move color palette to task settings
-- ST2: Range Mode radio → dropdown
-
-**Design-needed (undecided):**
-- TL3: consistent day column widths across month boundaries
-- TL4: week labels in monthly view header
-- TL5: day header display with "Show week/month #" toggle (keep "Mon" or just "6"?)
-
-## What v1 Has (all preserved in v2)
-
-- Editable task table with drag-to-reorder
-- Tab-separated spreadsheet import with preview
-- Weekly and monthly timeline views (horizontal and stacked layouts)
-- Stacked monthly split-by-days/weeks
-- Calendar view
-- Weekend toggle
-- Timeline-click task selection filter
-- CSV export (includes week number)
-- Browser-local task persistence
-- Special priority treatment (Vacation/Holiday/OOO)
-- Category legend
-
-## How to Run
-
-```bash
-npm install
-npm run dev
-```
-
-v2 (master/branches): `http://localhost:5173`
-v1 (worktree): `cd ../Roadmap\ Project\ v1 && npm run dev` → `http://localhost:5174`
-
-## How to Verify
-
-```bash
-npm run build
-npx eslint src/App.tsx
-git diff --check
-```
+Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merges** so Haiku reorganizes a stable settings panel.
+- **Rock-solid (CSS + default flips):** LY1 white bg, LY2 100% width, HD1 icon padding, TP1 grid lines (transparent variable), TP4 row buttons, DF1 defaults (months/stacked/split-by-days/weekends-off), DF2 fit-to-data default.
+- **Settings-reorg cluster (borderline):** TP2, TP3, TP5, ST1, ST2 — pull back to Sonnet if state wiring breaks on the JSX move.
+- **Deferred (design-needed):** TL3 day column widths, TL5 day header display.
 
 ## Next Steps
 
-**Option A: Merge Phase 4 to master**
-- `git checkout master`
-- `git merge feat/phase-4-presentation-mode`
-- Clears the feature branch
-- Phase 4 (L1 + E6 + E7) all complete and tested
-
-**Option B: Start Phase 5 work on new branch**
-- Create new branch `feat/phase-5-ux-polish`
-- Batch quick wins first (7–8 items, ~1–2 hours): LY1 (white bg), LY2 (100% width), HD1 (icon), TP1 (lines), TP4 (buttons), TL1/TL2 (phase headers), DF1/DF2 (defaults)
-- Then medium-lift refinements (TP2/TP3/TP5/ST1/ST2)
-- Leave design-needed items (TL3/TL5) for later decision
-
-**Recommended:** Merge Phase 4 first (clean state), then start Phase 5 on a fresh branch.
+1. **Merge Phase 5 PR** into master and delete the remote branch.
+2. **Then Phase 6** (Haiku): branch off updated master; do the rock-solid batch first (LY1, LY2, HD1, TP1, TP4, DF1, DF2), then the settings-reorg cluster (TP2, TP3, TP5, ST1, ST2 — pull back to Sonnet if state wiring breaks).
+3. **Defer** TL3/TL5 until day-column and day-header decisions are made.
 
 ## New Chat Start
 
-Read first:
+Read these first:
 - `README.md`
 - `CLAUDE.md`
 - `docs/handoff.md` (this file)
+- `docs/product-brief.md` (for Phase 5/6 backlog and design decisions)
 
-Then:
-- `docs/product-brief.md` — Phases 0–5 status + full requirements
-- `src/App.tsx` — main implementation (~3700 lines, organized in 3 layers)
-
-If starting Phase 5 work, consult the "Quick wins" checklist and design items in product-brief.md Phase 5 section.
+Current state: Phases 0–4 complete and merged to master. Phase 5 (phase header removal, TL1+TL2) complete on `phase-5-remove-phase-headers` with an open PR. Phase 6 (Haiku UX polish) documented and waiting for Phase 5 to merge. All v1 carryover features preserved. Build clean, lint clean.

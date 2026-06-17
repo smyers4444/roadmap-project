@@ -13,10 +13,9 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 - Switch between weekly, monthly, and calendar views.
 - Toggle date labels versus week/month numbers.
 - Show or hide weekends in weekly, monthly, and calendar rendering.
-- Group tasks by phase, or collapse phase grouping into a single timeline.
 - Paste tab-separated task data from a spreadsheet, preview it, edit it, and import it.
 - Export the current task list to CSV.
-- Show category and phase legends for the visible timeline.
+- Show a category legend for the visible timeline.
 - Choose whether bars use category or phase color, and whether bar labels show task, category, or phase text.
 - Persist tasks in browser-local storage on the current device and browser.
 
