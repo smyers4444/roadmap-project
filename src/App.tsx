@@ -93,7 +93,7 @@
  */
 
 // React imports
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 // Third-party component for date selection
 import DatePicker from "react-datepicker";
@@ -292,6 +292,10 @@ function App() {
   // v2 layout shell state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showColorsPanel, setShowColorsPanel] = useState(false);
+  const colorsPanelAnchorRef = useRef<HTMLButtonElement>(null);
+  const [colorsPanelPos, setColorsPanelPos] = useState<{ top: number; right: number }>({ top: 60, right: 12 });
+  const settingsPanelAnchorRef = useRef<HTMLButtonElement>(null);
+  const [settingsPanelPos, setSettingsPanelPos] = useState<{ top: number; right: number }>({ top: 60, right: 12 });
   const [taskSettingsDisplayExpanded, setTaskSettingsDisplayExpanded] = useState(true);
   const [taskSettingsPhasesExpanded, setTaskSettingsPhasesExpanded] = useState(false);
   const [taskSettingsCategoriesExpanded, setTaskSettingsCategoriesExpanded] = useState(false);
@@ -2012,16 +2016,6 @@ function App() {
             >
               Import
             </button>
-            <button
-              className={`v2-btn v2-btn-ghost v2-btn-icon${showSettingsPanel ? " v2-btn-active" : ""}`}
-              onClick={() => setShowSettingsPanel((p) => !p)}
-              title="Settings"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-              </svg>
-            </button>
             <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
               Export CSV
             </button>
@@ -2034,6 +2028,26 @@ function App() {
                 <rect x="2" y="3" width="20" height="14" rx="2"/>
                 <line x1="8" y1="21" x2="16" y2="21"/>
                 <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </button>
+            <button
+              ref={settingsPanelAnchorRef}
+              className={`v2-btn v2-btn-ghost v2-btn-icon${showSettingsPanel ? " v2-btn-active" : ""}`}
+              onClick={() => {
+                const rect = settingsPanelAnchorRef.current?.getBoundingClientRect();
+                if (rect) {
+                  setSettingsPanelPos({
+                    top: rect.bottom + 6,
+                    right: window.innerWidth - rect.right,
+                  });
+                }
+                setShowSettingsPanel((p) => !p);
+              }}
+              title="Settings"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
             </button>
           </div>
@@ -2066,7 +2080,7 @@ function App() {
       {!presentationMode && showSettingsPanel && (
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowSettingsPanel(false)} />
-          <div className="v2-settings-panel">
+          <div className="v2-settings-panel" style={{ position: "fixed", top: settingsPanelPos.top, right: settingsPanelPos.right, zIndex: 1001 }}>
 
             {/* Range mode (N1) */}
             <div className="v2-settings-section">
@@ -3395,8 +3409,19 @@ function App() {
             <button className="v2-panel-add" onClick={(e) => { e.stopPropagation(); addTask(); }}>+ Add task</button>
             <button className="v2-panel-export" onClick={(e) => { e.stopPropagation(); exportTasks(); }}>Export CSV</button>
             <button
+              ref={colorsPanelAnchorRef}
               className={`v2-btn v2-btn-ghost v2-btn-icon${showColorsPanel ? " v2-btn-active" : ""}`}
-              onClick={(e) => { e.stopPropagation(); setShowColorsPanel((p) => !p); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const rect = colorsPanelAnchorRef.current?.getBoundingClientRect();
+                if (rect) {
+                  setColorsPanelPos({
+                    top: rect.bottom + 6,
+                    right: window.innerWidth - rect.right,
+                  });
+                }
+                setShowColorsPanel((p) => !p);
+              }}
               title="Task view settings"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3556,7 +3581,7 @@ function App() {
       {!presentationMode && showColorsPanel && (
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
-          <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, width: "248px", height: "fit-content", maxHeight: "calc(100vh - 48px)", overflowY: "auto" }}>
+          <div className="v2-settings-panel" style={{ position: "fixed", top: colorsPanelPos.top, right: colorsPanelPos.right, zIndex: 1001, width: "248px", height: "fit-content", maxHeight: "calc(100vh - 48px)", overflowY: "auto" }}>
             <div className="v2-settings-section" style={{ marginTop: "0" }}>
               <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setTaskSettingsDisplayExpanded(p => !p)}>
                 <span>Display</span><span style={{ fontSize: "14px" }}>{taskSettingsDisplayExpanded ? "▾" : "▸"}</span>
