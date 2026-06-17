@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (Phase 6: TP6/TP7/TP8 complete; ST1/TP5 color+hex settings consolidated on branch `phase-6-ux-polish`)
+Last updated: 2026-06-17 (Phase 6: TP6/TP7/TP8 complete; ST1/TP5 color+hex settings consolidated; TP2 line padding tuned on branch `phase-6-ux-polish`)
 
 ## Current Snapshot
 
@@ -44,7 +44,7 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 | **4b** | **E6 Column sorting** | **✅ Complete** | Already implemented; verified working |
 | **4c** | **E7 Task panel layout** | **✅ Complete** | Refactored to flexbox: single scroll direction, timeline pinned, task panel below |
 | **5** | **Phase header removal (TL1, TL2)** | **✅ Complete** | Sonnet/Opus work. Phase bands + `showPhaseLabels` toggle removed; all tasks pack into one combined board per period. Committed on `phase-5-remove-phase-headers`, PR open. |
-| **6** | **UX Polish (Haiku, 12 items)** | **🚀 In Progress** | Rock-solid batch (LY1, LY2, HD1, TP1, TP4, DF1, DF2) complete. TP6/TP7/TP8 (Action column, task row padding, Category Key) complete. ST1/TP5 (color settings + hex toggle → task panel modal) complete. Remaining: TP2, TP3, ST2. |
+| **6** | **UX Polish (Haiku, 12 items)** | **🚀 In Progress** | Rock-solid batch (LY1, LY2, HD1, TP1, TP4, DF1, DF2) complete. TP6/TP7/TP8 (Action column, task row padding, Category Key) complete. ST1/TP5 (color settings + hex toggle → task panel modal) complete. TP2 (Line Padding width) complete. Remaining: LY3, TL4, and any design-scoped holdouts. |
 
 ## Phase 4 — Complete (L1 + E6 + E7)
 
@@ -145,13 +145,15 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 
 **Remaining Phase 6 items (each item = separate commit):**
 
-1. **TP2** — Expand "Line Padding" column visibility in task table (CSS column width adjustment)
-2. **TP3** — Add +/−0.25 increment buttons for Line Padding input (UI + state wiring)
-3. **ST2** — Convert range mode radios to dropdown (UI refactor; DF2 dependency already landed)
+1. **LY3** — Remove "Stacked" as top-level toggle
+2. **TL4** — Week labels in monthly view header
 
 **✅ Complete:**
+- TP2 (Line Padding column width tuned for readability)
+- TP3 (Line padding increment buttons)
 - TP5 (Hex toggle moved to Task View Settings modal)
 - ST1 (Color settings moved to Task View Settings modal, now functional)
+- ST2 (Range Mode converted to dropdown)
 
 **After Phase 6 Polish complete:**
 - **Merge to master** and open PR for review.
@@ -166,4 +168,4 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 - `docs/handoff.md` — this file
 - `docs/product-brief.md` — Phase 6 remaining items and design decisions
 
-**Current state:** Phases 0–5 merged to master. Phase 6 on `phase-6-ux-polish` branch: rock-solid batch (LY1–TP4, DF1–DF2) + TP6/TP7/TP8 (column widths, padding, legend spacing) + ST1/TP5 (color settings modal, hex toggle consolidated) all complete. **Remaining:** TP2 (Line Padding column width), TP3 (Line Padding increment buttons), ST2 (range mode dropdown). All v1 features preserved. Build/lint clean, browser verified. Ready for next 3 items or merge to master for PR.
+**Current state:** Phases 0–5 merged to master. Phase 6 on `phase-6-ux-polish` branch: rock-solid batch (LY1–TP4, DF1–DF2) + TP6/TP7/TP8 (column widths, padding, legend spacing) + ST1/TP5 (color settings modal, hex toggle consolidated) all complete. TP2 is now tuned to `100px` for readability. Remaining work is now scoped to LY3 and TL4, plus any deferred design decisions. All v1 features preserved. Build/lint clean, browser verified. Ready for the next scoped UI task or merge to master for PR.

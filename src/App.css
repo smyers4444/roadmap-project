@@ -721,6 +721,12 @@
   border-right: none;
 }
 
+.v2-task-table-line-pad-cell,
+.v2-task-table-actions-cell {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
 .v2-task-table td input[type="text"],
 .v2-task-table td input[type="number"] {
   width: 100%;
@@ -730,6 +736,17 @@
   padding: 1px 3px;
   font-family: inherit;
   color: inherit;
+}
+
+.v2-task-table td input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.v2-task-table td input[type="number"]::-webkit-outer-spin-button,
+.v2-task-table td input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
 }
 
 .v2-task-table td input[type="text"]:hover,

@@ -3376,7 +3376,7 @@ function App() {
                       { key: "name" as const, label: "Task", width: "auto" },
                       { key: "startDate" as const, label: "Start", width: "68px" },
                       { key: "endDate" as const, label: "End", width: "68px" },
-                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "105px" },
+                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "100px" },
                     ] as Array<{ key: typeof sortBy; label: string; width: string }>
                   ).map((col) => (
                     <th
@@ -3445,7 +3445,7 @@ function App() {
                         popperClassName="task-date-picker-popper"
                       />
                     </td>
-                    <td>
+                    <td className="v2-task-table-line-pad-cell">
                       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                         <button
                           className="v2-task-row-action"
@@ -3460,7 +3460,7 @@ function App() {
                           value={t.lineHeightAdjust ?? 0}
                           onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
                           step={0.25}
-                          style={{ width: "45px", textAlign: "center" }}
+                          style={{ width: "40px", textAlign: "center" }}
                         />
                         <button
                           className="v2-task-row-action"
@@ -3472,7 +3472,7 @@ function App() {
                         </button>
                       </div>
                     </td>
-                    <td style={{ paddingLeft: "8px", paddingRight: "8px" }}>
+                    <td className="v2-task-table-actions-cell">
                       <div style={{ display: "flex", gap: "4px" }}>
                         <button
                           className="v2-task-row-action"
