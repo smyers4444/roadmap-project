@@ -310,12 +310,18 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 | # | Item | Type | Notes & code anchors |
 |---|------|------|----------------------|
-| TP2 | Expand "Line Padding" column visibility | Layout | Adjust `.v2-task-table` column widths so "Line Padding" is fully visible. |
-| TP3 | Line padding: +/−0.25 increment buttons | Interaction | Add increment/decrement buttons next to the Line Padding input; round-trips via `lineHeightAdjust` (CSV "Line Padding" column). |
-| TP5 | Move "Show hex columns" to task settings | IA | Move control from timeline settings → task panel section. Keep state wiring intact. |
-| ST1 | Move color palette to task settings | IA | Move hex palette management (`colorPalette`/`categoryColorMap`, `src/App.tsx:306–309`) UI from timeline settings → task panel. |
-| ST2 | Range Mode: radio → dropdown | UX | Convert the three `rangeMode` options (`fit`/`range`/`rolling`) from radios to a dropdown. Do after DF2. |
-| LY3 | Remove "Stacked" as top-level toggle | Navigation | "Stacked" is a third header tab alongside Weekly/Monthly but overlaps the "Stacked layout" settings toggle. Touches header tab JSX + the `activeTab`/`timelineLayout` mapping — needs scoping before handing to Haiku. |
+| TP2 | Expand "Line Padding" column visibility | Layout | Adjust `.v2-task-table` column widths so "Line Padding" is fully visible even for large values. Currently 85px; may need 100px+. |
+| TP3 | Line padding: +/−0.25 increment buttons | Interaction | Add increment/decrement buttons next to the Line Padding input; round-trips via `lineHeightAdjust` (CSV "Line Padding" column). ✅ Done |
+| TP5 | Move "Show hex columns" to task settings | IA | Move control from timeline settings → task panel section. Keep state wiring intact. ✅ Done |
+| ST1 | Move color palette to task settings | IA | Move hex palette management (`colorPalette`/`categoryColorMap`, `src/App.tsx:306–309`) UI from timeline settings → task panel. ✅ Done |
+| ST2 | Range Mode: radio → dropdown | UX | Convert the three `rangeMode` options (`fit`/`range`/`rolling`) from radios to a dropdown. ✅ Done |
+| LY3 | Remove "Stacked" as top-level toggle | Navigation | "Stacked" is a third header tab alongside Weekly/Monthly but overlaps the "Stacked layout" settings toggle. Remove from header; control only in settings. |
+| LY4 | Icon sizing: settings & import buttons | Style | ⚙ and import icon too small. Increase button padding/icon size for better visual weight and hit target. |
+| TP6 | Action column width + text padding | Layout | Widen Actions column (`src/App.tsx:3447`); reduce left/right padding on text columns (Phase, Category, Task). Plenty of space available. |
+| TP7 | Reduce vertical task spacing | Layout | Tasks stacked too far apart vertically. Reduce margins/gaps between rows and/or row height to tighten vertical density. |
+| TP8 | Category key box sizing consistency | Bug | One category key (e.g., "Build Metadata (basic MDM) Architecture") renders smaller than others. Likely text wrapping or flex issue in legend. |
+| ST3 | Category palette item top/bottom padding | Layout | Reduce top/bottom padding (but not left/right) on category items in the color palette section. |
+| V6 | Month header display & padding | Display | (a) Show "Jun 1 – 30, 2026" format (not "Jun 1 – Jun 30, 2026") when single month; (b) reduce padding below month header text by ~50%; (c) reduce top/bottom padding of week/month column headers by ~50%. |
 
 ### Needs scoping (render work — likely Sonnet)
 
