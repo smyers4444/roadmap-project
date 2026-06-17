@@ -3496,12 +3496,31 @@ function App() {
                       />
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        value={t.lineHeightAdjust ?? 0}
-                        onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
-                        style={{ width: "75px" }}
-                      />
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <button
+                          className="v2-task-row-action"
+                          title="Decrease by 0.25"
+                          onClick={() => updateTask(t.id, "lineHeightAdjust", Math.max(0, (t.lineHeightAdjust ?? 0) - 0.25))}
+                          style={{ padding: "2px 4px", fontSize: "11px" }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          value={t.lineHeightAdjust ?? 0}
+                          onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
+                          step={0.25}
+                          style={{ width: "45px", textAlign: "center" }}
+                        />
+                        <button
+                          className="v2-task-row-action"
+                          title="Increase by 0.25"
+                          onClick={() => updateTask(t.id, "lineHeightAdjust", (t.lineHeightAdjust ?? 0) + 0.25)}
+                          style={{ padding: "2px 4px", fontSize: "11px" }}
+                        >
+                          +
+                        </button>
+                      </div>
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
