@@ -293,6 +293,8 @@ function App() {
   // v2 layout shell state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showColorsPanel, setShowColorsPanel] = useState(false);
+  const [taskSettingsPhasesExpanded, setTaskSettingsPhasesExpanded] = useState(false);
+  const [taskSettingsCategoriesExpanded, setTaskSettingsCategoriesExpanded] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -3531,73 +3533,91 @@ function App() {
       {!presentationMode && showColorsPanel && (
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
-          <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, maxWidth: "500px", width: "90%" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #ddd", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 600 }}>Task View Settings</h3>
-              <button className="v2-btn v2-btn-ghost v2-btn-icon" onClick={() => setShowColorsPanel(false)} style={{ padding: "4px" }}>✕</button>
+          <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, width: "248px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#111" }}>Task View Settings</span>
+              <button className="v2-btn v2-btn-ghost v2-btn-icon" onClick={() => setShowColorsPanel(false)}>✕</button>
             </div>
-            <div style={{ padding: "12px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", fontSize: "11px" }}>
-              <div>
-                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Display</h4>
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", marginBottom: "8px" }}>
-                  <input
-                    type="checkbox"
-                    checked={showHexColumns}
-                    onChange={(e) => setShowHexColumns(e.target.checked)}
-                    style={{ cursor: "pointer" }}
-                  />
-                  <span>Show hex columns</span>
-                </label>
-              </div>
 
-              <div>
-                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Phases</h4>
-                {phases.length === 0 ? (
-                  <em style={{ color: "#999" }}>No phases</em>
-                ) : (
-                  phases.map((phase) => (
-                    <div key={phase} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                      <span style={{ flex: 1, minWidth: 0 }}>{phase}</span>
-                      <input
-                        type="text"
-                        value={phaseHexMap[phase] || ""}
-                        onChange={(e) => {
-                          const newHex = e.target.value;
-                          setPhaseHexMap({ ...phaseHexMap, [phase]: newHex });
-                          tasks.filter(t => t.phase === phase).forEach(t => updateTask(t.id, "phaseHex", newHex));
-                        }}
-                        placeholder="#000000"
-                        maxLength={7}
-                        style={{ width: "70px", padding: "3px 4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
-                      />
-                    </div>
-                  ))
-                )}
+            <div className="v2-settings-section" style={{ marginTop: "4px" }}>
+              <div className="v2-settings-heading">Display</div>
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Show hex columns</span>
+                <input
+                  type="checkbox"
+                  checked={showHexColumns}
+                  onChange={(e) => setShowHexColumns(e.target.checked)}
+                  style={{ cursor: "pointer", width: "14px", height: "14px" }}
+                />
               </div>
-              <div>
-                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Categories</h4>
-                {categories.length === 0 ? (
-                  <em style={{ color: "#999" }}>No categories</em>
-                ) : (
-                  categories.map((cat) => (
-                    <div key={cat} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                      <span style={{ flex: 1, minWidth: 0 }}>{cat}</span>
-                      <input
-                        type="text"
-                        value={categoryHexMap[cat] || ""}
-                        onChange={(e) => {
-                          const newHex = e.target.value;
-                          setCategoryHexMap({ ...categoryHexMap, [cat]: newHex });
-                          tasks.filter(t => t.category === cat).forEach(t => updateTask(t.id, "categoryHex", newHex));
-                        }}
-                        placeholder="#000000"
-                        maxLength={7}
-                        style={{ width: "70px", padding: "3px 4px", fontSize: "10px", border: "1px solid #ddd", borderRadius: "3px" }}
-                      />
-                    </div>
-                  ))
-                )}
+            </div>
+
+            <hr className="v2-divider" />
+
+            <div className="v2-settings-section">
+              <div
+                className="v2-settings-heading"
+                style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }}
+                onClick={() => setTaskSettingsPhasesExpanded(e => !e)}
+              >
+                <span>Phases</span>
+                <span>{taskSettingsPhasesExpanded ? "▾" : "▸"}</span>
               </div>
+              {taskSettingsPhasesExpanded && (phases.length === 0 ? (
+                <em style={{ color: "#999", fontSize: "11px" }}>No phases</em>
+              ) : (
+                phases.map((phase) => (
+                  <div key={phase} className="v2-toggle-row">
+                    <span className="v2-toggle-label">{phase}</span>
+                    <input
+                      type="text"
+                      value={phaseHexMap[phase] || ""}
+                      onChange={(e) => {
+                        const newHex = e.target.value;
+                        setPhaseHexMap({ ...phaseHexMap, [phase]: newHex });
+                        tasks.filter(t => t.phase === phase).forEach(t => updateTask(t.id, "phaseHex", newHex));
+                      }}
+                      placeholder="#000000"
+                      maxLength={7}
+                      style={{ width: "70px", padding: "3px 6px", fontSize: "11px", border: "1px solid #ddd", borderRadius: "4px", fontFamily: "inherit" }}
+                    />
+                  </div>
+                ))
+              ))}
+            </div>
+
+            <hr className="v2-divider" />
+
+            <div className="v2-settings-section">
+              <div
+                className="v2-settings-heading"
+                style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }}
+                onClick={() => setTaskSettingsCategoriesExpanded(e => !e)}
+              >
+                <span>Categories</span>
+                <span>{taskSettingsCategoriesExpanded ? "▾" : "▸"}</span>
+              </div>
+              {taskSettingsCategoriesExpanded && (categories.length === 0 ? (
+                <em style={{ color: "#999", fontSize: "11px" }}>No categories</em>
+              ) : (
+                categories.map((cat) => (
+                  <div key={cat} className="v2-toggle-row">
+                    <span className="v2-toggle-label">{cat}</span>
+                    <input
+                      type="text"
+                      value={categoryHexMap[cat] || ""}
+                      onChange={(e) => {
+                        const newHex = e.target.value;
+                        setCategoryHexMap({ ...categoryHexMap, [cat]: newHex });
+                        tasks.filter(t => t.category === cat).forEach(t => updateTask(t.id, "categoryHex", newHex));
+                      }}
+                      placeholder="#000000"
+                      maxLength={7}
+                      style={{ width: "70px", padding: "3px 6px", fontSize: "11px", border: "1px solid #ddd", borderRadius: "4px", fontFamily: "inherit" }}
+                    />
+                  </div>
+                ))
+              ))}
             </div>
           </div>
         </>
