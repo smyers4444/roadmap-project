@@ -3407,7 +3407,7 @@ function App() {
               </svg>
             </button>
           </div>
-          <div style={{ overflowX: "auto", overflowY: "auto", flex: 1 }}>
+          <div style={{ overflowX: "auto", overflowY: "auto", flex: "0 0 auto" }}>
             <table className="v2-task-table">
               <thead>
                 <tr>

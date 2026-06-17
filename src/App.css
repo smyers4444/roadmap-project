@@ -551,7 +551,7 @@
 
 /* ── Task panel tab (collapsed) ── */
 .v2-task-panel-tab {
-  background: #fff;
+  background: #fafafa;
   border: 1px solid #ddd;
   border-radius: 8px;
   margin: 24px 30px 0;
@@ -567,7 +567,7 @@
 }
 
 .v2-task-panel-tab:hover {
-  background: #fafafa;
+  background: #f0f0f0;
 }
 
 .v2-task-panel-tab.expanded {
@@ -591,6 +591,10 @@
   margin-left: auto;
   font-size: 11px;
   color: #aaa;
+}
+
+.v2-task-panel-tab:hover .v2-panel-tab-arrow {
+  color: #555;
 }
 
 /* ── Task panel (expanded) ── */
@@ -689,6 +693,7 @@
   border-collapse: collapse;
   font-size: 11px;
   table-layout: fixed;
+  margin-bottom: 0;
 }
 
 .v2-task-table th {
@@ -783,7 +788,7 @@
   padding: 6px 12px;
   border-top: 1px solid #eee;
   font-size: 10px;
-  color: #aaa;
+  color: #888;
   background: #fafafa;
 }
 
