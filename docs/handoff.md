@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (Phase 6: TP6/TP7/TP8 complete; ST1/TP5 color+hex settings consolidated; TP2 line padding tuned; LY3 stacked header toggle removed; TL4 stacked monthly title compacted on branch `phase-6-ux-polish`)
+Last updated: 2026-06-17 (Phase 6: TP6/TP7/TP8 complete; ST1/TP5 color+hex settings consolidated; TP2 line padding tuned; LY3 stacked header toggle removed; TL4 stacked monthly title compacted and week callout anchored to the visible span on branch `phase-6-ux-polish`)
 
 ## Current Snapshot
 
@@ -166,4 +166,4 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 - `docs/handoff.md` — this file
 - `docs/product-brief.md` — Phase 6 remaining items and design decisions
 
-**Current state:** Phases 0–5 merged to master. Phase 6 on `phase-6-ux-polish` branch: rock-solid batch (LY1–TP4, DF1–DF2) + TP6/TP7/TP8 (column widths, padding, legend spacing) + ST1/TP5 (color settings modal, hex toggle consolidated) all complete. TP2 is tuned to `100px` for readability. LY3 and TL4 are now complete; stacked monthly titles now use compact month ranges with the year, followed by a lighter week callout. All v1 features preserved. Build/lint clean, browser verified. Ready for the next scoped UI task or merge to master for PR.
+**Current state:** Phases 0–5 merged to master. Phase 6 on `phase-6-ux-polish` branch: rock-solid batch (LY1–TP4, DF1–DF2) + TP6/TP7/TP8 (column widths, padding, legend spacing) + ST1/TP5 (color settings modal, hex toggle consolidated) all complete. TP2 is tuned to `100px` for readability. LY3 and TL4 are now complete; stacked monthly titles now use compact month ranges with the year, followed by a lighter week callout anchored to the visible span. All v1 features preserved. Build/lint clean, browser verified. Ready for the next scoped UI task or merge to master for PR.

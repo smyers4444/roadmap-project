@@ -858,6 +858,13 @@ function App() {
     return Math.round((targetWeek.getTime() - firstTaskWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
   };
 
+  const getRelativeWeekNumberFromAnchor = (date: Date, anchorDate: Date) => {
+    const anchorWeek = startOfWeek(anchorDate);
+    const targetWeek = startOfWeek(date);
+
+    return Math.round((targetWeek.getTime() - anchorWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  };
+
   const getRelativeMonthNumber = (date: Date, taskList: Task[]) => {
     if (taskList.length === 0) return 1;
 
@@ -3179,6 +3186,7 @@ function App() {
                     ? (units[units.length - 1]?.end ?? normalizeDate(endOfMonth(month)))
                     : normalizeDate(endOfMonth(month));
                   const headerGroups = isWeekSplit ? getWeekHeaderGroupsForUnits(units) : undefined;
+                  const monthRangeStart = monthColumns[0] ?? currentMonth;
                   const periodTasks = timelineTasks.filter((task) => {
                     if (task.startDate > periodEnd || task.endDate < periodStart) {
                       return false;
@@ -3203,7 +3211,7 @@ function App() {
                             color: "var(--text-muted)",
                           }}
                         >
-                          weeks {getRelativeWeekNumber(periodStart, timelineTasks)} – {getRelativeWeekNumber(periodEnd, timelineTasks)}
+                          weeks {getRelativeWeekNumberFromAnchor(periodStart, monthRangeStart)} – {getRelativeWeekNumberFromAnchor(periodEnd, monthRangeStart)}
                         </span>
                       </>
                     ),
