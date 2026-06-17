@@ -13,19 +13,19 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 5 complete on branch `phase-5-remove-phase-headers`, PR open)
+Last updated: 2026-06-17 (Phase 6 rock-solid batch complete on branch `phase-6-ux-polish`)
 
 ## Current Snapshot
 
 Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/product-brief.md`), targeting screenshot-first UX for client deliverables. v1 preserved as tag `v1` and worktree `../Roadmap Project v1/`.
 
-**Branch:** `phase-5-remove-phase-headers` (off master; Phase 5 committed, PR open for merge)
+**Branch:** `phase-6-ux-polish` (off master; Phase 5 already merged into master)
 
 **Latest commits:**
-- `19f6f09` Update handoff: Phase 4 L1 complete, E6 verified, E7 scoped (post-merge on master)
-- [Phase 4 merge] Merged PR #10: Presentation mode + task panel layout refactor
-- `2c56bb3` E7: Refactor task panel layout to structural section below timeline
-- `ab89363` Update handoff: Phase 4 complete, ready for merge or Phase 5 start
+- `795074f` Phase 6: Rock-solid batch — CSS + view defaults (LY1, LY2, HD1, TP1, TP4, DF1, DF2)
+- [Phase 5 merged] PR #11: Phase 5 (phase header removal, TL1/TL2) merged to master
+- `8865e20` Phase 5 wrap-up: sync docs for phase header removal
+- `7758b04` Phase 5: remove phase header bars and "Show phases" toggle (TL1, TL2)
 
 **Build:** `npm run build` passes clean. Dev server: `npm run dev` → `http://localhost:5173`.
 
@@ -41,7 +41,7 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 | **4b** | **E6 Column sorting** | **✅ Complete** | Already implemented; verified working |
 | **4c** | **E7 Task panel layout** | **✅ Complete** | Refactored to flexbox: single scroll direction, timeline pinned, task panel below |
 | **5** | **Phase header removal (TL1, TL2)** | **✅ Complete** | Sonnet/Opus work. Phase bands + `showPhaseLabels` toggle removed; all tasks pack into one combined board per period. Committed on `phase-5-remove-phase-headers`, PR open. |
-| **6** | **UX Polish (Haiku, 12 items)** | **📋 Backlog** | CSS + default flips + settings reorg. Anchored in product-brief.md. Starts after Phase 5 merges. |
+| **6** | **UX Polish (Haiku, 12 items)** | **🚀 In Progress** | Rock-solid batch (LY1, LY2, HD1, TP1, TP4, DF1, DF2) complete & committed. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending. |
 
 ## Phase 4 — Complete (L1 + E6 + E7)
 
@@ -71,12 +71,28 @@ Already implemented and verified working. No changes needed.
 
 ## Phase 5 — Phase Header Removal (TL1, TL2) ✅
 
-**Complete on `phase-5-remove-phase-headers` (PR open).** Sonnet/Opus work — touched the shared render primitive, so it was split out from the Haiku batch and landed first.
+**Complete & merged to master (PR #11).** Sonnet/Opus work — touched the shared render primitive, so it was split out from the Haiku batch and landed first.
 
 - **TL1** — Removed the dark phase header bands and per-phase grouping from `renderStackedTimelineBoard` and both inline horizontal boards. All tasks now pack into one combined board per period. Phase remains a color/label source (C4/C5).
 - **TL2** — Removed the `showPhaseLabels` state, its Settings → Display toggle, the orphaned "Phase Key" legend, and the unused `phases`/`visibleLegendPhases` derivations.
 - **Approach:** collapsed onto the existing `showPhaseLabels === false` path (already working) rather than inventing new layout.
 - **Verified:** `npm run build` clean, `npx eslint src/App.tsx` clean, browser render confirmed.
+
+## Phase 6 — UX Polish (Haiku) 🚀 In Progress
+
+### Rock-solid batch ✅ Complete
+
+**Branch:** `phase-6-ux-polish` | **Commit:** `795074f`
+
+- **LY1** — Background color: grey (#f5f5f5) → white (#ffffff). Updated `#root` and `.app`.
+- **LY2** — Page width: 1800px → 100% (remove left overhang). Updated `#root` width.
+- **HD1** — Settings icon padding reduction: button padding 5px 12px → 4px 8px (smaller hit targets for icon-only buttons).
+- **TP1** — Vertical grid lines in task table: added CSS variable `--task-grid-line: transparent` (controlled toggleable); applied to `.v2-task-table td` with `:last-child` exception.
+- **TP4** — Row action buttons (Edit/Copy/Delete): new `.v2-task-row-action` CSS class matching `.v2-panel-export` style (grey outline, icon-friendly spacing, hover state).
+- **DF1** — View defaults: `view` "weeks" → "months", `timelineLayout` "horizontal" → "stacked", `showWeekends` true → false, split type already "day" (Split by Days).
+- **DF2** — Range mode default: `rangeMode` "rolling" → "fit" (fit-to-data on startup).
+
+**Verified:** `npm run build` clean, `npx eslint src/App.tsx` clean, browser preview working (white bg, full width, stacked+days layout, no weekends, fit-to-data range).
 
 ## Phase 6 — UX Polish (Haiku) 📋
 
@@ -87,9 +103,14 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 
 ## Next Steps
 
-1. **Merge Phase 5 PR** into master and delete the remote branch.
-2. **Then Phase 6** (Haiku): branch off updated master; do the rock-solid batch first (LY1, LY2, HD1, TP1, TP4, DF1, DF2), then the settings-reorg cluster (TP2, TP3, TP5, ST1, ST2 — pull back to Sonnet if state wiring breaks).
-3. **Defer** TL3/TL5 until day-column and day-header decisions are made.
+1. **Phase 6 — Settings-reorg cluster** (Haiku): TP2, TP3, TP5, ST1, ST2. Verify state wiring; pull back to Sonnet if state management breaks on JSX moves.
+   - **TP2** — Expand "Line Padding" column visibility in task table
+   - **TP3** — Add +/−0.25 increment buttons for Line Padding input
+   - **TP5** — Move "Show hex columns" toggle from timeline → task panel settings
+   - **ST1** — Move color palette UI from timeline settings → task panel
+   - **ST2** — Convert range mode radios to dropdown (after DF2 lands)
+2. **Scope LY3/TL4** (Sonnet) — "Stacked" header tab overlap, week-number labels in monthly view header.
+3. **Defer TL3/TL5** until day-column width and day-header label decisions are made.
 
 ## New Chat Start
 
@@ -97,6 +118,6 @@ Read these first:
 - `README.md`
 - `CLAUDE.md`
 - `docs/handoff.md` (this file)
-- `docs/product-brief.md` (for Phase 5/6 backlog and design decisions)
+- `docs/product-brief.md` (for Phase 6 remaining items and design decisions)
 
-Current state: Phases 0–4 complete and merged to master. Phase 5 (phase header removal, TL1+TL2) complete on `phase-5-remove-phase-headers` with an open PR. Phase 6 (Haiku UX polish) documented and waiting for Phase 5 to merge. All v1 carryover features preserved. Build clean, lint clean.
+Current state: Phases 0–5 complete and merged to master. Phase 6 rock-solid batch (LY1–TP4, DF1–DF2) complete on `phase-6-ux-polish` branch. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending; ready to start if state wiring is stable. All v1 carryover features preserved. Build clean, lint clean, browser verified.
