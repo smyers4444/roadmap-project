@@ -1215,6 +1215,65 @@ function App() {
     return ["vacation", "holiday", "ooo"].some((keyword) => phase.includes(keyword) || category.includes(keyword));
   };
 
+  const getTaskVerticalLayout = ({
+    sortedTasks,
+    getPosition,
+    taskHeights,
+    topPadding,
+    compactRows,
+  }: {
+    sortedTasks: Task[];
+    getPosition: (task: Task) => { start: number; width: number } | null;
+    taskHeights: Map<number, number>;
+    topPadding: number;
+    compactRows: boolean;
+  }) => {
+    const taskPositions = new Map<number, number>();
+    const occupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
+    let nextRowTop = topPadding;
+
+    sortedTasks.forEach((task) => {
+      const position = getPosition(task);
+      if (!position) return;
+
+      const taskHeight = taskHeights.get(task.id) || 30;
+      const horizontalPadding = 0.3;
+      const taskStart = position.start + horizontalPadding;
+      const taskEnd = position.start + position.width - horizontalPadding;
+      let bestTop = nextRowTop;
+
+      if (compactRows) {
+        bestTop = topPadding;
+
+        for (const occupied of occupiedRanges) {
+          const tolerance = 0.1;
+          const horizontalOverlap = !(taskEnd <= occupied.start + tolerance || taskStart >= occupied.end - tolerance);
+
+          if (horizontalOverlap) {
+            bestTop = Math.max(bestTop, occupied.bottom);
+          }
+        }
+      } else {
+        nextRowTop += taskHeight;
+      }
+
+      taskPositions.set(task.id, bestTop);
+      occupiedRanges.push({
+        start: taskStart,
+        end: taskEnd,
+        top: bestTop,
+        bottom: bestTop + taskHeight,
+      });
+    });
+
+    let totalHeight = 0;
+    occupiedRanges.forEach((range) => {
+      totalHeight = Math.max(totalHeight, range.bottom);
+    });
+
+    return { taskPositions, occupiedRanges, totalHeight };
+  };
+
   const getCalendarChipLabel = (task: Task, day: Date) => {
     const isStartDay = normalizeDate(task.startDate).getTime() === normalizeDate(day).getTime();
     if (isStartDay) {
@@ -1484,43 +1543,17 @@ function App() {
                 return (a.displayOrder || 0) - (b.displayOrder || 0);
               });
 
-              const phaseTaskPositions = new Map<number, number>();
-              const phaseOccupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
               const phaseTopPadding = compactTaskSpacing ? 4 : 8;
-
-              sortedPhaseTasks.forEach((task) => {
-                const position = getPosition(task);
-                if (!position) return;
-
-                const taskHeight = taskHeights.get(task.id) || 30;
-                const horizontalPadding = 0.3;
-                const taskStartPos = position.start + horizontalPadding;
-                const taskEndPos = position.start + position.width - horizontalPadding;
-                let bestTop = phaseTopPadding;
-
-                for (const occupied of phaseOccupiedRanges) {
-                  const tolerance = 0.1;
-                  const horizontalOverlap = !(taskEndPos <= occupied.start + tolerance || taskStartPos >= occupied.end - tolerance);
-
-                  if (horizontalOverlap) {
-                    bestTop = Math.max(bestTop, occupied.bottom);
-                  }
-                }
-
-                phaseTaskPositions.set(task.id, bestTop);
-                phaseOccupiedRanges.push({
-                  start: taskStartPos,
-                  end: taskEndPos,
-                  top: bestTop,
-                  bottom: bestTop + taskHeight,
-                });
+              const {
+                taskPositions: phaseTaskPositions,
+                totalHeight: phaseTotalHeight,
+              } = getTaskVerticalLayout({
+                sortedTasks: sortedPhaseTasks,
+                getPosition,
+                taskHeights,
+                topPadding: phaseTopPadding,
+                compactRows: compactTaskSpacing,
               });
-
-              let phaseTotalHeight = 0;
-              phaseOccupiedRanges.forEach((range) => {
-                phaseTotalHeight = Math.max(phaseTotalHeight, range.bottom);
-              });
-
               const phaseStart = normalizeDate(new Date(Math.min(...phaseTasks.map((task) => task.startDate.getTime()))));
               const phaseEnd = normalizeDate(new Date(Math.max(...phaseTasks.map((task) => task.endDate.getTime()))));
               const phaseBarPosition = getPosition({
@@ -1528,6 +1561,22 @@ function App() {
                 startDate: phaseStart,
                 endDate: phaseEnd,
               });
+              const specialPriorityColumnColors = new Map<number, string>();
+
+              phaseTasks
+                .filter((task) => isSpecialPriorityTask(task))
+                .forEach((task) => {
+                  units.forEach((unit, index) => {
+                    const unitStart = normalizeDate(unit.start).getTime();
+                    const unitEnd = normalizeDate(unit.end).getTime();
+                    const taskStart = normalizeDate(task.startDate).getTime();
+                    const taskEnd = normalizeDate(task.endDate).getTime();
+
+                    if (taskStart <= unitEnd && taskEnd >= unitStart && !specialPriorityColumnColors.has(index)) {
+                      specialPriorityColumnColors.set(index, blendHexWithWhite(task.categoryHex, 0.78));
+                    }
+                  });
+                });
 
               return (
                 <div key={`${periodKey}-phase-${phase || "all"}`} style={{ position: "relative" }}>
@@ -1636,33 +1685,12 @@ function App() {
                             className="day-cell"
                             style={{
                               borderRight,
+                              backgroundColor: specialPriorityColumnColors.get(index),
                               ...(!isWithinPhase && index < units.length - 1 && borderRight !== "none" && !isWeekendGap ? { borderRight: "1px solid var(--border-medium)" } : {}),
                             }}
                           />
                         );
                       })}
-
-                      {phaseTasks
-                        .filter((task) => isSpecialPriorityTask(task))
-                        .map((task) => {
-                          const position = getPosition(task);
-                          if (!position) return null;
-
-                          return (
-                            <div
-                              key={`${periodKey}-special-bg-${task.id}`}
-                              style={{
-                                position: "absolute",
-                                left: `${position.start}%`,
-                                width: `${position.width}%`,
-                                top: 0,
-                                height: "100%",
-                                backgroundColor: blendHexWithWhite(task.categoryHex, 0.9),
-                                zIndex: 0,
-                              }}
-                            />
-                          );
-                        })}
 
                       {phaseTasks.map((task) => {
                         const position = getPosition(task);
@@ -2196,68 +2224,6 @@ function App() {
                   debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
                 });
 
-                // ========== TASK SORTING ==========
-                // "Reverse Tetris" algorithm: Pack tasks to the top
-                // Sort by: 1) Special priority first, 2) Display order for manual arrangement
-                const sortedTasks = [...visibleTasks].sort((a, b) => {
-                  const aIsVacation = isSpecialPriorityTask(a);
-                  const bIsVacation = isSpecialPriorityTask(b);
-
-                  // Special priority tasks always come first (appear at top)
-                  if (aIsVacation && !bIsVacation) return -1;
-                  if (!aIsVacation && bIsVacation) return 1;
-
-                  // For non-priority tasks or priority ties, use display order
-                  return (a.displayOrder || 0) - (b.displayOrder || 0);
-                });
-
-                // ========== VERTICAL POSITIONING ==========
-                // Pack tasks into vertical space using collision detection
-                const taskPositions = new Map<number, number>();
-                const occupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
-                const topPadding = 8; // Padding from top of timeline
-
-                // For each task, find the first available vertical position
-                sortedTasks.forEach((task) => {
-                  const position = getTaskPosition(task);
-                  if (!position) return;
-                  const { start, width } = position;
-                  const taskHeight = taskHeights.get(task.id) || 30;
-                  const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                  const taskStart = start + horizontalPadding;
-                  const taskEnd = start + width - horizontalPadding;
-
-                  // Find the lowest available position (pack upward)
-                  let bestTop = topPadding;
-
-                  // Check all existing tasks for horizontal overlap
-                  for (const occupied of occupiedRanges) {
-                    // Check if tasks overlap horizontally (with tolerance for floating point precision)
-                    const tolerance = 0.1;
-                    const horizontalOverlap = !(taskEnd <= occupied.start + tolerance || taskStart >= occupied.end - tolerance);
-
-                    if (horizontalOverlap) {
-                      // They overlap horizontally, so this task must be below the occupied task
-                      bestTop = Math.max(bestTop, occupied.bottom);
-                    }
-                  }
-
-                  // Record this task's position and occupied space
-                  taskPositions.set(task.id, bestTop);
-                  occupiedRanges.push({
-                    start: taskStart,
-                    end: taskEnd,
-                    top: bestTop,
-                    bottom: bestTop + taskHeight,
-                  });
-                });
-
-                // Calculate total height needed for all tasks
-                let totalHeight = 0;
-                occupiedRanges.forEach((range) => {
-                  totalHeight = Math.max(totalHeight, range.bottom);
-                });
-
                 return (
                   <div className="board">
                     {/* ========== WEEK HEADER ROW ========== */}
@@ -2341,34 +2307,17 @@ function App() {
                         return (a.displayOrder || 0) - (b.displayOrder || 0);
                       });
 
-                      sortedPhaseTasks.forEach((task) => {
-                        const position = getTaskPosition(task);
-                        if (!position) return;
-                        const { start: taskStart, width: taskWidth } = position;
-                        const taskHeight = taskHeights.get(task.id) || 30;
-                        const horizontalPadding = 0.3;
-                        const taskStartPos = taskStart + horizontalPadding;
-                        const taskEndPos = taskStart + taskWidth - horizontalPadding;
-
-                        let bestTop = phaseTopPadding;
-
-                        for (const occupied of phaseOccupiedRanges) {
-                          const tolerance = 0.1;
-                          const horizontalOverlap = !(taskEndPos <= occupied.start + tolerance || taskStartPos >= occupied.end - tolerance);
-
-                          if (horizontalOverlap) {
-                            bestTop = Math.max(bestTop, occupied.bottom);
-                          }
-                        }
-
-                        phaseTaskPositions.set(task.id, bestTop);
-                        phaseOccupiedRanges.push({
-                          start: taskStartPos,
-                          end: taskEndPos,
-                          top: bestTop,
-                          bottom: bestTop + taskHeight,
-                        });
+                      const { taskPositions: packedPhaseTaskPositions, occupiedRanges: packedPhaseOccupiedRanges } = getTaskVerticalLayout({
+                        sortedTasks: sortedPhaseTasks,
+                        getPosition: getTaskPosition,
+                        taskHeights,
+                        topPadding: phaseTopPadding,
+                        compactRows: compactTaskSpacing,
                       });
+                      packedPhaseTaskPositions.forEach((top, taskId) => {
+                        phaseTaskPositions.set(taskId, top);
+                      });
+                      phaseOccupiedRanges.push(...packedPhaseOccupiedRanges);
 
                       let phaseTotalHeight = 0;
                       phaseOccupiedRanges.forEach((range) => {
@@ -2780,68 +2729,6 @@ function App() {
                   debugInfo.set(task.id, `W:${actualWidth.toFixed(0)}px T:${textWidth.toFixed(0)}px C:${charsPerLine} L:${lines} H:${height}px\nStart:${periodStart.toDateString()}\nEnd:${periodEnd.toDateString()}`);
                 });
 
-                // ========== TASK SORTING ==========
-                // "Reverse Tetris" algorithm: Pack tasks to the top
-                // Sort by: 1) Special priority first, 2) Display order for manual arrangement
-                const sortedTasks = [...visibleTasks].sort((a, b) => {
-                  const aIsVacation = isSpecialPriorityTask(a);
-                  const bIsVacation = isSpecialPriorityTask(b);
-
-                  // Special priority tasks always come first (appear at top)
-                  if (aIsVacation && !bIsVacation) return -1;
-                  if (!aIsVacation && bIsVacation) return 1;
-
-                  // For non-priority tasks or priority ties, use display order
-                  return (a.displayOrder || 0) - (b.displayOrder || 0);
-                });
-
-                // ========== VERTICAL POSITIONING ==========
-                // Pack tasks into vertical space using collision detection
-                const taskPositions = new Map<number, number>();
-                const occupiedRanges: Array<{ start: number; end: number; top: number; bottom: number }> = [];
-                const topPadding = 8; // Padding from top of timeline
-
-                // For each task, find the first available vertical position
-                sortedTasks.forEach((task) => {
-                  const position = getMonthTaskPosition(task);
-                  if (!position) return;
-                  const { start, width } = position;
-                  const taskHeight = taskHeights.get(task.id) || 30;
-                  const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                  const taskStart = start + horizontalPadding;
-                  const taskEnd = start + width - horizontalPadding;
-
-                  // Find the lowest available position (pack upward)
-                  let bestTop = topPadding;
-
-                  // Check all existing tasks for horizontal overlap
-                  for (const occupied of occupiedRanges) {
-                    // Check if tasks overlap horizontally (with tolerance for floating point precision)
-                    const tolerance = 0.1;
-                    const horizontalOverlap = !(taskEnd <= occupied.start + tolerance || taskStart >= occupied.end - tolerance);
-
-                    if (horizontalOverlap) {
-                      // They overlap horizontally, so this task must be below the occupied task
-                      bestTop = Math.max(bestTop, occupied.bottom);
-                    }
-                  }
-
-                  // Record this task's position and occupied space
-                  taskPositions.set(task.id, bestTop);
-                  occupiedRanges.push({
-                    start: taskStart,
-                    end: taskEnd,
-                    top: bestTop,
-                    bottom: bestTop + taskHeight,
-                  });
-                });
-
-                // Calculate total height needed for all tasks
-                let totalHeight = 0;
-                occupiedRanges.forEach((range) => {
-                  totalHeight = Math.max(totalHeight, range.bottom);
-                });
-
                 return (
                   <div className="board">
                     {/* ========== MONTH HEADER ROW ========== */}
@@ -2916,34 +2803,17 @@ function App() {
                         return (a.displayOrder || 0) - (b.displayOrder || 0);
                       });
 
-                      sortedPhaseTasks.forEach((task) => {
-                        const position = getMonthTaskPosition(task);
-                        if (!position) return;
-                        const { start: taskStart, width: taskWidth } = position;
-                        const taskHeight = taskHeights.get(task.id) || 30;
-                        const horizontalPadding = 0.3;
-                        const taskStartPos = taskStart + horizontalPadding;
-                        const taskEndPos = taskStart + taskWidth - horizontalPadding;
-
-                        let bestTop = phaseTopPadding;
-
-                        for (const occupied of phaseOccupiedRanges) {
-                          const tolerance = 0.1;
-                          const horizontalOverlap = !(taskEndPos <= occupied.start + tolerance || taskStartPos >= occupied.end - tolerance);
-
-                          if (horizontalOverlap) {
-                            bestTop = Math.max(bestTop, occupied.bottom);
-                          }
-                        }
-
-                        phaseTaskPositions.set(task.id, bestTop);
-                        phaseOccupiedRanges.push({
-                          start: taskStartPos,
-                          end: taskEndPos,
-                          top: bestTop,
-                          bottom: bestTop + taskHeight,
-                        });
+                      const { taskPositions: packedPhaseTaskPositions, occupiedRanges: packedPhaseOccupiedRanges } = getTaskVerticalLayout({
+                        sortedTasks: sortedPhaseTasks,
+                        getPosition: getMonthTaskPosition,
+                        taskHeights,
+                        topPadding: phaseTopPadding,
+                        compactRows: compactTaskSpacing,
                       });
+                      packedPhaseTaskPositions.forEach((top, taskId) => {
+                        phaseTaskPositions.set(taskId, top);
+                      });
+                      phaseOccupiedRanges.push(...packedPhaseOccupiedRanges);
 
                       let phaseTotalHeight = 0;
                       phaseOccupiedRanges.forEach((range) => {

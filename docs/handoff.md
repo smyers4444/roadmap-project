@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 2 settings wiring landed; build and App.tsx lint clean)
+Last updated: 2026-06-16 (settings slice committed; K1/V4 Phase 2 follow-up in progress; build/lint/diff clean)
 
 ## Current Snapshot
 
@@ -21,7 +21,7 @@ The repository is now on the `v2` branch. This is a ground-up redesign effort dr
 
 **v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and the Phase 2 settings wiring pass is now in place on branch `feat/phase-2-settings`.
+The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and Phase 2 is partly closed: the settings slice was committed as `3f5f1e2 Wire Phase 2 settings controls`, and follow-up work is now tightening the remaining timeline carryover gaps on branch `feat/phase-2-settings`.
 
 ## What v1 Has (all still in the codebase)
 
@@ -56,7 +56,7 @@ See `docs/product-brief.md` for the full brief. Key points:
 ## Branch and Working Tree
 
 - `master` — v1 baseline, tagged as `v1`
-- `feat/phase-2-settings` — active development branch (current); Phase 1 complete, Phase 2 settings wiring implemented and locally verified
+- `feat/phase-2-settings` — active development branch (current); settings slice committed, additional Phase 2 carryover work currently uncommitted
 - `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
 
 ## How to Run
@@ -110,10 +110,10 @@ New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compa
 
 ## Recommended Next Task
 
-Finish verification on the Phase 2 settings slice, then move to the next Phase 2/3 behavior gap with the highest screenshot impact:
-- Browser-check range mode switching in monthly views (`fit` / `range` / `rolling`)
-- Browser-check stacked monthly titles + phase labels when `Show week / month #` is toggled
-- If verification is clean, pick the next net-new feature from the brief such as presentation / clean mode (L1) or the edit modal flow (E8/E10)
+Finish the remaining Phase 2 carryover gap review, then verify the newest behavior in-browser:
+- Browser-check `Compact rows` ON vs OFF to confirm OFF is truly one-task-per-row in weekly/monthly/stacked views
+- Browser-check stacked priority-period column shading (Vacation / Holiday / OOO) in monthly stacked views
+- Decide whether to extend V4 column shading into the horizontal views now, or treat stacked-only as the Phase 2 checkpoint and move to the next brief item
 
 ## New Chat Start
 
