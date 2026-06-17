@@ -7,7 +7,9 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 - Create and edit roadmap tasks with phase, category, owner, start date, end date, and manual line-height padding.
 - Reorder tasks by dragging rows in the task table.
 - Filter and sort tasks directly in the editor, with the timeline and legends following the filtered task set.
+- Filter tasks by text, `Phase HEX`, or `Category HEX` in the task panel search.
 - Click a task bar in weekly or monthly view to isolate that task in the task table while keeping the full timeline visible, with the selected bar visually highlighted until cleared.
+- Right-click a task bar or calendar chip to open the edit modal.
 - Switch between weekly, monthly, and calendar views.
 - Toggle date labels versus week/month numbers.
 - Show or hide weekends in weekly, monthly, and calendar rendering.
@@ -15,6 +17,7 @@ Roadmap Project is a React + TypeScript planning board for building and reviewin
 - Paste tab-separated task data from a spreadsheet, preview it, edit it, and import it.
 - Export the current task list to CSV.
 - Show category and phase legends for the visible timeline.
+- Choose whether bars use category or phase color, and whether bar labels show task, category, or phase text.
 - Persist tasks in browser-local storage on the current device and browser.
 
 ## Task Fields

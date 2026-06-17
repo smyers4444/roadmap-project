@@ -14,7 +14,12 @@
       "Bash(git push *)",
       "Bash(git worktree *)",
       "Read(//Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap Project v1/**)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(grep -n \"RENDER\\\\|return \\(\\\\|<div\\\\|showTaskList\\\\|showImport\\\\|showSettings\\\\|compactTaskSpacing\" /Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap Project/src/App.tsx | head -80)",
+      "Read(//Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/**)",
+      "Bash(wc -l /Users/sarahmyers/Library/CloudStorage/OneDrive-Insight/Documents/GitHub/Roadmap Project/src/App.tsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)"
     ]
   }
 }

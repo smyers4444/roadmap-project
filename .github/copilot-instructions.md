@@ -17,6 +17,8 @@ This repository contains Roadmap Project, a local planning board for building an
 - Styling lives primarily in `src/App.css` and `src/index.css`.
 - Timeline behavior supports weekly and monthly views.
 - Tasks can be added manually, edited in place, imported from tab-separated data, reordered, filtered, and exported to CSV.
+- The task filter matches task text plus phase/category hex values.
+- The editor can open from row actions or by right-clicking a timeline bar or calendar chip.
 - Task data persists in browser-local storage on the current device/browser.
 - Date handling is done with `date-fns`.
 - No backend service is required. This is a client-side app run through the Vite dev server.
@@ -28,6 +30,7 @@ This repository contains Roadmap Project, a local planning board for building an
 - Do not make the importer stricter unless the user explicitly asks for stricter validation. Spreadsheet paste is a primary workflow.
 - Keep weekly and monthly views behaviorally consistent unless a difference is intentional and documented.
 - Preserve CSV export when changing task fields, ordering behavior, or import logic.
+- Keep legend and bar color/label source controls aligned with the active task data source.
 - Prefer incremental cleanup over large refactors. `src/App.tsx` is intentionally the center of the app right now.
 - Do not add runtime dependencies unless they clearly improve the roadmap workflow and are worth the maintenance cost.
 - Do not hard-code user-specific, machine-specific, environment-specific, or deployment-specific values in docs, source, config, or scripts. Prefer repo-owned defaults and documented commands.
