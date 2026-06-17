@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (v2 design package complete: product brief + 7-state HTML mockup)
+Last updated: 2026-06-16 (Phase 0 bugs C1/I1/I2 fixed; build clean)
 
 ## Current Snapshot
 
@@ -21,7 +21,7 @@ The repository is now on the `v2` branch. This is a ground-up redesign effort dr
 
 **v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. No v2 implementation work has started yet — the codebase is currently identical to v1.
+The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete (see status table below). The codebase is v1 code with those three bugs patched; the v2 layout shell has not been started yet.
 
 ## What v1 Has (all still in the codebase)
 
@@ -85,16 +85,20 @@ The v2 design work is done and committed. Do not start implementation without re
 
 Four open design questions remain in `product-brief.md` (hex palette, calendar retirement, relative-mode anchor, phase bars). These can be decided during Phase 3; they don't block Phase 0–2.
 
+## Phase 0 Status — Complete (except V3)
+
+| Bug | Status | Notes |
+|-----|--------|-------|
+| C1 — category colors | Fixed | All 4 `bgColor` callsites now strip any existing `#` before prepending, matching how `blendHexWithWhite` and `getTextColor` already handled it. Affects weekly view, both stacked monthly views, and the category key legend. |
+| I1 — import row merging | Fixed | Removed the `GROUP TASKS` block in `importTasks`. Rows are no longer collapsed by `phase\|category\|name` key — every row becomes its own task. |
+| I2 — line padding round-trip | Verified working | `case "line padding"` was already present in the import switch. The grouping (I1) was the actual cause of `lineHeightAdjust` loss on re-import. Removing I1 fixes I2 too. |
+| V3 — calendar date bleed | Not started | Fold into "retire calendar" decision (open design question #2). |
+
 ## Recommended Next Task
 
-**Phase 0 — Bug fixes (highest value, lowest risk, start here):**
+**Phase 1 — Layout shell** (new header, settings panel, task panel as collapsible section, import modal).
 
-1. **C1** — fix broken category colors: `categoryHex` no longer applies correctly to task bars. Likely broke in the special-priority refactor. Color is central to the deliverable.
-2. **I1** — remove import row-merging: same phase/category + different dates are incorrectly merged. Breaks Vacation/Holiday entries. The merge logic is in `importTasks` in `src/App.tsx`.
-3. **I2 / S2** — line-padding round-trip: `lineHeightAdjust` is exported but not re-imported. Find the import column mapping in `importTasks` and add it alongside the other columns.
-4. **V3** — calendar single-month date bleed (or fold this into a "retire calendar" decision per the open design question).
-
-Then move to **Phase 1 — Layout shell** (new header, settings panel, task panel as collapsible section, import modal).
+Read `docs/mockups/v2-layout-mockup.html` in a browser (States 1–7) and `docs/product-brief.md` Phase 1 build order before starting.
 
 ## New Chat Start
 

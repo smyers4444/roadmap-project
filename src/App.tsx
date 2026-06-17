@@ -593,46 +593,7 @@ function App() {
       }
     });
 
-    // ========== GROUP TASKS ==========
-    // Group tasks with same phase, category, and name
-    // Combine into single task with earliest start and latest end date
-    // Concatenate sub-tasks and owners
-    const groupedTasksMap = new Map<string, Task>();
-
-    newTasks.forEach((task) => {
-      const groupKey = `${task.phase}|${task.category}|${task.name}`;
-
-      if (groupedTasksMap.has(groupKey)) {
-        // Task group already exists, merge this task into it
-        const existingTask = groupedTasksMap.get(groupKey)!;
-
-        // Update start date to earliest
-        if (task.startDate < existingTask.startDate) {
-          existingTask.startDate = task.startDate;
-        }
-
-        // Update end date to latest
-        if (task.endDate > existingTask.endDate) {
-          existingTask.endDate = task.endDate;
-        }
-
-        // Combine sub-tasks (if different)
-        if (task.subTask && task.subTask !== existingTask.subTask) {
-          existingTask.subTask = existingTask.subTask ? `${existingTask.subTask}; ${task.subTask}` : task.subTask;
-        }
-
-        // Combine owners (if different)
-        if (task.owner && task.owner !== existingTask.owner) {
-          existingTask.owner = existingTask.owner ? `${existingTask.owner}; ${task.owner}` : task.owner;
-        }
-      } else {
-        // First task in this group
-        groupedTasksMap.set(groupKey, { ...task });
-      }
-    });
-
-    // Convert grouped tasks back to array
-    const finalTasks = Array.from(groupedTasksMap.values());
+    const finalTasks = newTasks;
 
     // Add grouped tasks to the main list and navigate to show them
     if (finalTasks.length > 0) {
@@ -1635,7 +1596,7 @@ function App() {
 
                         const top = phaseTaskPositions.get(task.id) || 0;
                         const horizontalPadding = 0.3;
-                        const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
+                        const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                         const textColor = getTextColor(task.categoryHex);
                         const taskStartsBeforeView = task.startDate < periodStart;
                         const taskEndsAfterView = task.endDate > periodEnd;
@@ -2694,7 +2655,7 @@ function App() {
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
                                 // Use category color for all task bars, including priority tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
+                                const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                                 const textColor = getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
@@ -3273,7 +3234,7 @@ function App() {
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
                                 // Use category color for all task bars, including priority tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex}` : "var(--task-bg-fallback)";
+                                const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                                 const textColor = getTextColor(task.categoryHex);
                                 
                                 // Check if task extends beyond visible timeline
@@ -3525,7 +3486,7 @@ function App() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
                 {visibleCategories.map((category) => {
                   const taskWithCategory = visibleLegendTasks.find(t => t.category === category);
-                  const color = taskWithCategory?.categoryHex ? `#${taskWithCategory.categoryHex}` : 'var(--task-bg-fallback)';
+                  const color = taskWithCategory?.categoryHex ? `#${taskWithCategory.categoryHex.replace(/^#/, "")}` : 'var(--task-bg-fallback)';
                   return (
                     <div key={category} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <div style={{
