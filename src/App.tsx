@@ -3367,7 +3367,7 @@ function App() {
                       { key: "name" as const, label: "Task", width: "auto" },
                       { key: "startDate" as const, label: "Start", width: "68px" },
                       { key: "endDate" as const, label: "End", width: "68px" },
-                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "85px" },
+                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "105px" },
                     ] as Array<{ key: typeof sortBy; label: string; width: string }>
                   ).map((col) => (
                     <th
@@ -3385,7 +3385,7 @@ function App() {
                       )}
                     </th>
                   ))}
-                  <th style={{ width: "170px" }}>Actions</th>
+                  <th style={{ width: "110px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -3463,8 +3463,8 @@ function App() {
                         </button>
                       </div>
                     </td>
-                    <td>
-                      <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                    <td style={{ paddingLeft: "8px", paddingRight: "8px" }}>
+                      <div style={{ display: "flex", gap: "4px" }}>
                         <button
                           className="v2-task-row-action"
                           title="Edit"
