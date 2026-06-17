@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 3 complete: C2 palette management, N4 relative timeline; build clean; ready for Phase 4)
+Last updated: 2026-06-16 (Phase 4 in progress: L1 Presentation mode implemented; builds clean)
 
 ## Current Snapshot
 
@@ -55,8 +55,8 @@ See `docs/product-brief.md` for the full brief. Key points:
 
 ## Branch and Working Tree
 
-- `codex/phase-3-edit-modal` — active development branch based on `master` at `310231c`; `8a9b4f0 Add phase 3 edit modal` and `d730fb7 Add phase 3 color controls` are committed; hex filter support is part of the current branch state; v1 baseline is still preserved as tag `v1`
-- Working tree — `docs/handoff.md` is the only repo file still carrying the current wrap-up notes; unrelated `.claude/settings.json` remains dirty, and untracked `AGENTS.md` plus `.agents/` are present
+- `feat/phase-4-presentation-mode` — active development branch based on `master`; commit 4384fb5 implements L1 Presentation mode
+- Working tree — clean (ready for commits)
 - `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
 
 ## How to Run
@@ -157,10 +157,17 @@ New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compa
 **Phase 3 items not implemented:**
 - Lighter/darker color variants (can defer)
 
-## Phase 4 — Next
+## Phase 4 — In Progress
 
-From product-brief.md, Phase 3 is complete. Phase 4 candidates:
-- **L1**: Presentation mode (hide all controls, show timeline + legend only) — biggest UX win
+**L1: Presentation Mode** (commit 4384fb5)
+- Toggle with Ctrl/Cmd+P keyboard shortcut or 🎬 button in header
+- When active: hides header (logo/tabs/buttons), settings panel, import modal, task panel, and task panel tab
+- Shows a dark overlay banner at the top indicating presentation mode is active and how to exit
+- Automatically closes any open panels when entering presentation mode
+- Preserves all timeline rendering and legend
+- Screenshot-ready: timeline occupies full viewport with no controls visible
+
+Phase 4 next candidates:
 - **E6**: Click column headers to sort + drag to reorder in task table
 - **E7**: Task panel as true collapsible section below timeline
 - Continue with remaining bugs/enhancements in priority order
