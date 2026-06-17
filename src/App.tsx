@@ -299,6 +299,9 @@ function App() {
   const [compactTaskSpacing, setCompactTaskSpacing] = useState(true);
   const [rangeMode, setRangeMode] = useState<"fit" | "range" | "rolling">("rolling");
 
+  // N4: Relative timeline mode (Week 1 / Month 1 instead of dates)
+  const [useRelativeTimeline, setUseRelativeTimeline] = useState(false);
+
   // C2: Hex palette management
   const [colorPalette] = useState<string[]>([
     "FF6B6B", "4ECDC4", "45B7D1", "FFA07A", "98D8C8", "F7DC6F", "BB8FCE", "85C1E2",
@@ -1647,6 +1650,13 @@ function App() {
                   const nextUnit = units[index + 1];
                   const isWeekendGap = nextUnit ? differenceInCalendarDays(nextUnit.start, unit.start) > 1 : false;
 
+                  // N4: Compute relative label if timeline mode enabled
+                  const displayLabel = useRelativeTimeline
+                    ? periodKey === "week"
+                      ? `W${index + 1}`
+                      : `M${index + 1}`
+                    : unit.label;
+
                   return (
                     <div
                       key={`${periodKey}-header-${unit.key}`}
@@ -1660,7 +1670,7 @@ function App() {
                       }}
                       title={unit.title}
                     >
-                      {unit.label}
+                      {displayLabel}
                     </div>
                   );
                 })}
@@ -2145,6 +2155,13 @@ function App() {
                 <div
                   className={`v2-toggle${showHexColumns ? " on" : ""}`}
                   onClick={() => setShowHexColumns((p) => !p)}
+                />
+              </div>
+              <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Relative timeline (Week 1, 2, ...)</span>
+                <div
+                  className={`v2-toggle${useRelativeTimeline ? " on" : ""}`}
+                  onClick={() => setUseRelativeTimeline((p) => !p)}
                 />
               </div>
             </div>
