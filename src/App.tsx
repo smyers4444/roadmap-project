@@ -1965,49 +1965,42 @@ function App() {
             {/* Range mode (N1) */}
             <div className="v2-settings-section">
               <div className="v2-settings-heading">Range mode</div>
-              <label className="v2-radio-label">
-                <input
-                  type="radio"
-                  name="rangemode"
-                  checked={rangeMode === "fit"}
-                  onChange={() => {
+              <select
+                value={rangeMode}
+                onChange={(e) => {
+                  const newMode = e.target.value as typeof rangeMode;
+                  if (newMode === "fit") {
                     setRangeMode("fit");
                     if (view === "weeks") {
                       const bounds = getTaskDateBounds(tasks);
                       if (!bounds) {
                         return;
                       }
-
                       setCurrentWeek(startOfWeek(bounds.start));
                       setWeekSpan(Math.max(1, Math.ceil((bounds.end.getTime() - startOfWeek(bounds.start).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1));
                     }
-                  }}
-                />
-                {" "}Fit to data
-              </label>
-              <label className="v2-radio-label">
-                <input
-                  type="radio"
-                  name="rangemode"
-                  checked={rangeMode === "range"}
-                  onChange={() => setRangeMode("range")}
-                />
-                {" "}Specific date range
-              </label>
-              <label className="v2-radio-label">
-                <input
-                  type="radio"
-                  name="rangemode"
-                  checked={rangeMode === "rolling"}
-                  onChange={() => {
+                  } else if (newMode === "rolling") {
                     setRangeMode("rolling");
                     setUseCustomMonthRange(false);
                     setCustomMonthStart(null);
                     setCustomMonthEnd(null);
-                  }}
-                />
-                {" "}Rolling span
-              </label>
+                  } else {
+                    setRangeMode(newMode);
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  padding: "6px 8px",
+                  fontSize: "11px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                <option value="fit">Fit to data</option>
+                <option value="range">Specific date range</option>
+                <option value="rolling">Rolling span</option>
+              </select>
               {rangeMode === "range" && view !== "weeks" && (
                 <div style={{ marginTop: "6px" }}>
                   <DatePicker
