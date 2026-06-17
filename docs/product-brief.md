@@ -327,7 +327,7 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 | # | Item | Type | Notes |
 |---|------|------|-------|
-| TL4 | Week labels in monthly view header | Enhancement | ✅ Complete. Monthly view now shows week-number labels spanning the visible day columns above the month callout; labels persist independently of the month label toggle. |
+| TL4 | Week labels in monthly view header | Enhancement | ✅ Complete. Monthly view now shows month labels on top and week labels below with compact header spacing; stacked monthly view uses the same compact header treatment. |
 
 ### Deferred — Design-Needed (not yet scoped)
 

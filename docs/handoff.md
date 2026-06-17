@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (Phase 6: TP6/TP7/TP8 complete; ST1/TP5 color+hex settings consolidated; TP2 line padding tuned; LY3 stacked header toggle removed; TL4 month week labels added on branch `phase-6-ux-polish`)
+Last updated: 2026-06-17 (Phase 6: TP6/TP7/TP8 complete; ST1/TP5 color+hex settings consolidated; TP2 line padding tuned; LY3 stacked header toggle removed; TL4 month/week header order and sizing corrected on branch `phase-6-ux-polish`)
 
 ## Current Snapshot
 
@@ -152,7 +152,7 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 - ST1 (Color settings moved to Task View Settings modal, now functional)
 - ST2 (Range Mode converted to dropdown)
 - LY3 (Removed "Stacked" from the top-level header; stacking is controlled in settings)
-- TL4 (Monthly view week labels added above the month callout)
+- TL4 (Monthly view header now shows month on top, weeks below, with compact sizing; stacked monthly matches the compact treatment)
 
 **After Phase 6 Polish complete:**
 - **Merge to master** and open PR for review.

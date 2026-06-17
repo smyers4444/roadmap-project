@@ -2951,6 +2951,30 @@ function App() {
                       <div
                         style={{
                           display: "grid",
+                          gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
+                        }}
+                      >
+                        {monthColumns.map((month, index) => {
+                          const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
+
+                          return (
+                          <div
+                              key={`month-${month.toISOString()}`}
+                              className="day-header day-header--compact"
+                            style={{
+                                borderRight: index < monthColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
+                                fontSize: "0.8rem",
+                              }}
+                              title={`${format(month, "MMM dd, yyyy")} – ${format(endOfMonth(month), "MMM dd, yyyy")}`}
+                            >
+                              {showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMM yyyy")}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div
+                        style={{
+                          display: "grid",
                           gridTemplateColumns: `repeat(${weekHeaderGroups.length}, 1fr)`,
                         }}
                       >
@@ -2968,29 +2992,6 @@ function App() {
                             {group.label}
                           </div>
                         ))}
-                      </div>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
-                        }}
-                      >
-                        {monthColumns.map((month, index) => {
-                          const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
-
-                          return (
-                            <div
-                              key={index}
-                              className="day-header"
-                              style={{
-                                borderRight: index < monthColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
-                              }}
-                              title={`${format(month, "MMM dd, yyyy")} – ${format(endOfMonth(month), "MMM dd, yyyy")}`}
-                            >
-                              {showMonthNumbers ? `Month ${monthNumber}` : format(month, "MMM yyyy")}
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
 
