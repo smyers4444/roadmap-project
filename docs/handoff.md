@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (v2 branch created; docs cleaned up; product brief written)
+Last updated: 2026-06-16 (v2 design package complete: product brief + 7-state HTML mockup)
 
 ## Current Snapshot
 
@@ -76,12 +76,25 @@ npm run build
 npx eslint src/App.tsx
 ```
 
+## Design Package — Complete
+
+The v2 design work is done and committed. Do not start implementation without reading both:
+
+- `docs/product-brief.md` — full requirements, carryover inventory (K1–K18), build order
+- `docs/mockups/v2-layout-mockup.html` — open in browser; 7 annotated states covering every surface
+
+Four open design questions remain in `product-brief.md` (hex palette, calendar retirement, relative-mode anchor, phase bars). These can be decided during Phase 3; they don't block Phase 0–2.
+
 ## Recommended Next Task
 
-1. Design the v2 layout — agree on where controls live, what presentation mode looks like, and what the user sees first — before writing any code. Create mockups in `docs/mockups/`.
-2. Answer the five open design questions in `docs/product-brief.md` before implementation begins.
-3. Fix the color codes bug (C1 in product brief) — high priority since color is central to the deliverable.
-4. Fix the import deduplication bug (I1) — breaks Vacation/Holiday entries.
+**Phase 0 — Bug fixes (highest value, lowest risk, start here):**
+
+1. **C1** — fix broken category colors: `categoryHex` no longer applies correctly to task bars. Likely broke in the special-priority refactor. Color is central to the deliverable.
+2. **I1** — remove import row-merging: same phase/category + different dates are incorrectly merged. Breaks Vacation/Holiday entries. The merge logic is in `importTasks` in `src/App.tsx`.
+3. **I2 / S2** — line-padding round-trip: `lineHeightAdjust` is exported but not re-imported. Find the import column mapping in `importTasks` and add it alongside the other columns.
+4. **V3** — calendar single-month date bleed (or fold this into a "retire calendar" decision per the open design question).
+
+Then move to **Phase 1 — Layout shell** (new header, settings panel, task panel as collapsible section, import modal).
 
 ## New Chat Start
 
