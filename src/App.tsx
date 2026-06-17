@@ -2203,6 +2203,60 @@ function App() {
 
             <hr className="v2-divider" />
 
+            {/* C2: Palette */}
+            <div className="v2-settings-section">
+              <div className="v2-settings-heading">Color Palette</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "10px" }}>
+                {colorPalette.map((hex, idx) => (
+                  <div
+                    key={idx}
+                    title={hex}
+                    style={{
+                      width: "100%",
+                      aspectRatio: "1",
+                      backgroundColor: `#${hex}`,
+                      borderRadius: "4px",
+                      border: "1px solid #ddd",
+                      cursor: "default",
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ fontSize: "11px", color: "#666", lineHeight: "1.4" }}>
+                <strong>Categories mapped:</strong>
+                <br />
+                {Object.entries(categoryColorMap).length > 0 ? (
+                  <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
+                    {Object.entries(categoryColorMap).map(([cat, idx]) => {
+                      const paletteIdx = parseInt(idx, 10);
+                      const hex = colorPalette[paletteIdx % colorPalette.length];
+                      return (
+                        <li key={cat} style={{ marginBottom: "2px" }}>
+                          {cat}{" "}
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: "12px",
+                              height: "12px",
+                              backgroundColor: `#${hex}`,
+                              borderRadius: "2px",
+                              verticalAlign: "middle",
+                              marginLeft: "4px",
+                              border: "1px solid #999",
+                            }}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <em style={{ color: "#999" }}>No categories yet</em>
+                )}
+              </div>
+            </div>
+
+            <hr className="v2-divider" />
+
             {/* Danger */}
             <div className="v2-settings-section">
               <div className="v2-settings-heading">Danger</div>
