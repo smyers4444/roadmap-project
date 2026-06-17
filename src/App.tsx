@@ -988,13 +988,20 @@ function App() {
     // Apply text filter across multiple task fields
     if (filterText.trim()) {
       const searchLower = filterText.toLowerCase();
+      const searchHex = searchLower.replace(/^#/, "");
+      const matchesText = (value?: string) => Boolean(value && value.toLowerCase().includes(searchLower));
+      const matchesHex = (value?: string) => Boolean(value && value.replace(/^#/, "").toLowerCase().includes(searchHex));
       filtered = filtered.filter(
         (task) =>
-          task.name.toLowerCase().includes(searchLower) ||
-          (task.phase && task.phase.toLowerCase().includes(searchLower)) ||
-          (task.category && task.category.toLowerCase().includes(searchLower)) ||
-          (task.subTask && task.subTask.toLowerCase().includes(searchLower)) ||
-          (task.owner && task.owner.toLowerCase().includes(searchLower))
+          matchesText(task.name) ||
+          matchesText(task.phase) ||
+          matchesText(task.category) ||
+          matchesText(task.subTask) ||
+          matchesText(task.owner) ||
+          matchesText(task.phaseHex) ||
+          matchesText(task.categoryHex) ||
+          matchesHex(task.phaseHex) ||
+          matchesHex(task.categoryHex)
       );
     }
 
@@ -1825,6 +1832,10 @@ function App() {
                             onDrop={() => handleDrop(task.id)}
                             onDragEnd={handleDragEnd}
                             onClick={() => toggleTimelineTaskSelection(task.id)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              openTaskEditor(task.id);
+                            }}
                             title={[
                               `Task: ${task.name}`,
                               task.subTask ? `Sub-Task: ${task.subTask}` : "",
@@ -2851,6 +2862,10 @@ function App() {
                                     onDrop={() => handleDrop(task.id)}
                                     onDragEnd={handleDragEnd}
                                     onClick={() => toggleTimelineTaskSelection(task.id)}
+                                    onContextMenu={(e) => {
+                                      e.preventDefault();
+                                      openTaskEditor(task.id);
+                                    }}
                                     title={[
                                       `Task: ${task.name}`,
                                       task.subTask ? `Sub-Task: ${task.subTask}` : '',
@@ -3326,6 +3341,10 @@ function App() {
                                     onDrop={() => handleDrop(task.id)}
                                     onDragEnd={handleDragEnd}
                                     onClick={() => toggleTimelineTaskSelection(task.id)}
+                                    onContextMenu={(e) => {
+                                      e.preventDefault();
+                                      openTaskEditor(task.id);
+                                    }}
                                     title={[
                                       `Task: ${task.name}`,
                                       task.subTask ? `Sub-Task: ${task.subTask}` : '',
@@ -3502,8 +3521,12 @@ function App() {
                                   type="button"
                                   className={`calendar-task-chip${isSelected ? " calendar-task-chip--selected" : ""}`}
                                   aria-pressed={isSelected}
-                            onClick={() => toggleTimelineTaskSelection(task.id)}
-                            title={[
+                                  onClick={() => toggleTimelineTaskSelection(task.id)}
+                                  onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    openTaskEditor(task.id);
+                                  }}
+                                  title={[
                               `Task: ${task.name}`,
                               task.phase ? `Phase: ${task.phase}` : "",
                               task.category ? `Category: ${task.category}` : "",

@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 3 edit modal committed; color/label source controls smoke-tested; build/lint/diff clean)
+Last updated: 2026-06-16 (Phase 3 edit modal committed; color/label source, right-click edit, and hex filter smoke-tested; build/lint/diff clean)
 
 ## Current Snapshot
 
@@ -21,7 +21,7 @@ The repository is now on the `v2` branch. This is a ground-up redesign effort dr
 
 **v1 is preserved** as a git tag (`v1`) and a local worktree at `../Roadmap Project v1/` running on its own dev server port. v1 should not be modified.
 
-The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and Phase 2 now has three bounded commits on branch `feat/phase-2-settings`: `3f5f1e2 Wire Phase 2 settings controls`, `a390e0b Tighten Phase 2 timeline carryover`, and `1ead8d6 Extend Phase 2 priority shading`. The current branch is `codex/phase-3-edit-modal`, branched from `master` at `310231c`, and commit `8a9b4f0 Add phase 3 edit modal` captures the modal editor slice. A follow-up browser pass on 2026-06-16 verified the Compact rows toggle and priority-period shading behavior across weekly horizontal, monthly horizontal, and monthly stacked views. A new Phase 3 edit-modal slice is in place and browser-checked: row actions open an edit modal with live task fields, and Prev/Next steps through the current sort order. The next Phase 3 slice for bar color and label source controls is now also wired and smoke-tested in the browser.
+The main implementation lives in `src/App.tsx`, with styling in `src/App.css` and `src/index.css`. Phase 0 bug fixes are complete, Phase 1 (v2 layout shell) is complete, and Phase 2 now has three bounded commits on branch `feat/phase-2-settings`: `3f5f1e2 Wire Phase 2 settings controls`, `a390e0b Tighten Phase 2 timeline carryover`, and `1ead8d6 Extend Phase 2 priority shading`. The current branch is `codex/phase-3-edit-modal`, branched from `master` at `310231c`, and commit `8a9b4f0 Add phase 3 edit modal` captures the modal editor slice. A follow-up browser pass on 2026-06-16 verified the Compact rows toggle and priority-period shading behavior across weekly horizontal, monthly horizontal, and monthly stacked views. The Phase 3 edit-modal slice is in place and browser-checked: row actions open an edit modal with live task fields, and Prev/Next steps through the current sort order. The bar color and label source controls are also wired and smoke-tested, right-clicking a task bar opens the editor, and the task filter now matches hex values as well as text.
 
 ## What v1 Has (all still in the codebase)
 
@@ -55,8 +55,8 @@ See `docs/product-brief.md` for the full brief. Key points:
 
 ## Branch and Working Tree
 
-- `codex/phase-3-edit-modal` — active development branch based on `master` at `310231c`; `8a9b4f0 Add phase 3 edit modal` is committed; Phase 3 color/label source controls are in the working tree; v1 baseline is still preserved as tag `v1`
-- Working tree — Phase 3 edit-modal and color/label source work is now in `src/App.tsx` and `src/App.css`, tracked diff includes `docs/handoff.md`, unrelated `.claude/settings.json` remains dirty, and untracked `AGENTS.md` plus `.agents/` are present
+- `codex/phase-3-edit-modal` — active development branch based on `master` at `310231c`; `8a9b4f0 Add phase 3 edit modal` and `d730fb7 Add phase 3 color controls` are committed; hex filter support is part of the current branch state; v1 baseline is still preserved as tag `v1`
+- Working tree — `docs/handoff.md` is the only repo file still carrying the current wrap-up notes; unrelated `.claude/settings.json` remains dirty, and untracked `AGENTS.md` plus `.agents/` are present
 - `../Roadmap Project v1/` — local worktree pinned to v1 tag for side-by-side reference
 
 ## How to Run
@@ -130,11 +130,21 @@ New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compa
 - Timeline bars, calendar chips, special-priority column shading, and the color legend now follow the selected color source.
 - The browser smoke test confirmed the `Phase` color source and `Phase` label source update the visible bars and legend, while the settings UI reflects the active selection.
 
+## Phase 3 Right-Click Edit — PASS
+
+- Right-clicking a task bar or calendar chip opens the edit modal for that task.
+- The browser smoke test confirmed the editor opens from a right-click on a visible task bar after horizontal scroll is reset.
+
+## Phase 3 Hex Filter — PASS
+
+- The task filter now matches `phaseHex` and `categoryHex` values, including entries typed with or without a leading `#`.
+- This keeps the task panel search aligned with the color-source controls and makes it easier to find tasks by exact color value.
+
 ## Recommended Next Task
 
 Pick the next Phase 3 candidate from `docs/product-brief.md`:
-- `E9` right-click-to-edit is now the cleanest next follow-on if direct timeline access is the priority
-- `C2` hex palette management can wait until the display/edit affordances settle
+- `C2` hex palette management is now the cleanest next follow-on if you want to keep advancing Phase 3
+- `E4` duplicate task is already present, so it is no longer a useful follow-on slice
 
 ## New Chat Start
 
