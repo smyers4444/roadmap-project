@@ -1967,7 +1967,7 @@ function App() {
   const activeTab = timelineLayout === "stacked" ? "stacked" : view === "weeks" ? "weekly" : "monthly";
 
   return (
-    <div className="app" style={{ position: "relative", paddingTop: presentationMode ? "40px" : "0" }}>
+    <div className="app" style={{ paddingTop: presentationMode ? "40px" : "0" }}>
 
       {/* ─── v2 HEADER ─── */}
       {!presentationMode && (
@@ -2658,8 +2658,10 @@ function App() {
         </div>
       )}
 
-      {/* ─── TIMELINE CANVAS ─── */}
-      <div className="v2-canvas">
+      {/* ─── CONTENT AREA (scrollable) ─── */}
+      <div className="v2-content-area">
+        {/* ─── TIMELINE CANVAS ─── */}
+        <div className="v2-canvas">
         <div>
             {/* ==================== WEEKLY VIEW TIMELINE ==================== */}
             {/* 
@@ -3835,7 +3837,7 @@ function App() {
               <button style={{ fontSize: "11px" }} onClick={(e) => { e.stopPropagation(); addTestTask(); }}>Dev task</button>
             )}
           </div>
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto", overflowY: "auto", flex: 1 }}>
             <table className="v2-task-table">
               <thead>
                 <tr>
@@ -3963,6 +3965,7 @@ function App() {
           </div>
         </div>
       )}
+      </div>
 
       <div style={{ height: "16px" }} />
     </div>

@@ -19,18 +19,21 @@ Last updated: 2026-06-16 (Phase 4: L1 complete on feat/phase-4-presentation-mode
 
 Roadmap Project v2 redesign—ground-up rewrite driven by product brief, targeting screenshot-first UX for client deliverables. v1 preserved as tag `v1` and worktree `../Roadmap Project v1/`.
 
-**Current branch:** `feat/phase-4-presentation-mode` (10 commits ahead of master)
-- L1 Presentation mode: complete, verified, ready to merge
+**Current branch:** `feat/phase-4-presentation-mode` (11 commits ahead of master)
+- L1 Presentation mode: complete, verified
+- E6 Column sorting: verified working
+- E7 Task panel layout: complete, refactored to collapsible section below timeline
 - Product-brief: updated with Phases 0-4 status + Phase 5 backlog (17 items)
 - Master branch: 1 commit ahead (handoff update from earlier session)
 
 **Latest commits on feat/phase-4-presentation-mode:**
+- [new] E7: Refactor task panel layout—flexbox structure, scrollable content area, single scroll direction
 - `f1a1ccd` Mark TL5 as design decision: undecided on day-of-week display
 - `c5f0182` Add TL4: Week labels in monthly view header
 - `ec828c6` Fix: Add top padding in presentation mode to prevent banner overlay
 - `4384fb5` Add L1 Presentation mode—hide all controls, show timeline only
 
-**Build:** `npm run build` passes clean.
+**Build:** `npm run build` passes clean. Lint: `npx eslint src/App.tsx` clean.
 
 ## Phases Status
 
@@ -42,7 +45,7 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief, targeti
 | 3 | ✅ Complete | Edit modal, color/label toggles, hex palette, relative timeline |
 | 4a (L1) | ✅ Complete | Presentation mode: Ctrl+P toggle, hides controls, shows timeline only |
 | 4b (E6) | ✅ Verified | Column header sorting already working; no action needed |
-| 4c (E7) | ⏳ Next | Task panel layout refactor (collapsible section below timeline) |
+| 4c (E7) | ✅ Complete | Task panel layout refactor: flexbox structure, scrollable content area, single scroll direction |
 | **5** | 📋 **Backlog** | **17 UX polish items documented; ready for prioritization** |
 
 ## Phase 4 — L1 Presentation Mode ✅ Complete
@@ -57,6 +60,20 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief, targeti
 - Fixed: added `paddingTop: 40px` to prevent banner overlay on timeline
 
 **Verification:** Build clean, feature tested (presentation mode accessible, banner visible, timeline unobstructed).
+
+## Phase 4 — E7 Task Panel Layout Refactor ✅ Complete
+
+**Feature:** Refactor task panel from overlay-based to structural layout below timeline. Single scroll direction (vertical), no overlaps, clean flexbox architecture.
+
+**Implementation:**
+- Changed `.app` layout from `position: relative` to `display: flex; flex-direction: column; height: 100vh`
+- Added `.v2-content-area` wrapper: `flex: 1; overflow-y: auto` (scrollable content region)
+- Task panel tab/panel: `flex-shrink: 0` (don't shrink, maintain consistent height)
+- Table wrapper in panel: `flex: 1; overflow-y: auto` (allows panel table to scroll while panel itself doesn't)
+- Header: remains sticky with `z-index: 100` (stays visible during scroll)
+- Single scroll direction: entire page scrolls vertically as one unit
+
+**Verification:** Build clean, lint clean, structure properly separated.
 
 ## Phase 5 — UX Polish & Layout Cleanup 📋 Backlog
 

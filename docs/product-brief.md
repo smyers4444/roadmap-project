@@ -251,13 +251,13 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 | C2 — Hex palette | ✅ Done | 8-color default palette. Auto-assign categories on import; per-category override in settings. Swatches + mapping UI. |
 | N4 — Relative timeline | ✅ Done | Toggle: "Relative timeline (Week 1, 2, ...)" in settings. Headers show W1/W2/M1/M2 instead of dates. For unconfirmed-date projects. |
 
-### Phase 4 — Screenshot & Layout Enhancements 🔄 In Progress
+### Phase 4 — Screenshot & Layout Enhancements ✅ Complete
 
 | Item | Status | Notes |
 |------|--------|-------|
 | **L1 — Presentation mode** | ✅ Complete | Ctrl/Cmd+P toggle or 🎬 button. Hides header, settings, import modal, task panel. Shows timeline + legend only. Dark overlay banner guides exit. Screenshot-ready. |
 | **E6 — Column sorting** | ✅ Verified | Column headers already clickable for sort. ▲/▼ indicators visible. All columns covered (Phase, Category, Task, Start, End, Order, Line Padding, etc.). Drag handle for manual reorder. No work needed. |
-| **E7 — Task panel layout** | ⏳ Next | Refactor task panel from overlay to structural layout below timeline. Collapsible section, no overlap, single scroll direction. ~30–45 min scope. |
+| **E7 — Task panel layout** | ✅ Complete | Refactored from overlay to structural layout below timeline. Flexbox architecture: timeline stays pinned at top, task panel collapses/expands below. Single scroll direction (vertical), no overlaps. |
 | L2 — Control area redesign | ⏭️ Future | View selector needs visual hierarchy (most important choice, not equal weight with toggles). Design work required. |
 | L3 — Task section redesign | ⏭️ Future | Import + filter layout currently clunky. Needs UX redesign to reduce vertical footprint. |
 | L4 — Configurable priority labels | ⏭️ Future | User-editable list of phase/category values that sort to top + shade columns. Currently hardcoded (Vacation/Holiday/OOO). |
