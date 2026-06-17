@@ -258,6 +258,18 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 | **L1 — Presentation mode** | ✅ Complete | Ctrl/Cmd+P toggle or 🎬 button. Hides header, settings, import modal, task panel. Shows timeline + legend only. Dark overlay banner guides exit. Screenshot-ready. |
 | **E6 — Column sorting** | ✅ Complete | Column headers clickable for sort. ▲/▼ indicators visible. All columns covered (Phase, Category, Task, Start, End, Order, Line Padding, etc.). Drag handle for manual reorder. |
 | **E7 — Task panel layout** | ✅ Complete | Refactored from overlay to structural layout below timeline using flexbox. `.app` uses flex column layout (height: 100vh). `.v2-content-area` wrapper provides scrollable region. Task panel tab/panel use flex-shrink: 0. Single scroll direction (vertical). Timeline stays pinned at top via sticky header. |
+| L2 — Control area redesign | ⏭️ Future | View selector needs visual hierarchy (most important choice, not equal weight with toggles). Design work required. |
+| L3 — Task section redesign | ⏭️ Future | Import + filter layout currently clunky. Needs UX redesign to reduce vertical footprint. |
+| L4 — Configurable priority labels | ⏭️ Future | User-editable list of phase/category values that sort to top + shade columns. Currently hardcoded (Vacation/Holiday/OOO). |
+
+### Design Questions Resolved
+
+| # | Question | Decision | Status |
+|---|----------|----------|--------|
+| 1 | Hex palette: auto-assign or manual? | Auto-assign by default + per-category override | ✅ Implemented (C2) |
+| 2 | Calendar view: keep or retire? | Retire (stacked Split-by-Days is superior; calendar underutilized) | ⏭️ Decision made, pending removal |
+| 3 | Relative timeline mode anchor | Week 1 = earliest task's week (user-set start not yet implemented) | ✅ Implemented (N4) |
+| 4 | Phase bars: remove or toggle? | Remove from primary UI (rarely used, too noisy) | ✅ Done in Phase 5 (TL1/TL2) |
 
 ### Key Carryover Features — All Preserved
 
@@ -303,6 +315,13 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 | TP5 | Move "Show hex columns" to task settings | IA | Move control from timeline settings → task panel section. Keep state wiring intact. |
 | ST1 | Move color palette to task settings | IA | Move hex palette management (`colorPalette`/`categoryColorMap`, `src/App.tsx:306–309`) UI from timeline settings → task panel. |
 | ST2 | Range Mode: radio → dropdown | UX | Convert the three `rangeMode` options (`fit`/`range`/`rolling`) from radios to a dropdown. Do after DF2. |
+| LY3 | Remove "Stacked" as top-level toggle | Navigation | "Stacked" is a third header tab alongside Weekly/Monthly but overlaps the "Stacked layout" settings toggle. Touches header tab JSX + the `activeTab`/`timelineLayout` mapping — needs scoping before handing to Haiku. |
+
+### Needs scoping (render work — likely Sonnet)
+
+| # | Item | Type | Notes |
+|---|------|------|-------|
+| TL4 | Week labels in monthly view header | Enhancement | Add week-number labels (Week 1, 2, …) spanning their day columns in monthly view; month callout unchanged; labels persist when day numbers are toggled off. Render work on monthly header groups — not a Haiku quick win. |
 
 ### Deferred — Design-Needed (not yet scoped)
 
@@ -315,7 +334,8 @@ All v1 features (K1–K18) remain in the codebase. v2 adds new controls and feat
 
 **Phase 5 — Sonnet/Opus:** ✅ TL1, TL2 (phase header removal) complete  
 **Phase 6 — Haiku, rock-solid:** LY1, LY2, HD1, TP1, TP4, DF1, DF2  
-**Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2 (pull back to Sonnet if state wiring breaks)  
+**Phase 6 — Haiku, settings-reorg cluster:** TP2, TP3, TP5, ST1, ST2 (pull back to Sonnet if state wiring breaks); LY3 needs scoping first  
+**Needs scoping (Sonnet):** TL4 (week labels in monthly header)  
 **Deferred (design-needed):** TL3, TL5  
 
-**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → revisit TL3/TL5 once decisions are made.
+**Recommended order:** Phase 5 first (stable render base) → Haiku CSS/default-flip batch → Haiku settings-reorg cluster → scope LY3/TL4 → revisit TL3/TL5 once decisions are made.
