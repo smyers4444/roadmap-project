@@ -274,3 +274,61 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 ### Key Carryover Features — All Preserved
 
 All v1 features (K1–K18 from handoff) remain in the codebase. v2 adds new controls and features without removing functionality. Browser-local persistence, CSV round-trip, flexible import, and drag-drop in both task panel and timeline all working.
+
+---
+
+## Phase 5 — UX Polish & Layout Cleanup 🔄 Backlog
+
+User-reported issues and refinements for screenshot workflow and general usability. Organized by area.
+
+### Layout & Rendering
+
+| # | Item | Type | Priority | Notes |
+|---|------|------|----------|-------|
+| LY1 | Background color: grey → white | Style | High | White background makes screenshots easier to crop and paste into decks. Currently grey. |
+| LY2 | Page 100% width (remove left overhang) | Layout | High | Content currently has left overhang; should render at 100% viewport width. |
+| LY3 | Remove "Stacked" as top-level toggle | Navigation | Medium | "Stacked" appears as a third tab alongside Weekly/Monthly, but it's redundant with "Stacked layout" toggle in settings. Merge or remove from header. |
+
+### Header & Controls
+
+| # | Item | Type | Priority | Notes |
+|---|------|------|----------|-------|
+| HD1 | Settings icon padding reduction | Style | Medium | Settings ⚙ icon is too small relative to button padding. Reduce padding or increase icon size. |
+
+### Task Panel Table
+
+| # | Item | Type | Priority | Notes |
+|---|------|------|----------|-------|
+| TP1 | Remove vertical grid lines | Style | Low | Vertical lines in task table clutter the view. Consider removing or making very light. |
+| TP2 | Expand "Line Padding" column visibility | Layout | Medium | "Line Padding" column not fully visible; need to move "Start" column left or adjust widths so full "Line Padding" label shows. |
+| TP3 | Line padding: +/−0.25 increment buttons | Interaction | Medium | Add increment/decrement buttons (or spinner) so users can adjust by 0.25 without typing. Currently requires manual text input. |
+| TP4 | Restyle row action buttons | Style | Medium | Edit/Copy/Delete buttons should match "Export CSV" style: grey outline with icon, slightly larger hit target. Delete icon: trash can instead of ×. |
+| TP5 | Move "Show hex columns" to task settings | IA | Medium | "Show hex columns" is a task table display toggle but lives in timeline settings. Should move to task panel section. |
+
+### Timeline Rendering
+
+| # | Item | Type | Priority | Notes |
+|---|------|------|----------|-------|
+| TL1 | Remove phase header bars from timeline | UX | Medium | Phase header bars in the timeline (colored bars spanning phase duration) add visual noise. Consider removing or hiding by default. |
+| TL2 | Remove "Show phases" toggle | UX | Medium | If phase headers are removed from timeline, remove the settings toggle as well (currently rarely used). |
+
+### Settings Panel Organization
+
+| # | Item | Type | Priority | Notes |
+|---|------|------|----------|-------|
+| ST1 | Move color palette to task settings | IA | Medium | Hex palette management (swatches, category mapping) currently in timeline settings. Should move to task panel section with "Show hex columns" (TP5). |
+| ST2 | Range Mode: radio → dropdown | UX | Medium | Range Mode (Fit to data / Specific date range / Rolling span) uses radio buttons. Dropdowns are more compact and standard for mutually exclusive options. |
+
+### Defaults
+
+| # | Item | Type | Priority | Notes |
+|---|------|------|----------|-------|
+| DF1 | Change view defaults | Config | Medium | Current: weekly/horizontal. Desired: monthly/stacked with weekends OFF and compact rows ON. Better matches most common screenshot workflow. |
+
+### Summary
+
+**Quick wins (low effort):** LY1 (white bg), LY2 (100% width), HD1 (icon), TP1 (lines), TP4 (buttons), TL1/TL2 (phase header removal), DF1 (defaults)
+
+**Medium lift:** TP2 (column widths), TP3 (increment buttons), TP5 (settings reorganization), ST1 (settings IA), ST2 (dropdown)
+
+**Recommended approach:** Batch quick wins first, then tackle IA/UX refinements (TP5/ST1/ST2) as a cohesive settings panel cleanup.
