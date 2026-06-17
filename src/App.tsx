@@ -3426,7 +3426,7 @@ function App() {
                       { key: "name" as const, label: "Task", width: "auto" },
                       { key: "startDate" as const, label: "Start", width: "68px" },
                       { key: "endDate" as const, label: "End", width: "68px" },
-                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "50px" },
+                      { key: "lineHeightAdjust" as const, label: "Line Pad", width: "85px" },
                     ] as Array<{ key: typeof sortBy; label: string; width: string }>
                   ).map((col) => (
                     <th
@@ -3500,7 +3500,7 @@ function App() {
                         type="number"
                         value={t.lineHeightAdjust ?? 0}
                         onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
-                        style={{ width: "48px" }}
+                        style={{ width: "75px" }}
                       />
                     </td>
                     <td>
