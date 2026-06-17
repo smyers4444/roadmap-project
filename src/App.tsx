@@ -293,8 +293,15 @@ function App() {
   // v2 layout shell state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showColorsPanel, setShowColorsPanel] = useState(false);
+  const [taskSettingsDisplayExpanded, setTaskSettingsDisplayExpanded] = useState(true);
   const [taskSettingsPhasesExpanded, setTaskSettingsPhasesExpanded] = useState(false);
   const [taskSettingsCategoriesExpanded, setTaskSettingsCategoriesExpanded] = useState(false);
+  const [taskSettingsDangerExpanded, setTaskSettingsDangerExpanded] = useState(true);
+  const [settingsRangeModeExpanded, setSettingsRangeModeExpanded] = useState(true);
+  const [settingsLayoutExpanded, setSettingsLayoutExpanded] = useState(true);
+  const [settingsDisplayExpanded, setSettingsDisplayExpanded] = useState(true);
+  const [settingsColorsExpanded, setSettingsColorsExpanded] = useState(true);
+  const [settingsDangerExpanded, setSettingsDangerExpanded] = useState(true);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -2062,7 +2069,10 @@ function App() {
 
             {/* Range mode (N1) */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading">Range mode</div>
+              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsRangeModeExpanded(p => !p)}>
+                <span>Range mode</span><span style={{ fontSize: "14px" }}>{settingsRangeModeExpanded ? "▾" : "▸"}</span>
+              </div>
+              {settingsRangeModeExpanded && <>
               <select
                 value={rangeMode}
                 onChange={(e) => {
@@ -2142,13 +2152,17 @@ function App() {
                   <button className="v2-btn-sm-icon" onClick={view === "weeks" ? nextWeek : nextMonth}>Next ›</button>
                 </div>
               )}
+              </>}
             </div>
 
             <hr className="v2-divider" />
 
             {/* Layout */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading">Layout</div>
+              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsLayoutExpanded(p => !p)}>
+                <span>Layout</span><span style={{ fontSize: "14px" }}>{settingsLayoutExpanded ? "▾" : "▸"}</span>
+              </div>
+              {settingsLayoutExpanded && <>
               <div className="v2-toggle-row">
                 <span className="v2-toggle-label">Stacked layout</span>
                 <div
@@ -2176,13 +2190,17 @@ function App() {
                   onClick={() => setCompactTaskSpacing((p) => !p)}
                 />
               </div>
+              </>}
             </div>
 
             <hr className="v2-divider" />
 
             {/* Display */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading">Display</div>
+              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsDisplayExpanded(p => !p)}>
+                <span>Display</span><span style={{ fontSize: "14px" }}>{settingsDisplayExpanded ? "▾" : "▸"}</span>
+              </div>
+              {settingsDisplayExpanded && <>
               <div className="v2-toggle-row">
                 <span className="v2-toggle-label">Show weekends</span>
                 <div
@@ -2207,13 +2225,17 @@ function App() {
                   onClick={() => setUseRelativeTimeline((p) => !p)}
                 />
               </div>
+              </>}
             </div>
 
             <hr className="v2-divider" />
 
             {/* Colors */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading">Colors</div>
+              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsColorsExpanded(p => !p)}>
+                <span>Colors</span><span style={{ fontSize: "14px" }}>{settingsColorsExpanded ? "▾" : "▸"}</span>
+              </div>
+              {settingsColorsExpanded && <>
               <div className="v2-settings-group">
                 <div className="v2-settings-subheading">Bar color source</div>
                 <div className="v2-settings-pills">
@@ -2259,14 +2281,17 @@ function App() {
                   </button>
                 </div>
               </div>
+              </>}
             </div>
 
             <hr className="v2-divider" />
 
             {/* Danger */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading">Danger</div>
-              <button
+              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsDangerExpanded(p => !p)}>
+                <span>Danger</span><span style={{ fontSize: "14px" }}>{settingsDangerExpanded ? "▾" : "▸"}</span>
+              </div>
+              {settingsDangerExpanded && <button
                 className="v2-btn-sm"
                 style={{ color: "#c0392b", borderColor: "#e0b0b0", width: "100%" }}
                 onClick={() => {
@@ -2278,7 +2303,7 @@ function App() {
                 }}
               >
                 Clear all tasks
-              </button>
+              </button>}
             </div>
 
           </div>
@@ -3533,15 +3558,12 @@ function App() {
       {!presentationMode && showColorsPanel && (
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
-          <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, width: "248px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-              <span style={{ fontSize: "12px", fontWeight: 700, color: "#111" }}>Task View Settings</span>
-              <button className="v2-btn v2-btn-ghost v2-btn-icon" onClick={() => setShowColorsPanel(false)}>✕</button>
-            </div>
-
-            <div className="v2-settings-section" style={{ marginTop: "4px" }}>
-              <div className="v2-settings-heading">Display</div>
-              <div className="v2-toggle-row">
+          <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, width: "248px", height: "fit-content", maxHeight: "calc(100vh - 48px)", overflowY: "auto" }}>
+            <div className="v2-settings-section" style={{ marginTop: "0" }}>
+              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setTaskSettingsDisplayExpanded(p => !p)}>
+                <span>Display</span><span style={{ fontSize: "14px" }}>{taskSettingsDisplayExpanded ? "▾" : "▸"}</span>
+              </div>
+              {taskSettingsDisplayExpanded && <div className="v2-toggle-row">
                 <span className="v2-toggle-label">Show hex columns</span>
                 <input
                   type="checkbox"
@@ -3549,7 +3571,7 @@ function App() {
                   onChange={(e) => setShowHexColumns(e.target.checked)}
                   style={{ cursor: "pointer", width: "14px", height: "14px" }}
                 />
-              </div>
+              </div>}
             </div>
 
             <hr className="v2-divider" />
@@ -3561,7 +3583,7 @@ function App() {
                 onClick={() => setTaskSettingsPhasesExpanded(e => !e)}
               >
                 <span>Phases</span>
-                <span>{taskSettingsPhasesExpanded ? "▾" : "▸"}</span>
+                <span style={{ fontSize: "14px" }}>{taskSettingsPhasesExpanded ? "▾" : "▸"}</span>
               </div>
               {taskSettingsPhasesExpanded && (phases.length === 0 ? (
                 <em style={{ color: "#999", fontSize: "11px" }}>No phases</em>
@@ -3595,7 +3617,7 @@ function App() {
                 onClick={() => setTaskSettingsCategoriesExpanded(e => !e)}
               >
                 <span>Categories</span>
-                <span>{taskSettingsCategoriesExpanded ? "▾" : "▸"}</span>
+                <span style={{ fontSize: "14px" }}>{taskSettingsCategoriesExpanded ? "▾" : "▸"}</span>
               </div>
               {taskSettingsCategoriesExpanded && (categories.length === 0 ? (
                 <em style={{ color: "#999", fontSize: "11px" }}>No categories</em>
@@ -3618,6 +3640,27 @@ function App() {
                   </div>
                 ))
               ))}
+            </div>
+
+            <hr className="v2-divider" />
+
+            <div className="v2-settings-section">
+              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setTaskSettingsDangerExpanded(p => !p)}>
+                <span>Danger</span><span style={{ fontSize: "14px" }}>{taskSettingsDangerExpanded ? "▾" : "▸"}</span>
+              </div>
+              {taskSettingsDangerExpanded && <button
+                className="v2-btn-sm"
+                style={{ color: "#c0392b", borderColor: "#e0b0b0", width: "100%" }}
+                onClick={() => {
+                  if (window.confirm(`Clear all ${tasks.length} tasks? This cannot be undone.`)) {
+                    setTasks([]);
+                    setSelectedTimelineTaskId(null);
+                    setShowColorsPanel(false);
+                  }
+                }}
+              >
+                Clear all tasks
+              </button>}
             </div>
           </div>
         </>

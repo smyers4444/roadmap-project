@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (ui-polish branch: outer padding, edit modal field removal, delete button + confirm warnings)
+Last updated: 2026-06-17 (ui-polish branch: outer padding, edit modal cleanup, delete+confirm, Task View Settings restyle, collapsible sections)
 
 ## Current Snapshot
 
@@ -22,6 +22,7 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 **Branch:** `ui-polish` (off master; all prior phases merged to master)
 
 **Latest commits (this branch):**
+- `e90fe91` style: restyle Task View Settings to match roadmap settings panel
 - `7b1cc3e` feat: add delete button to edit modal with confirmation warning
 - `a9c310d` style: remove sub-task/owner/week from edit modal; align task panel padding
 - `f855ce7` style: increase outer padding for more breathing room
@@ -51,23 +52,25 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 - **Edit modal field removal** — Sub-task, Owner, and Week fields removed from the task edit modal. These fields still exist on the task object, still import from CSV, and still export to CSV — they are just not editable through the modal.
 - **Delete button in edit modal** — Red outlined "Delete" button added to the far left of the edit modal footer (`.v2-btn-danger` style). Clicking it prompts `window.confirm()` with the task name before removing the task and closing the modal.
 - **Delete confirmation in task list** — The ✕ button in the task list rows now also prompts `window.confirm()` before removing a task (same message pattern).
+- **Task View Settings restyle** — Panel now uses `v2-settings-*` classes throughout, matching the roadmap settings panel visual language. Panel height is dynamic (`height: fit-content`) so it shrinks when sections are collapsed.
+- **Collapsible sections** — All section headings in both the roadmap settings panel and Task View Settings are now clickable expand/collapse toggles with a 14px arrow indicator. Phases and Categories default collapsed; all other sections default expanded. State variables: `settingsRangeModeExpanded`, `settingsLayoutExpanded`, `settingsDisplayExpanded`, `settingsColorsExpanded`, `settingsDangerExpanded`, `taskSettingsDisplayExpanded`, `taskSettingsPhasesExpanded`, `taskSettingsCategoriesExpanded`, `taskSettingsDangerExpanded`.
 
 ### Remaining items in user's list
 
-4. Make some changes to the task section settings
 5. Change the color of the task section header
 6. (and more — user-directed)
 
 ## Key Architecture Notes
 
-- `src/App.tsx` is a deliberate monolith (~3500 lines). Edit modal is around line 2418; task list delete button is around line 3510.
+- `src/App.tsx` is a deliberate monolith (~3600 lines). Edit modal is around line 2418; task list delete button is around line 3510; Task View Settings panel is around line 3543.
 - `subTask`, `owner`, and `week` fields still exist on the `Task` type and are preserved in import/export — only removed from the edit UI.
 - `.v2-btn-danger` is a new CSS class in `App.css` (red outline, light red hover) — reuse it for any future destructive-action buttons.
 - Hex colors stored without `#` prefix throughout (e.g. `"FF5733"` not `"#FF5733"`).
+- Collapsible pattern: `useState(bool)` + `onClick={() => setSomeExpanded(p => !p)}` on the heading div + `{expanded && <content />}` (use a `<> </>` fragment when wrapping multiple siblings).
 
 ## Next Steps
 
-**Technical:** Continue working through the user's UI polish list — task section settings changes (item 4), task section header color (item 5), and any further items.
+**Technical:** Continue working through the user's UI polish list — task section header color (item 5) and any further items.
 
 **Practical:** Open the app, expand the Tasks panel, and work through the remaining list items one at a time.
 
@@ -80,4 +83,4 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 - `CLAUDE.md` — project guidance and conventions
 - `docs/handoff.md` — this file
 
-**Current state:** All prior phases merged to master. `ui-polish` branch has 3 commits: outer padding adjustments, edit modal field removal (sub-task/owner/week), and delete button + confirmation warnings in both the edit modal and the task list. Build clean, browser verified. Next task is items 4–6 from the user's UI polish list (task section settings, header color, etc.).
+**Current state:** All prior phases merged to master. `ui-polish` branch has 5 commits: outer padding, edit modal field removal, delete+confirm warnings, Task View Settings restyle (v2-settings-* classes, dynamic height), and collapsible sections across both settings panels. Build clean. Next task is item 5 (task section header color) and any further user-directed items.
