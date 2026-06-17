@@ -299,12 +299,12 @@ function App() {
   const [taskSettingsDisplayExpanded, setTaskSettingsDisplayExpanded] = useState(true);
   const [taskSettingsPhasesExpanded, setTaskSettingsPhasesExpanded] = useState(false);
   const [taskSettingsCategoriesExpanded, setTaskSettingsCategoriesExpanded] = useState(false);
-  const [taskSettingsDangerExpanded, setTaskSettingsDangerExpanded] = useState(true);
+  const [taskSettingsDangerExpanded, setTaskSettingsDangerExpanded] = useState(false);
   const [settingsRangeModeExpanded, setSettingsRangeModeExpanded] = useState(true);
   const [settingsLayoutExpanded, setSettingsLayoutExpanded] = useState(true);
   const [settingsDisplayExpanded, setSettingsDisplayExpanded] = useState(true);
   const [settingsColorsExpanded, setSettingsColorsExpanded] = useState(true);
-  const [settingsDangerExpanded, setSettingsDangerExpanded] = useState(true);
+  const [settingsDangerExpanded, setSettingsDangerExpanded] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -2056,19 +2056,6 @@ function App() {
             </div>
           )}
           <div className="v2-header-actions">
-            {!presentationMode && (
-              <>
-                <button
-                  className="v2-btn v2-btn-ghost"
-                  onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
-                >
-                  Import
-                </button>
-                <button className="v2-btn v2-btn-dark" onClick={exportTasks}>
-                  Export CSV
-                </button>
-              </>
-            )}
             <button
               className={`v2-btn v2-btn-ghost${presentationMode ? "" : " v2-btn-icon"}`}
               onClick={() => setPresentationMode((prev) => !prev)}
@@ -2111,6 +2098,27 @@ function App() {
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowSettingsPanel(false)} />
           <div className="v2-settings-panel" style={{ position: "fixed", top: settingsPanelPos.top, right: settingsPanelPos.right, zIndex: 1001 }}>
+            <div className="v2-settings-section" style={{ marginTop: "0" }}>
+              <div className="v2-settings-heading" style={{ cursor: "default", display: "flex", justifyContent: "space-between", userSelect: "none", marginBottom: "8px" }}>
+                <span>Roadmap settings</span>
+              </div>
+              <div className="v2-settings-menu-actions">
+                <button
+                  className="v2-btn-sm v2-settings-menu-btn v2-settings-menu-btn--primary"
+                  onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
+                >
+                  Import tasks
+                </button>
+                <button
+                  className="v2-btn-sm v2-settings-menu-btn"
+                  onClick={exportTasks}
+                >
+                  Export CSV
+                </button>
+              </div>
+            </div>
+
+            <hr className="v2-divider" />
 
             {/* Range mode (N1) */}
             <div className="v2-settings-section">
@@ -3613,6 +3621,27 @@ function App() {
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
           <div className="v2-settings-panel" style={{ position: "fixed", top: colorsPanelPos.top, right: colorsPanelPos.right, zIndex: 1001, width: "248px", height: "fit-content", maxHeight: "calc(100vh - 48px)", overflowY: "auto" }}>
+            <div className="v2-settings-section" style={{ marginTop: "0" }}>
+              <div className="v2-settings-heading" style={{ cursor: "default", display: "flex", justifyContent: "space-between", userSelect: "none", marginBottom: "8px" }}>
+                <span>Task settings</span>
+              </div>
+              <div className="v2-settings-menu-actions">
+                <button
+                  className="v2-btn-sm v2-settings-menu-btn v2-settings-menu-btn--primary"
+                  onClick={() => { setShowImportModal(true); setShowColorsPanel(false); }}
+                >
+                  Import tasks
+                </button>
+                <button
+                  className="v2-btn-sm v2-settings-menu-btn"
+                  onClick={exportTasks}
+                >
+                  Export CSV
+                </button>
+              </div>
+            </div>
+
+            <hr className="v2-divider" />
             <div className="v2-settings-section" style={{ marginTop: "0" }}>
               <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setTaskSettingsDisplayExpanded(p => !p)}>
                 <span>Display</span><span style={{ fontSize: "14px" }}>{taskSettingsDisplayExpanded ? "▾" : "▸"}</span>

@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (ui-polish branch: import-year fix landed, Add Task now opens editor, line padding step aligned, imported roadmap colors fixed, legend border removal still pending)
+Last updated: 2026-06-17 (ui-polish branch: roadmap settings header/buttons added, imported roadmap colors fixed, legend border removal still pending)
 
 ## Current Snapshot
 
@@ -64,7 +64,9 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 
 Work these one at a time. After each change: review with user, wait for approval, and do not commit unless explicitly requested.
 
-1. Legend styling: remove the frame/border around the key legend at the bottom.
+1. Task settings menu: add the matching header and move import/export there.
+2. Empty roadmap state: show an obvious import CTA when there are no tasks.
+3. Legend styling: remove the frame/border around the key legend at the bottom.
 
 ### Awaiting user review
 
@@ -73,6 +75,8 @@ Work these one at a time. After each change: review with user, wait for approval
 - `+ Add task` now creates a blank task and opens the same edit modal used by row edit and right-click edit.
 - The task editor `Line Padding` field now uses `0.25` steps to match the task list control.
 - Imported tasks now render their explicit `categoryHex` colors in the roadmap timeline instead of being overridden by the category palette map.
+- The roadmap settings menu now has its own header and in-menu `Import tasks` / `Export CSV` buttons. The old header-bar copies were removed.
+- Both settings menus now default their `Danger` section collapsed.
 - `docs/product-brief.md` now matches the current presentation-mode behavior and records the remaining queued items (`I5` two-digit import year bug, `E11` Add Task should open the editor, `S4` legend border removal).
 
 ## Key Architecture Notes
@@ -87,7 +91,7 @@ Work these one at a time. After each change: review with user, wait for approval
 
 ## Next Steps
 
-**Technical:** Continue with the remaining queued item one at a time: legend border removal. The branch is build-verified after the presentation-mode refinement and this slice, and the first two UI polish items are now closed out.
+**Technical:** Continue with the remaining queued items one at a time: task-settings menu parity, empty-roadmap CTA, and legend border removal. The branch is build-verified after the presentation-mode refinement and this slice, and the roadmap settings menu chunk is now closed out.
 
 **Practical:** Open the app, expand the Tasks panel, and work through the remaining list items one at a time.
 
@@ -100,4 +104,4 @@ Work these one at a time. After each change: review with user, wait for approval
 - `CLAUDE.md` — project guidance and conventions
 - `docs/handoff.md` — this file
 
-**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, matching `0.25` line padding step, and imported roadmap colors now honoring explicit hex values; the only remaining queue item is the legend border removal. `npm run build` and `npx eslint src/App.tsx` need to be rerun after this slice.
+**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, matching `0.25` line padding step, imported roadmap colors honoring explicit hex values, and the roadmap settings menu header/buttons. Remaining queue items are task-settings menu parity, an empty-roadmap import CTA, and legend border removal. `npm run build` and `npx eslint src/App.tsx` need to be rerun after this slice.
