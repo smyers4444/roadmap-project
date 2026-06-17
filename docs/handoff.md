@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (Phase 6 TP6/TP7/TP8 UX polish complete on branch `phase-6-ux-polish`)
+Last updated: 2026-06-17 (Phase 6: TP6/TP7/TP8 complete; ST1/TP5 color+hex settings consolidated on branch `phase-6-ux-polish`)
 
 ## Current Snapshot
 
@@ -22,12 +22,13 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 **Branch:** `phase-6-ux-polish` (off master; Phase 5 already merged into master)
 
 **Latest commits:**
-- `84347e2` TP8: Fix category color square sizing and reduce heading margin (App.css dead-class cleanup)
-- `86ca466` TP8: Tighten Category Key spacing and fix color square sizing
-- `0103a6e` TP8: Reduce Category Key vertical gap from 1rem to 0.5rem
+- `b6164ff` TP8: Use SVG gear icon for task view settings—match Settings button style
+- `c58ad0f` TP8: Consolidate task view settings—one gear icon, unified modal
+- `cb075e9` TP8: Redesign color settings—modal popup, toolbar button, functional inputs
+- `262bab5` TP8: Add dedicated Colors settings panel
+- `039cd06` TP8: Fix Category Key inline styles—alignment, spacing, square sizing
 - `2283232` TP7: Reduce vertical task row padding from 4px to 2px
 - `4300fd0` TP6: Set Actions column width to 110px
-- `795074f` Phase 6: Rock-solid batch — CSS + view defaults (LY1, LY2, HD1, TP1, TP4, DF1, DF2)
 
 **Build:** `npm run build` passes clean. Dev server: `npm run dev` → `http://localhost:5173`.
 
@@ -43,7 +44,7 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 | **4b** | **E6 Column sorting** | **✅ Complete** | Already implemented; verified working |
 | **4c** | **E7 Task panel layout** | **✅ Complete** | Refactored to flexbox: single scroll direction, timeline pinned, task panel below |
 | **5** | **Phase header removal (TL1, TL2)** | **✅ Complete** | Sonnet/Opus work. Phase bands + `showPhaseLabels` toggle removed; all tasks pack into one combined board per period. Committed on `phase-5-remove-phase-headers`, PR open. |
-| **6** | **UX Polish (Haiku, 12 items)** | **🚀 In Progress** | Rock-solid batch (LY1, LY2, HD1, TP1, TP4, DF1, DF2) complete. TP6 (Action column width), TP7 (task row padding), TP8 (Category Key spacing/sizing) complete. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending. |
+| **6** | **UX Polish (Haiku, 12 items)** | **🚀 In Progress** | Rock-solid batch (LY1, LY2, HD1, TP1, TP4, DF1, DF2) complete. TP6/TP7/TP8 (Action column, task row padding, Category Key) complete. ST1/TP5 (color settings + hex toggle → task panel modal) complete. Remaining: TP2, TP3, ST2. |
 
 ## Phase 4 — Complete (L1 + E6 + E7)
 
@@ -114,6 +115,25 @@ Already implemented and verified working. No changes needed.
 
 **Note:** `.category-key-list`, `.category-key-item`, `.category-color`, `.category-name` CSS classes in `App.css` are dead code — they have no `className` references in App.tsx. Safe to remove in a future cleanup pass.
 
+### ST1, TP5 batch ✅ Complete
+
+**Branch:** `phase-6-ux-polish` | **Commits:** `262bab5`, `cb075e9`, `c58ad0f`, `b6164ff`
+
+Settings reorganization: consolidated color management + hex toggle into a unified Task View Settings modal.
+
+**What changed:**
+- **Old:** Color Palette section in task panel (grid of colors + category mapping dropdowns); Hex toggle as standalone button in task panel toolbar.
+- **New:** Dedicated "Task View Settings" modal (gear icon button ⚙ in task panel toolbar) containing Display + Phases + Categories sections.
+  - **Display section:** "Show hex columns" checkbox (replaces standalone toggle).
+  - **Phases section:** Editable hex colors for each phase found in tasks.
+  - **Categories section:** Editable hex colors for each category found in tasks.
+  - **Functional:** Editing a phase/category hex color updates all tasks with that phase/category in real-time.
+- **Icon:** SVG gear icon matching the Settings gear in the top toolbar (not emoji).
+- **Positioning:** Modal pops out centered below task panel when clicked, dismissible via backdrop or close button (X).
+- **Removed:** Old "Color Palette" grid display and "Categories mapped" selector UI.
+
+**Verified:** `npm run build` clean, browser verified with live task data, color inputs functional.
+
 ## Phase 6 — UX Polish (Haiku) 📋
 
 Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merges** so Haiku reorganizes a stable settings panel.
@@ -123,26 +143,27 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 
 ## Next Steps
 
-**Recommended order (each item = separate commit):**
+**Remaining Phase 6 items (each item = separate commit):**
 
 1. **TP2** — Expand "Line Padding" column visibility in task table (CSS column width adjustment)
 2. **TP3** — Add +/−0.25 increment buttons for Line Padding input (UI + state wiring)
-3. **TP5** — Move "Show hex columns" toggle from timeline → task panel settings (JSX move; watch state)
-4. **ST1** — Move color palette UI from timeline settings → task panel (JSX move; watch state)
-5. **ST2** — Convert range mode radios to dropdown (UI refactor; DF2 dependency already landed)
+3. **ST2** — Convert range mode radios to dropdown (UI refactor; DF2 dependency already landed)
 
-**If state wiring breaks on TP5/ST1 JSX moves:** flag for Sonnet and defer that item.
+**✅ Complete:**
+- TP5 (Hex toggle moved to Task View Settings modal)
+- ST1 (Color settings moved to Task View Settings modal, now functional)
 
-**After settings-reorg cluster:**
+**After Phase 6 Polish complete:**
+- **Merge to master** and open PR for review.
 - **Scope LY3/TL4** (Sonnet) — "Stacked" header tab overlap, week-number labels in monthly view header.
 - **Defer TL3/TL5** until day-column width and day-header label decisions are made.
 
 ## New Chat Start
 
-Read these first:
-- `README.md`
-- `CLAUDE.md`
-- `docs/handoff.md` (this file)
-- `docs/product-brief.md` (for Phase 6 remaining items and design decisions)
+**Read first:**
+- `README.md` — overview and setup
+- `CLAUDE.md` — project guidance and conventions
+- `docs/handoff.md` — this file
+- `docs/product-brief.md` — Phase 6 remaining items and design decisions
 
-Current state: Phases 0–5 complete and merged to master. Phase 6 rock-solid batch (LY1–TP4, DF1–DF2) plus TP6/TP7/TP8 UX polish complete on `phase-6-ux-polish` branch. Settings-reorg cluster (TP2, TP3, TP5, ST1, ST2) pending; ready to start if state wiring is stable. All v1 carryover features preserved. Build clean, browser verified.
+**Current state:** Phases 0–5 merged to master. Phase 6 on `phase-6-ux-polish` branch: rock-solid batch (LY1–TP4, DF1–DF2) + TP6/TP7/TP8 (column widths, padding, legend spacing) + ST1/TP5 (color settings modal, hex toggle consolidated) all complete. **Remaining:** TP2 (Line Padding column width), TP3 (Line Padding increment buttons), ST2 (range mode dropdown). All v1 features preserved. Build/lint clean, browser verified. Ready for next 3 items or merge to master for PR.
