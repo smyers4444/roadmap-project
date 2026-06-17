@@ -2528,6 +2528,12 @@ function App() {
             </div>
             <div className="v2-modal-footer v2-edit-modal-footer">
               <button
+                className="v2-btn v2-btn-danger"
+                onClick={() => { if (window.confirm(`Delete "${editingTask.name || 'this task'}"? This cannot be undone.`)) { removeTask(editingTask.id); closeTaskEditor(); } }}
+              >
+                Delete
+              </button>
+              <button
                 className="v2-btn v2-btn-ghost"
                 onClick={() => stepTaskEditor(-1)}
                 disabled={editingTaskIndex <= 0}
@@ -3504,7 +3510,7 @@ function App() {
                         <button
                           className="v2-task-row-action delete"
                           title="Remove"
-                          onClick={() => removeTask(t.id)}
+                          onClick={() => { if (window.confirm(`Delete "${t.name || 'this task'}"? This cannot be undone.`)) removeTask(t.id); }}
                         >
                           ✕
                         </button>

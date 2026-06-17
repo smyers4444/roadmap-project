@@ -187,6 +187,16 @@
   background: #333;
 }
 
+.v2-btn-danger {
+  background: none;
+  color: var(--color-red-600);
+  border-color: var(--color-red-600);
+}
+
+.v2-btn-danger:hover {
+  background: #fef2f2;
+}
+
 /* ── Settings panel ── */
 .v2-settings-backdrop {
   position: fixed;
