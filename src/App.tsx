@@ -1274,6 +1274,36 @@ function App() {
     return { taskPositions, occupiedRanges, totalHeight };
   };
 
+  const getSpecialPriorityColumnColors = (
+    taskList: Task[],
+    columns: Array<{ start: Date; end: Date }>,
+    ratio = 0.78,
+  ) => {
+    const columnColors = new Map<number, string>();
+
+    taskList
+      .filter((task) => isSpecialPriorityTask(task))
+      .forEach((task) => {
+        const taskStart = normalizeDate(task.startDate).getTime();
+        const taskEnd = normalizeDate(task.endDate).getTime();
+
+        columns.forEach((column, index) => {
+          if (columnColors.has(index)) {
+            return;
+          }
+
+          const columnStart = normalizeDate(column.start).getTime();
+          const columnEnd = normalizeDate(column.end).getTime();
+
+          if (taskStart <= columnEnd && taskEnd >= columnStart) {
+            columnColors.set(index, blendHexWithWhite(task.categoryHex, ratio));
+          }
+        });
+      });
+
+    return columnColors;
+  };
+
   const getCalendarChipLabel = (task: Task, day: Date) => {
     const isStartDay = normalizeDate(task.startDate).getTime() === normalizeDate(day).getTime();
     if (isStartDay) {
@@ -2318,6 +2348,10 @@ function App() {
                         phaseTaskPositions.set(taskId, top);
                       });
                       phaseOccupiedRanges.push(...packedPhaseOccupiedRanges);
+                      const specialPriorityColumnColors = getSpecialPriorityColumnColors(
+                        phaseTasks,
+                        weekColumns.map((week) => ({ start: week, end: addDays(week, 6) })),
+                      );
 
                       let phaseTotalHeight = 0;
                       phaseOccupiedRanges.forEach((range) => {
@@ -2449,10 +2483,11 @@ function App() {
                                 const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
                                 
                                 return (
-                                  <div 
-                                    key={index} 
-                                    className="day-cell" 
+                                  <div
+                                    key={index}
+                                    className="day-cell"
                                     style={{
+                                      backgroundColor: specialPriorityColumnColors.get(index),
                                       ...(index === weekColumns.length - 1 ? { borderRight: "none" } : {}),
                                       // Dim the border if outside phase boundaries
                                       ...(!isWithinPhase && index < weekColumns.length - 1 ? { borderRight: "1px solid var(--border-medium)" } : {}),
@@ -2479,29 +2514,6 @@ function App() {
                               )}
 
                               {/* Grey overlays REMOVED for consistent light background throughout */}
-
-                              {/* Special background bars - category-colored overlay for priority periods */}
-                              {phaseTasks
-                                .filter((task) => isSpecialPriorityTask(task))
-                                .map((task) => {
-                                  const position = getTaskPosition(task);
-                                  if (!position) return null;
-                                  const { start, width } = position;
-                                  return (
-                                    <div
-                              key={`special-bg-${task.id}`}
-                                      style={{
-                                        position: "absolute",
-                                        left: `${start}%`,
-                                        width: `${width}%`,
-                                        top: "0px",
-                                        height: "100%",
-                                        backgroundColor: blendHexWithWhite(task.categoryHex, 0.9),
-                                        zIndex: 0,
-                                      }}
-                                    />
-                                  );
-                                })}
 
                               {/* Individual task bars with calculated positions */}
                               {phaseTasks.map((task) => {
@@ -2814,6 +2826,10 @@ function App() {
                         phaseTaskPositions.set(taskId, top);
                       });
                       phaseOccupiedRanges.push(...packedPhaseOccupiedRanges);
+                      const specialPriorityColumnColors = getSpecialPriorityColumnColors(
+                        phaseTasks,
+                        monthColumns.map((month) => ({ start: month, end: endOfMonth(month) })),
+                      );
 
                       let phaseTotalHeight = 0;
                       phaseOccupiedRanges.forEach((range) => {
@@ -2943,10 +2959,11 @@ function App() {
                                 const isWithinPhase = columnPercent >= start && columnPercent < (start + width);
                                 
                                 return (
-                                  <div 
-                                    key={index} 
-                                    className="day-cell" 
+                                  <div
+                                    key={index}
+                                    className="day-cell"
                                     style={{
+                                      backgroundColor: specialPriorityColumnColors.get(index),
                                       ...(index === monthColumns.length - 1 ? { borderRight: "none" } : {}),
                                       // Dim the border if outside phase boundaries
                                       ...(!isWithinPhase && index < monthColumns.length - 1 ? { borderRight: "1px solid var(--border-medium)" } : {}),
@@ -2972,29 +2989,6 @@ function App() {
                               )}
 
                               {/* Grey overlays REMOVED for consistent light background throughout */}
-
-                              {/* Special background bars - category-colored overlay for priority periods */}
-                              {phaseTasks
-                                .filter((task) => isSpecialPriorityTask(task))
-                                .map((task) => {
-                                  const position = getMonthTaskPosition(task);
-                                  if (!position) return null;
-                                  const { start, width } = position;
-                                  return (
-                                    <div
-                              key={`special-bg-${task.id}`}
-                                      style={{
-                                        position: "absolute",
-                                        left: `${start}%`,
-                                        width: `${width}%`,
-                                        top: "0px",
-                                        height: "100%",
-                                        backgroundColor: blendHexWithWhite(task.categoryHex, 0.9),
-                                        zIndex: 0,
-                                      }}
-                                    />
-                                  );
-                                })}
 
                               {/* Individual task bars with calculated positions */}
                               {phaseTasks.map((task) => {
