@@ -303,7 +303,7 @@ function App() {
   const [colorPalette] = useState<string[]>([
     "FF6B6B", "4ECDC4", "45B7D1", "FFA07A", "98D8C8", "F7DC6F", "BB8FCE", "85C1E2",
   ]); // Palette of hex codes without # prefix
-  const [categoryColorMap] = useState<Record<string, string>>({}); // category name -> palette index
+  const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({}); // category name -> palette index
   const [showHexColumns, setShowHexColumns] = useState(true);
 
   useEffect(() => {
@@ -707,6 +707,22 @@ function App() {
     });
 
     const finalTasks = newTasks;
+
+    // C2: Auto-assign categories to palette colors
+    const newCategories = new Set(finalTasks.map((t) => t.category).filter(Boolean));
+    const updatedMap = { ...categoryColorMap };
+    let nextPaletteIndex = Object.keys(updatedMap).length;
+
+    newCategories.forEach((category) => {
+      if (category && !updatedMap[category]) {
+        updatedMap[category] = String(nextPaletteIndex % colorPalette.length);
+        nextPaletteIndex += 1;
+      }
+    });
+
+    if (Object.keys(updatedMap).length > Object.keys(categoryColorMap).length) {
+      setCategoryColorMap(updatedMap);
+    }
 
     // Add grouped tasks to the main list and navigate to show them
     if (finalTasks.length > 0) {
