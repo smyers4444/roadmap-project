@@ -3345,14 +3345,6 @@ function App() {
                 )}
               </span>
             )}
-            <button
-              className="v2-toggle"
-              style={{ marginLeft: "8px", width: "20px", height: "12px" }}
-              title={showHexColumns ? "Hide hex columns" : "Show hex columns"}
-              onClick={(e) => { e.stopPropagation(); setShowHexColumns((p) => !p); }}
-              aria-pressed={showHexColumns}
-            />
-            <span style={{ fontSize: "11px", color: "#888", marginLeft: "4px" }}>Hex</span>
             <button className="v2-panel-add" onClick={(e) => { e.stopPropagation(); addTask(); }}>+ Add task</button>
             <button className="v2-panel-export" onClick={(e) => { e.stopPropagation(); exportTasks(); }}>Export CSV</button>
             {showDevTaskButton && (
@@ -3361,9 +3353,9 @@ function App() {
             <button
               className={`v2-btn v2-btn-ghost v2-btn-icon${showColorsPanel ? " v2-btn-active" : ""}`}
               onClick={(e) => { e.stopPropagation(); setShowColorsPanel((p) => !p); }}
-              title="Color settings"
+              title="Task view settings"
             >
-              🎨
+              ⚙
             </button>
           </div>
           <div style={{ overflowX: "auto", overflowY: "auto", flex: 1 }}>
@@ -3519,10 +3511,23 @@ function App() {
           <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
           <div className="v2-settings-panel" style={{ position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)", zIndex: 1001, maxWidth: "500px", width: "90%" }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #ddd", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 600 }}>Color Settings</h3>
+              <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 600 }}>Task View Settings</h3>
               <button className="v2-btn v2-btn-ghost v2-btn-icon" onClick={() => setShowColorsPanel(false)} style={{ padding: "4px" }}>✕</button>
             </div>
             <div style={{ padding: "12px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", fontSize: "11px" }}>
+              <div>
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Display</h4>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", marginBottom: "8px" }}>
+                  <input
+                    type="checkbox"
+                    checked={showHexColumns}
+                    onChange={(e) => setShowHexColumns(e.target.checked)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <span>Show hex columns</span>
+                </label>
+              </div>
+
               <div>
                 <h4 style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Phases</h4>
                 {phases.length === 0 ? (
