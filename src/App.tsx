@@ -2440,14 +2440,6 @@ function App() {
                     onChange={(e) => updateTaskFields(editingTask.id, { name: e.target.value })}
                   />
                 </label>
-                <label className="v2-edit-field v2-edit-field--wide">
-                  <span className="v2-edit-label">Sub-task</span>
-                  <input
-                    type="text"
-                    value={editingTask.subTask || ""}
-                    onChange={(e) => updateTaskFields(editingTask.id, { subTask: e.target.value })}
-                  />
-                </label>
                 <label className="v2-edit-field">
                   <span className="v2-edit-label">Phase</span>
                   <input
@@ -2497,23 +2489,6 @@ function App() {
                       placeholder="hex"
                     />
                   </div>
-                </label>
-                <label className="v2-edit-field">
-                  <span className="v2-edit-label">Owner</span>
-                  <input
-                    type="text"
-                    value={editingTask.owner || ""}
-                    onChange={(e) => updateTaskFields(editingTask.id, { owner: e.target.value })}
-                  />
-                </label>
-                <label className="v2-edit-field">
-                  <span className="v2-edit-label">Week</span>
-                  <input
-                    type="number"
-                    value={editingTask.week ?? ""}
-                    onChange={(e) => updateTaskFields(editingTask.id, { week: e.target.value === "" ? undefined : Number(e.target.value) })}
-                    placeholder="optional"
-                  />
                 </label>
                 <label className="v2-edit-field">
                   <span className="v2-edit-label">Start</span>
