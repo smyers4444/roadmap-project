@@ -1470,14 +1470,17 @@ function App() {
     if (barColorSource === "phase") {
       return task.phaseHex;
     }
-    // For category: check if category is mapped to palette, fall back to explicit categoryHex
+    if (task.categoryHex) {
+      return task.categoryHex;
+    }
+    // For category: fall back to the palette map when no explicit hex is stored.
     if (task.category && categoryColorMap[task.category]) {
       const paletteIndex = parseInt(categoryColorMap[task.category], 10);
       if (paletteIndex >= 0 && paletteIndex < colorPalette.length) {
         return colorPalette[paletteIndex];
       }
     }
-    return task.categoryHex;
+    return "";
   };
 
   const getTaskBarColorValue = (task: Task) => {

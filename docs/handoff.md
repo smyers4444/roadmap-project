@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (ui-polish branch: import-year fix landed, Add Task now opens editor, line padding step aligned, legend border removal still pending)
+Last updated: 2026-06-17 (ui-polish branch: import-year fix landed, Add Task now opens editor, line padding step aligned, imported roadmap colors fixed, legend border removal still pending)
 
 ## Current Snapshot
 
@@ -72,6 +72,7 @@ Work these one at a time. After each change: review with user, wait for approval
 - Import parsing now treats two-digit years in `Date Start` and `Date End` as `20xx` values, so `mm/dd/26` resolves to 2026 instead of 1926.
 - `+ Add task` now creates a blank task and opens the same edit modal used by row edit and right-click edit.
 - The task editor `Line Padding` field now uses `0.25` steps to match the task list control.
+- Imported tasks now render their explicit `categoryHex` colors in the roadmap timeline instead of being overridden by the category palette map.
 - `docs/product-brief.md` now matches the current presentation-mode behavior and records the remaining queued items (`I5` two-digit import year bug, `E11` Add Task should open the editor, `S4` legend border removal).
 
 ## Key Architecture Notes
@@ -99,4 +100,4 @@ Work these one at a time. After each change: review with user, wait for approval
 - `CLAUDE.md` — project guidance and conventions
 - `docs/handoff.md` — this file
 
-**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, and matching `0.25` line padding step; the only remaining queue item is the legend border removal. `npm run build` and `npx eslint src/App.tsx` pass on this slice.
+**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, matching `0.25` line padding step, and imported roadmap colors now honoring explicit hex values; the only remaining queue item is the legend border removal. `npm run build` and `npx eslint src/App.tsx` need to be rerun after this slice.
