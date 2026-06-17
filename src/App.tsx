@@ -278,6 +278,8 @@ function App() {
   
   // Toggle for showing/hiding phase labels and colors
   const [showPhaseLabels, setShowPhaseLabels] = useState(true);
+  const [barColorSource, setBarColorSource] = useState<"category" | "phase">("category");
+  const [barLabelSource, setBarLabelSource] = useState<"task" | "category" | "phase">("task");
 
   // Date range filter for monthly view
   const [useCustomMonthRange, setUseCustomMonthRange] = useState(false);
@@ -1090,7 +1092,6 @@ function App() {
   const calendarDays = eachDayOfInterval({ start: calendarGridStart, end: calendarGridEnd });
   const calendarWeeks = Array.from({ length: Math.ceil(calendarDays.length / 7) }, (_, index) => calendarDays.slice(index * 7, index * 7 + 7));
   const phases = [...new Set(timelineTasks.map((t) => t.phase).filter((c) => c && c.trim()))];
-  const categories = [...new Set(timelineTasks.map((t) => t.category).filter((c) => c && c.trim()))];
   const legendPeriodStart = view === "weeks"
     ? currentWeek
     : view === "calendar"
@@ -1269,6 +1270,29 @@ function App() {
     return ["vacation", "holiday", "ooo"].some((keyword) => phase.includes(keyword) || category.includes(keyword));
   };
 
+  const getTaskBarColorHex = (task: Task) => (barColorSource === "phase" ? task.phaseHex : task.categoryHex);
+
+  const getTaskBarColorValue = (task: Task) => {
+    const colorHex = getTaskBarColorHex(task);
+    return colorHex ? `#${colorHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
+  };
+
+  const getTaskBarText = (task: Task) => {
+    if (barLabelSource === "phase") {
+      return task.phase || task.name;
+    }
+
+    if (barLabelSource === "category") {
+      return task.category || task.name;
+    }
+
+    return task.name;
+  };
+
+  const getColorKeyLabel = () => (barColorSource === "phase" ? "Phase Key:" : "Category Key:");
+
+  const getColorKeyValue = (task: Task) => (barColorSource === "phase" ? task.phase : task.category);
+
   const getTaskVerticalLayout = ({
     sortedTasks,
     getPosition,
@@ -1350,7 +1374,7 @@ function App() {
           const columnEnd = normalizeDate(column.end).getTime();
 
           if (taskStart <= columnEnd && taskEnd >= columnStart) {
-            columnColors.set(index, blendHexWithWhite(task.categoryHex, ratio));
+            columnColors.set(index, blendHexWithWhite(getTaskBarColorHex(task), ratio));
           }
         });
       });
@@ -1359,13 +1383,14 @@ function App() {
   };
 
   const getCalendarChipLabel = (task: Task, day: Date) => {
+    const label = getTaskBarText(task);
     const isStartDay = normalizeDate(task.startDate).getTime() === normalizeDate(day).getTime();
     if (isStartDay) {
-      return task.name;
+      return label;
     }
 
     const taskStartsThisWeek = startOfWeek(task.startDate).getTime() === startOfWeek(day).getTime();
-    return taskStartsThisWeek ? task.name : `${task.name} (cont.)`;
+    return taskStartsThisWeek ? label : `${label} (cont.)`;
   };
 
   const isCalendarDayInRange = (day: Date) => {
@@ -1782,8 +1807,8 @@ function App() {
 
                         const top = phaseTaskPositions.get(task.id) || 0;
                         const horizontalPadding = 0.3;
-                        const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
-                        const textColor = getTextColor(task.categoryHex);
+                        const bgColor = getTaskBarColorValue(task);
+                        const textColor = getTextColor(getTaskBarColorHex(task));
                         const taskStartsBeforeView = task.startDate < periodStart;
                         const taskEndsAfterView = task.endDate > periodEnd;
                         const labelPaddingLeft = taskStartsBeforeView ? "6px" : "0";
@@ -1839,7 +1864,7 @@ function App() {
                                 paddingRight: labelPaddingRight,
                               }}
                             >
-                              {task.name}
+                              {getTaskBarText(task)}
                             </span>
                             {taskEndsAfterView ? (
                               <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
@@ -2076,6 +2101,58 @@ function App() {
                   className={`v2-toggle${showHexColumns ? " on" : ""}`}
                   onClick={() => setShowHexColumns((p) => !p)}
                 />
+              </div>
+            </div>
+
+            <hr className="v2-divider" />
+
+            {/* Colors */}
+            <div className="v2-settings-section">
+              <div className="v2-settings-heading">Colors</div>
+              <div className="v2-settings-group">
+                <div className="v2-settings-subheading">Bar color source</div>
+                <div className="v2-settings-pills">
+                  <button
+                    className={`v2-btn-sm${barColorSource === "category" ? " v2-btn-sm-active" : ""}`}
+                    aria-pressed={barColorSource === "category"}
+                    onClick={() => setBarColorSource("category")}
+                  >
+                    Category
+                  </button>
+                  <button
+                    className={`v2-btn-sm${barColorSource === "phase" ? " v2-btn-sm-active" : ""}`}
+                    aria-pressed={barColorSource === "phase"}
+                    onClick={() => setBarColorSource("phase")}
+                  >
+                    Phase
+                  </button>
+                </div>
+              </div>
+              <div className="v2-settings-group" style={{ marginTop: "10px" }}>
+                <div className="v2-settings-subheading">Bar label source</div>
+                <div className="v2-settings-pills">
+                  <button
+                    className={`v2-btn-sm${barLabelSource === "task" ? " v2-btn-sm-active" : ""}`}
+                    aria-pressed={barLabelSource === "task"}
+                    onClick={() => setBarLabelSource("task")}
+                  >
+                    Task
+                  </button>
+                  <button
+                    className={`v2-btn-sm${barLabelSource === "category" ? " v2-btn-sm-active" : ""}`}
+                    aria-pressed={barLabelSource === "category"}
+                    onClick={() => setBarLabelSource("category")}
+                  >
+                    Category
+                  </button>
+                  <button
+                    className={`v2-btn-sm${barLabelSource === "phase" ? " v2-btn-sm-active" : ""}`}
+                    aria-pressed={barLabelSource === "phase"}
+                    onClick={() => setBarLabelSource("phase")}
+                  >
+                    Phase
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2756,8 +2833,8 @@ function App() {
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
                                 // Use category color for all task bars, including priority tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
-                                const textColor = getTextColor(task.categoryHex);
+                                const bgColor = getTaskBarColorValue(task);
+                                const textColor = getTextColor(getTaskBarColorHex(task));
                                 
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
@@ -2805,7 +2882,7 @@ function App() {
                                     {taskStartsBeforeView && (
                                       <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
                                     )}
-                                    <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{task.name}</span>
+                                    <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{getTaskBarText(task)}</span>
                                     {taskEndsAfterView && (
                                       <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
                                     )}
@@ -3231,8 +3308,8 @@ function App() {
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
                                 
                                 // Use category color for all task bars, including priority tasks
-                                const bgColor = task.categoryHex ? `#${task.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
-                                const textColor = getTextColor(task.categoryHex);
+                                const bgColor = getTaskBarColorValue(task);
+                                const textColor = getTextColor(getTaskBarColorHex(task));
                                 
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
@@ -3280,7 +3357,7 @@ function App() {
                                     {taskStartsBeforeView && (
                                       <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
                                     )}
-                                    <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{task.name}</span>
+                                    <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{getTaskBarText(task)}</span>
                                     {taskEndsAfterView && (
                                       <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
                                     )}
@@ -3412,8 +3489,8 @@ function App() {
                               })()
                             ))}
                             {weekTaskSegments.map(({ task, startIndex, endIndex, lane }) => {
-                              const colorHex = task.categoryHex || task.phaseHex;
-                              const colorValue = colorHex ? `#${colorHex}` : "var(--accent-primary)";
+                              const colorHex = getTaskBarColorHex(task);
+                              const colorValue = colorHex ? `#${colorHex.replace(/^#/, "")}` : "var(--accent-primary)";
                               const isSelected = selectedTimelineTaskId === task.id;
                               const segmentStartDay = visibleDays[startIndex];
                               const taskStartsBeforeSegment = normalizeDate(task.startDate).getTime() < normalizeDate(segmentStartDay).getTime();
@@ -3425,24 +3502,24 @@ function App() {
                                   type="button"
                                   className={`calendar-task-chip${isSelected ? " calendar-task-chip--selected" : ""}`}
                                   aria-pressed={isSelected}
-                                  onClick={() => toggleTimelineTaskSelection(task.id)}
-                                  title={[
-                                    `Task: ${task.name}`,
-                                    task.phase ? `Phase: ${task.phase}` : "",
-                                    task.category ? `Category: ${task.category}` : "",
+                            onClick={() => toggleTimelineTaskSelection(task.id)}
+                            title={[
+                              `Task: ${task.name}`,
+                              task.phase ? `Phase: ${task.phase}` : "",
+                              task.category ? `Category: ${task.category}` : "",
                                     task.owner ? `Owner: ${task.owner}` : "",
                                     `Start: ${format(task.startDate, "MMM dd, yyyy")}`,
                                     `End: ${format(task.endDate, "MMM dd, yyyy")}`,
                                   ].filter(Boolean).join("\n")}
-                                  style={{
-                                    gridColumn: `${startIndex + 1} / ${endIndex + 2}`,
-                                    gridRow: `${lane + 2}`,
-                                    alignSelf: "center",
-                                    backgroundColor: blendHexWithWhite(colorHex),
-                                    borderColor: colorValue,
-                                    color: "var(--text-primary)",
-                                    opacity: selectedTimelineTaskId !== null && !isSelected ? 0.78 : 1,
-                                  }}
+                            style={{
+                              gridColumn: `${startIndex + 1} / ${endIndex + 2}`,
+                              gridRow: `${lane + 2}`,
+                              alignSelf: "center",
+                              backgroundColor: blendHexWithWhite(getTaskBarColorHex(task)),
+                              borderColor: colorValue,
+                              color: "var(--text-primary)",
+                              opacity: selectedTimelineTaskId !== null && !isSelected ? 0.78 : 1,
+                            }}
                                 >
                                   <span className="calendar-task-chip-dot" style={{ backgroundColor: colorValue }}></span>
                                   {taskStartsBeforeSegment && (
@@ -3472,20 +3549,29 @@ function App() {
 
       {/* ─── LEGENDS ─── */}
       <div className="v2-canvas" style={{ paddingTop: 0 }}>
-        {categories.length > 0 && (() => {
-          const visibleCategories = Array.from(new Set(visibleLegendTasks.map(t => t.category).filter(Boolean)));
-          if (visibleCategories.length === 0) return null;
+        {(() => {
+          const visibleColorValues = Array.from(
+            new Set(
+              visibleLegendTasks
+                .map((task) => getColorKeyValue(task))
+                .filter((value): value is string => Boolean(value && value.trim())),
+            ),
+          );
+
+          if (visibleColorValues.length === 0) return null;
+
           return (
             <div style={{ padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
-              <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Category Key:</h4>
+              <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>{getColorKeyLabel()}</h4>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
-                {visibleCategories.map((category) => {
-                  const taskWithCategory = visibleLegendTasks.find(t => t.category === category);
-                  const color = taskWithCategory?.categoryHex ? `#${taskWithCategory.categoryHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
+                {visibleColorValues.map((value) => {
+                  const taskWithValue = visibleLegendTasks.find((task) => getColorKeyValue(task) === value);
+                  const colorHex = getTaskBarColorHex(taskWithValue || visibleLegendTasks[0]);
+                  const color = colorHex ? `#${colorHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                   return (
-                    <div key={category} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div key={value} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <div style={{ width: "20px", height: "20px", backgroundColor: color, borderRadius: "3px", border: "1px solid var(--border-medium)" }} />
-                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem" }}>{category}</span>
+                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem" }}>{value}</span>
                     </div>
                   );
                 })}
@@ -3493,7 +3579,7 @@ function App() {
             </div>
           );
         })()}
-        {showPhaseLabels && visibleLegendPhases.length > 0 && (
+        {showPhaseLabels && barColorSource !== "phase" && visibleLegendPhases.length > 0 && (
           <div style={{ marginTop: "1rem", padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
             <h4 style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>Phase Key:</h4>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
