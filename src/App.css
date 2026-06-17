@@ -87,7 +87,7 @@
   border-bottom: 1px solid #ddd;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 20px;
   gap: 12px;
   position: sticky;
   top: 0;
@@ -533,7 +533,10 @@
 
 /* ── Canvas ── */
 .v2-canvas {
-  padding: 16px;
+  padding-top: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  background: white;
 }
 
 /* ── Task panel tab (collapsed) ── */
@@ -541,7 +544,7 @@
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  margin: 8px 16px 0;
+  margin: 8px 20px 0;
   display: flex;
   align-items: center;
   padding: 0 14px;
@@ -586,7 +589,7 @@
   border: 1px solid #ddd;
   border-top: none;
   border-radius: 0 0 8px 8px;
-  margin: 0 16px 16px;
+  margin: 0 20px 20px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
   flex-shrink: 0;
