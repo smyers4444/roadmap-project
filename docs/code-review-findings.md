@@ -20,7 +20,7 @@ checks on the running dev server.
 | 2 | Warning | CSV `Display Order` exports but never re-imports | ✅ Fixed — verified order preserved (30/10/20) |
 | 3 | Warning | Monthly-horizontal omitted the wrap safety line (text clip risk) | ✅ Fixed — now routes through shared helper with safety line on |
 | 4 | Warning | `debugInfo` layout metrics leaked into task-bar tooltips | ✅ Fixed — all `debugInfo` removed |
-| 5 | Warning | "Fit to data" is reactive in monthly but not weekly | ⏸️ Deferred — needs a product decision (see below) |
+| 5 | Warning | "Fit to data" is reactive in monthly but not weekly | ✅ Fixed — weekly fit now re-fits on task changes |
 | 6 | Info | Height calc duplicated 3× (root cause of #3 and #4) | ✅ Fixed — both horizontal blocks now call `getTaskHeightForPeriod` |
 
 ---
@@ -111,17 +111,25 @@ helper never produced debug output) plus removing the tooltip lines.
 
 ---
 
-## #5 — "Fit to data" reactive in monthly but not weekly (Warning) — DEFERRED
+## #5 — "Fit to data" reactive in monthly but not weekly (Warning) ✅
 
-**Where:** range effect (`src/App.tsx:350`, early-returns when `view !== "months"`); weekly
-fit handled separately in the view-mode dropdown onChange (~`src/App.tsx:2030`).
+**Where:** range effect (`src/App.tsx:350`); weekly fit also handled in the view-mode
+dropdown onChange (~`src/App.tsx:2045`).
 
-**Observation:** In monthly view, "Fit to data" is reactive — adding a task outside the
-current window re-fits the visible range automatically. In weekly view, fit is applied once
-when selected from the dropdown and never re-fits, so a task added outside the fitted range
-stays invisible until the user toggles the mode again.
+**Problem:** In monthly view, "Fit to data" was reactive — adding a task outside the current
+window re-fit the visible range automatically. In weekly view, fit was applied once when
+selected from the dropdown and never re-fit, so a task added outside the fitted range stayed
+invisible until the user re-selected the mode.
 
-**Why deferred:** this is a behavior/intent question, not a clear-cut bug — it may be
-acceptable that weekly fit is a one-shot. Fixing it means extending the range effect to
-handle `view === "weeks"` with `rangeMode === "fit"`, mirroring the dropdown's
-`setCurrentWeek`/`setWeekSpan` logic. **Needs a product decision before implementing.**
+**Decision:** make weekly consistent with monthly (auto re-fit), per the "weekly and monthly
+views should stay behaviorally consistent" guidance.
+
+**Fix (applied):** added a `view === "weeks"` branch at the top of the range effect. When
+`rangeMode === "fit"`, it recomputes `currentWeek` (start of week of the earliest task) and
+`weekSpan` (weeks needed to reach the latest task) on every `tasks` change — the same
+computation the dropdown uses, now reactive. Other weekly range modes are left to the
+dropdown and manual navigation.
+
+**Verified:** in weekly + fit with one task (Jun 17), the span fit to 2 weeks. Importing a
+task dated Aug 15 auto-expanded the weekly view to 10 weeks (Jun 14 → Aug 22), bringing the
+new task on-screen. Before the fix the span would have stayed at 2 weeks.

@@ -162,8 +162,8 @@ Anchored and prioritized in `docs/product-brief.md`. Starts **after Phase 5 merg
 `docs/code-review-findings.md`. Fixed and browser-verified: #1 Critical Colors-panel
 bulk-update data loss (functional `setTasks`), #2 CSV `Display Order` round-trip, #3+#6
 monthly-horizontal height via shared helper (removes duplication, restores wrap safety
-line), #4 debug-tooltip removal. **#5 deferred** — weekly "fit to data" isn't reactive
-like monthly; needs a product decision before implementing. PR not yet opened.
+line), #4 debug-tooltip removal, #5 weekly "fit to data" now re-fits reactively like
+monthly. All six findings resolved and browser-verified. PR not yet opened.
 
 ## New Chat Start
 

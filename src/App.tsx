@@ -348,6 +348,29 @@ function App() {
   }, [presentationMode]);
 
   useEffect(() => {
+    // Weekly view: keep "fit to data" reactive, mirroring monthly. When tasks
+    // change (e.g. a task is added outside the current span), re-fit the weekly
+    // range so nothing ends up off-screen. Other weekly range modes are driven
+    // by the Range-mode dropdown and manual navigation, so do nothing here.
+    if (view === "weeks") {
+      if (rangeMode !== "fit") {
+        return;
+      }
+      const bounds = getTaskDateBounds(tasks);
+      if (!bounds) {
+        return;
+      }
+      const weekStart = startOfWeek(bounds.start);
+      setCurrentWeek(weekStart);
+      setWeekSpan(
+        Math.max(
+          1,
+          Math.ceil((bounds.end.getTime() - weekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1
+        )
+      );
+      return;
+    }
+
     if (view !== "months") {
       return;
     }
