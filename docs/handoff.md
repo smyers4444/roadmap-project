@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-16 (Phase 3 C2 palette management: state structure, auto-assign on import, settings panel display; build clean)
+Last updated: 2026-06-16 (Phase 3 complete: C2 palette management, N4 relative timeline; build clean; ready for Phase 4)
 
 ## Current Snapshot
 
@@ -140,27 +140,30 @@ New state added: `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compa
 - The task filter now matches `phaseHex` and `categoryHex` values, including entries typed with or without a leading `#`.
 - This keeps the task panel search aligned with the color-source controls and makes it easier to find tasks by exact color value.
 
-## Phase 3 Hex Palette (C2) — In Progress
+## Phase 3 — Complete ✅
 
-**Completed (2026-06-16):**
-- Palette state: `colorPalette` (8 default colors), `categoryColorMap` (category → palette index)
-- Rendering: `getTaskBarColorHex` checks palette mapping first before falling back to explicit categoryHex
-- Auto-assign on import: new categories automatically get next unused palette color
-- Settings panel display: shows palette swatches + which categories are mapped
+**C2: Hex Palette Management** (commits fa51cd5, 181839b, b7f50c7, 2234a42)
+- Palette state: `colorPalette` (8 defaults), `categoryColorMap` (category → index)
+- Rendering: `getTaskBarColorHex` checks palette mapping first
+- Auto-assign on import: new categories get next unused palette color
+- Settings UI: shows swatches + category mappings + per-category override dropdowns
 
-**Remaining C2 work:**
-- Per-category override UI: allow manual reassignment of a category to a different palette index (edit buttons in settings)
-- Lighter/darker variants support (for priority-period column shading)
+**N4: Relative Timeline Mode** (commit 7104973)
+- Toggle: `useRelativeTimeline` state
+- Settings control: "Relative timeline (Week 1, 2, ...)"
+- Headers show W1/W2/M1/M2 instead of dates when enabled
+- For projects with unconfirmed dates
 
-**Other Phase 3 items:**
-- `N4` Relative timeline mode (generic Week 1 / Month 1 labels) — not started
+**Phase 3 items not implemented:**
+- Lighter/darker color variants (can defer)
 
-## Recommended Next Task
+## Phase 4 — Next
 
-Choose one:
-- **Continue C2**: Add per-category override UI in settings (small slice, finishes the feature)
-- **Jump to N4**: Relative timeline mode (medium complexity)
-- **Move to Phase 4**: Next big item (presentation mode, L1)
+From product-brief.md, Phase 3 is complete. Phase 4 candidates:
+- **L1**: Presentation mode (hide all controls, show timeline + legend only) — biggest UX win
+- **E6**: Click column headers to sort + drag to reorder in task table
+- **E7**: Task panel as true collapsible section below timeline
+- Continue with remaining bugs/enhancements in priority order
 
 ## New Chat Start
 
