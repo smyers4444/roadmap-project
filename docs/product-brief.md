@@ -203,3 +203,74 @@ Suggested sequence. Each step should `npm run build` clean and stay browser-veri
 15. Relative timeline mode (N4 / V1).
 
 **Reference mockup:** `docs/mockups/v2-layout-mockup.html` — open in browser, States 1–7.
+
+---
+
+## Implementation Status — Updated 2026-06-16
+
+### Phase 0 — Bug Fixes ✅ Complete
+
+| Item | Status | Notes |
+|------|--------|-------|
+| C1 — category colors | ✅ Fixed | All `bgColor` callsites strip leading `#` before prepending. Affects weekly, both stacked monthly, and legend. |
+| I1 — import row merging | ✅ Fixed | Removed task deduplication in `importTasks`. Each row becomes its own task, preserving multi-date entries. |
+| I2 — line padding round-trip | ✅ Fixed | Export includes `lineHeightAdjust`; import re-applies it. Round-trip now lossless. |
+| V3 — calendar date bleed | ⏭️ Deferred | Folded into "retire calendar" design decision. Not blocking other phases. |
+
+### Phase 1 — Layout Shell ✅ Complete
+
+| Item | Status | Notes |
+|------|--------|-------|
+| 48px v2 header | ✅ Done | Logo · Weekly/Monthly/Stacked tabs · Import/⚙/Export buttons |
+| Settings panel | ✅ Done | Range mode (Fit/Range/Rolling), layout toggles, danger section, backdrop close |
+| Import modal | ✅ Done | Paste → preview table → import; flexible column mapping (I3 guardrail: stays forgiving) |
+| Task panel UI | ✅ Done | Collapsible tab, sortable table, drag-to-reorder rows |
+| New state added | ✅ Done | `showSettingsPanel`, `showImportModal`, `showTaskPanel`, `compactTaskSpacing`, `rangeMode`, `showHexColumns` |
+
+### Phase 2 — Timeline Carryover ✅ Complete
+
+| Item | Status | Notes |
+|------|--------|-------|
+| K1 — Vertical auto-packing | ✅ Done | "Compact rows" toggle (default ON); OFF = one task per row. Reduces whitespace while preserving readability. |
+| K2 — Word-wrap + dynamic height | ✅ Done | Labels wrap to multiple lines; bar height grows. `lineHeightAdjust` adds extra padding. Never truncates/ellipsis. |
+| K3 — Auto text color | ✅ Done | Black or white label based on background luminance (contrast). Works with arbitrary hex colors. |
+| K4 — Continuation arrows | ✅ Done | ◀ ▶ shown when task extends beyond visible window. Pinned to bar edges. |
+| K5 — Special-priority overlay | ✅ Done | Faded category color painted across Vacation/Holiday/OOO spans (separate from column shading). |
+| V4 — Holiday/Vacation shading | ✅ Done | Full-height column shading for priority tasks. Works in stacked views; narrow stripe in horizontal monthly. |
+| K7–K9 — Tooltips, legend, selection | ✅ Done | Hover shows full task details; click selects task; legend shows only visible categories/phases. |
+
+### Phase 3 — Net-New Features ✅ Complete
+
+| Item | Status | Notes |
+|------|--------|-------|
+| E8/E10 — Edit modal + Prev/Next | ✅ Done | Modal form with task fields (name, phase, category, dates, owner, etc.). ‹ › buttons step through sorted tasks. |
+| E9 — Right-click-to-edit | ✅ Done | Right-click any timeline bar or calendar chip opens edit modal for that task. |
+| E4 — Duplicate task | ✅ Done | Row-level action to clone a task (useful for repeated entries like multi-date vacation). |
+| C4/C5 — Color/label source | ✅ Done | Settings controls: bar color source (Category/Phase), bar label source (Task/Category/Phase). Live updates all bars + legend. |
+| C3 — Filter by hex | ✅ Done | Task filter now matches `phaseHex` and `categoryHex` values (with or without leading `#`). |
+| C2 — Hex palette | ✅ Done | 8-color default palette. Auto-assign categories on import; per-category override in settings. Swatches + mapping UI. |
+| N4 — Relative timeline | ✅ Done | Toggle: "Relative timeline (Week 1, 2, ...)" in settings. Headers show W1/W2/M1/M2 instead of dates. For unconfirmed-date projects. |
+
+### Phase 4 — Screenshot & Layout Enhancements 🔄 In Progress
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **L1 — Presentation mode** | ✅ Complete | Ctrl/Cmd+P toggle or 🎬 button. Hides header, settings, import modal, task panel. Shows timeline + legend only. Dark overlay banner guides exit. Screenshot-ready. |
+| **E6 — Column sorting** | ✅ Verified | Column headers already clickable for sort. ▲/▼ indicators visible. All columns covered (Phase, Category, Task, Start, End, Order, Line Padding, etc.). Drag handle for manual reorder. No work needed. |
+| **E7 — Task panel layout** | ⏳ Next | Refactor task panel from overlay to structural layout below timeline. Collapsible section, no overlap, single scroll direction. ~30–45 min scope. |
+| L2 — Control area redesign | ⏭️ Future | View selector needs visual hierarchy (most important choice, not equal weight with toggles). Design work required. |
+| L3 — Task section redesign | ⏭️ Future | Import + filter layout currently clunky. Needs UX redesign to reduce vertical footprint. |
+| L4 — Configurable priority labels | ⏭️ Future | User-editable list of phase/category values that sort to top + shade columns. Currently hardcoded (Vacation/Holiday/OOO). |
+
+### Design Questions Resolved
+
+| # | Question | Decision | Status |
+|---|----------|----------|--------|
+| 1 | Hex palette: auto-assign or manual? | Auto-assign by default + per-category override | ✅ Implemented (C2) |
+| 2 | Calendar view: keep or retire? | Retire (stacked Split-by-Days is superior; calendar underutilized) | ⏭️ Decision made, pending removal |
+| 3 | Relative timeline mode anchor | Week 1 = earliest task's week (user-set start not yet implemented) | ✅ Implemented (N4) |
+| 4 | Phase bars: remove or toggle? | Remove from primary UI (rarely used, too noisy) | ⏭️ Decision made, pending cleanup |
+
+### Key Carryover Features — All Preserved
+
+All v1 features (K1–K18 from handoff) remain in the codebase. v2 adds new controls and features without removing functionality. Browser-local persistence, CSV round-trip, flexible import, and drag-drop in both task panel and timeline all working.
