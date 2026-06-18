@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (ui-polish branch: roadmap settings header/buttons added, imported roadmap colors fixed, legend border removal still pending)
+Last updated: 2026-06-17 (ui-polish branch: roadmap settings header/buttons added, import modal now draggable/resizable and auto-sizing from a compact top-aligned default, import preview compacted and column-sized, imported roadmap colors fixed, legend border removal still pending)
 
 ## Current Snapshot
 
@@ -77,6 +77,9 @@ Work these one at a time. After each change: review with user, wait for approval
 - Imported tasks now render their explicit `categoryHex` colors in the roadmap timeline instead of being overridden by the category palette map.
 - The roadmap settings menu now has its own header and in-menu `Import tasks` / `Export CSV` buttons. The old header-bar copies were removed.
 - Both settings menus now default their `Danger` section collapsed.
+- Import preview now uses its own bounded scroll shell, denser typography, reduced padding, and column-specific widths so hex/date/line-padding fields stay compact while text fields keep reasonable room.
+- The import modal can now be dragged by its header and resized from the bottom-right corner.
+- The import modal opens near the top of the viewport in a compact state and expands toward a larger viewport-bounded size once preview rows are present, while still staying smaller for tiny imports and one-row previews.
 - `docs/product-brief.md` now matches the current presentation-mode behavior and records the remaining queued items (`I5` two-digit import year bug, `E11` Add Task should open the editor, `S4` legend border removal).
 
 ## Key Architecture Notes

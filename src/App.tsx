@@ -257,6 +257,17 @@ function App() {
   const [importText, setImportText] = useState(""); // Raw tab-separated text from user
   const [importData, setImportData] = useState<Array<Record<string, string>>>([]); // Parsed import data
   const [showImportTable, setShowImportTable] = useState(false); // Show/hide import preview table
+  const [importModalPos, setImportModalPos] = useState({ top: 72, left: 72 });
+  const [importModalSize, setImportModalSize] = useState({ width: 840, height: 320 });
+  const importModalRef = useRef<HTMLDivElement>(null);
+  const importModalDragRef = useRef<{
+    startX: number;
+    startY: number;
+    startTop: number;
+    startLeft: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   // Filtering and sorting state
   const [filterText, setFilterText] = useState(""); // Text search filter
@@ -694,6 +705,61 @@ function App() {
     }
   };
 
+  const openImportModal = () => {
+    const viewportWidth = window.innerWidth;
+
+    setImportModalPos({
+      top: 24,
+      left: Math.max(16, Math.round((viewportWidth - 760) / 2)),
+    });
+    setImportModalSize({ width: 760, height: 220 });
+    setShowImportModal(true);
+    setShowSettingsPanel(false);
+    setShowColorsPanel(false);
+  };
+
+  const getImportPreviewColumnStyle = (header: string) => {
+    const normalized = header.toLowerCase().trim();
+
+    if (normalized === "phase hex" || normalized === "phase-hex" || normalized === "phasehex" || normalized === "category hex" || normalized === "category-hex" || normalized === "categoryhex") {
+      return { minWidth: "76px", width: "76px" };
+    }
+
+    if (normalized === "date start" || normalized === "start date" || normalized === "date end" || normalized === "end date" || normalized === "start" || normalized === "end") {
+      return { minWidth: "92px", width: "92px" };
+    }
+
+    if (normalized === "line padding" || normalized === "lineheight" || normalized === "line height") {
+      return { minWidth: "68px", width: "68px" };
+    }
+
+    if (normalized === "display order" || normalized === "order" || normalized === "sort order" || normalized === "week") {
+      return { minWidth: "70px", width: "70px" };
+    }
+
+    if (normalized === "task" || normalized === "task name" || normalized === "name" || normalized === "title" || normalized === "description") {
+      return { minWidth: "180px", width: "180px" };
+    }
+
+    if (normalized === "sub-task" || normalized === "subtask" || normalized === "sub task") {
+      return { minWidth: "130px", width: "130px" };
+    }
+
+    if (normalized === "owner" || normalized === "assigned to" || normalized === "assignee" || normalized === "responsible") {
+      return { minWidth: "120px", width: "120px" };
+    }
+
+    if (normalized === "phase" || normalized === "stage") {
+      return { minWidth: "120px", width: "120px" };
+    }
+
+    if (normalized === "category") {
+      return { minWidth: "140px", width: "140px" };
+    }
+
+    return { minWidth: "110px", width: "110px" };
+  };
+
   /**
    * Converts import data into Task objects and adds them to the main task list
    * Maps various header names to Task properties (e.g., "Date Start" -> startDate)
@@ -923,6 +989,59 @@ function App() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const drag = importModalDragRef.current;
+      if (!drag) {
+        return;
+      }
+
+      const nextLeft = drag.startLeft + (event.clientX - drag.startX);
+      const nextTop = drag.startTop + (event.clientY - drag.startY);
+      const maxLeft = Math.max(16, window.innerWidth - drag.width - 16);
+      const maxTop = Math.max(16, window.innerHeight - drag.height - 16);
+
+      setImportModalPos({
+        left: Math.min(Math.max(16, nextLeft), maxLeft),
+        top: Math.min(Math.max(16, nextTop), maxTop),
+      });
+    };
+
+    const handlePointerUp = () => {
+      importModalDragRef.current = null;
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showImportModal) {
+      return;
+    }
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const hasPreviewRows = showImportTable && importData.length > 0;
+    const maxWidth = Math.max(720, viewportWidth - 32);
+    const maxHeight = Math.max(520, viewportHeight - 32);
+    const targetWidth = hasPreviewRows ? Math.min(1100, maxWidth) : 760;
+    const previewRows = hasPreviewRows ? importData.length : 0;
+    const targetHeight = hasPreviewRows
+      ? Math.min(maxHeight, Math.max(320, 220 + Math.min(previewRows, 12) * 18))
+      : 220;
+
+    setImportModalSize({
+      width: targetWidth,
+      height: targetHeight,
+    });
+  }, [importData.length, showImportModal, showImportTable]);
 
   // ==================== TIMELINE NAVIGATION ====================
 
@@ -2105,7 +2224,7 @@ function App() {
               <div className="v2-settings-menu-actions">
                 <button
                   className="v2-btn-sm v2-settings-menu-btn v2-settings-menu-btn--primary"
-                  onClick={() => { setShowImportModal(true); setShowSettingsPanel(false); }}
+                  onClick={openImportModal}
                 >
                   Import tasks
                 </button>
@@ -2375,8 +2494,44 @@ function App() {
             }
           }}
         >
-          <div className="v2-modal">
-            <div className="v2-modal-header">
+          <div
+            ref={importModalRef}
+            className="v2-modal v2-modal--import"
+            style={{
+              top: `${importModalPos.top}px`,
+              left: `${importModalPos.left}px`,
+              width: `${importModalSize.width}px`,
+              height: `${importModalSize.height}px`,
+            }}
+          >
+            <div
+              className="v2-modal-header v2-modal-header--draggable"
+              onPointerDown={(e) => {
+                if (e.button !== 0) {
+                  return;
+                }
+
+                if ((e.target as HTMLElement).closest(".v2-modal-close")) {
+                  return;
+                }
+
+                const rect = importModalRef.current?.getBoundingClientRect();
+                if (!rect) {
+                  return;
+                }
+
+                importModalDragRef.current = {
+                  startX: e.clientX,
+                  startY: e.clientY,
+                  startTop: rect.top,
+                  startLeft: rect.left,
+                  width: rect.width,
+                  height: rect.height,
+                };
+
+                e.preventDefault();
+              }}
+            >
               <span className="v2-modal-title">Import tasks</span>
               <button
                 className="v2-modal-close"
@@ -2422,25 +2577,25 @@ function App() {
                 )}
               </div>
               {showImportTable && importData.length > 0 && (
-                <div style={{ marginTop: "16px" }}>
+                <div className="v2-import-preview-section">
                   <div className="v2-preview-label">
                     Preview — {importData.length} row{importData.length !== 1 ? "s" : ""} detected (editable)
                   </div>
-                  <div style={{ overflowX: "auto", marginTop: "6px" }}>
+                  <div className="v2-import-preview-scroll">
                     <table className="v2-preview-table">
                       <thead>
                         <tr>
                           {Object.keys(importData[0]).map((header) => (
-                            <th key={header}>{header}</th>
+                            <th key={header} style={getImportPreviewColumnStyle(header)}>{header}</th>
                           ))}
-                          <th>Actions</th>
+                          <th style={{ width: "42px", minWidth: "42px" }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {importData.map((row, rowIndex) => (
                           <tr key={rowIndex}>
                             {Object.keys(row).map((header) => (
-                              <td key={header}>
+                              <td key={header} style={getImportPreviewColumnStyle(header)}>
                                 <input
                                   type="text"
                                   value={row[header]}
@@ -2449,7 +2604,7 @@ function App() {
                                 />
                               </td>
                             ))}
-                            <td>
+                            <td style={{ width: "42px", minWidth: "42px" }}>
                               <button onClick={() => removeImportRow(rowIndex)}>✕</button>
                             </td>
                           </tr>
@@ -2457,7 +2612,7 @@ function App() {
                       </tbody>
                     </table>
                   </div>
-                  <button style={{ marginTop: "8px" }} onClick={addImportRow}>+ Add row</button>
+                  <button className="v2-btn-sm v2-import-add-row" onClick={addImportRow}>+ Add row</button>
                 </div>
               )}
             </div>
@@ -3628,7 +3783,7 @@ function App() {
               <div className="v2-settings-menu-actions">
                 <button
                   className="v2-btn-sm v2-settings-menu-btn v2-settings-menu-btn--primary"
-                  onClick={() => { setShowImportModal(true); setShowColorsPanel(false); }}
+                  onClick={openImportModal}
                 >
                   Import tasks
                 </button>
