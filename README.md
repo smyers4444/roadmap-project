@@ -56,6 +56,7 @@ Each task supports these fields:
 - Switch between a continuous horizontal board and vertically stacked full-month boards.
 - In stacked month layout, switch between day columns and week-range columns inside each month board.
 - Toggle between month labels and month numbers.
+- Collapse stacked month headers to hide the day row and show weekday-aware date ranges.
 - Show or hide weekends in the rendered monthly timeline without changing task dates.
 
 ### Calendar View
@@ -72,6 +73,7 @@ Each task supports these fields:
 
 The import tool accepts tab-separated values, which makes it easy to paste from Excel or Google Sheets. After parsing, you can review and edit the imported rows before adding them to the board.
 Two-digit years in `Date Start` and `Date End` import as `20xx` values, so `mm/dd/26` resolves to 2026 instead of 1926.
+The import modal opens compact near the top of the viewport, can be dragged and resized, and keeps the preview area editable so pasted spreadsheets stay easy to clean up.
 
 Recognized columns include:
 

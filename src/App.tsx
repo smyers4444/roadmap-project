@@ -284,9 +284,10 @@ function App() {
   const [showWeekNumbers, setShowWeekNumbers] = useState(false);
   const [showMonthNumbers, setShowMonthNumbers] = useState(false);
   const [showWeekends, setShowWeekends] = useState(false);
+  const [collapseTimelineHeaders, setCollapseTimelineHeaders] = useState(false);
   const [timelineLayout, setTimelineLayout] = useState<"horizontal" | "stacked">("stacked");
   const [monthStackSplit, setMonthStackSplit] = useState<"day" | "week">("day");
-  
+
   // Toggle for showing/hiding phase labels and colors
   const [barColorSource, setBarColorSource] = useState<"category" | "phase">("category");
   const [barLabelSource, setBarLabelSource] = useState<"task" | "category" | "phase">("task");
@@ -1092,6 +1093,14 @@ function App() {
     return `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
   };
 
+  const formatCollapsedDateRange = (start: Date, end: Date) => {
+    if (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()) {
+      return `${format(start, "EEE MMM d")} – ${format(end, "EEE d, yyyy")}`;
+    }
+
+    return `${format(start, "EEE MMM d")} – ${format(end, "EEE MMM d, yyyy")}`;
+  };
+
   const getWeeklyPeriodEnd = () => addDays(currentWeek, weekSpan * 7 - 1);
 
   const isWeekendDate = (date: Date) => {
@@ -1872,6 +1881,7 @@ function App() {
     compactTaskSpacing = false,
     headerGroups,
     showInnerUnitGridlines = true,
+    collapseHeaders = false,
   }: {
     periodKey: string;
     title: ReactNode;
@@ -1884,6 +1894,7 @@ function App() {
     compactTaskSpacing?: boolean;
     headerGroups?: TimelineHeaderGroup[];
     showInnerUnitGridlines?: boolean;
+    collapseHeaders?: boolean;
   }) => {
     if (units.length === 0) {
       return null;
@@ -1904,58 +1915,60 @@ function App() {
               minWidth: units.length > 12 ? `${Math.max(units.length * 52, 760)}px` : undefined,
             }}
           >
-            <div
-              className="board-header"
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
-              }}
-            >
-              {headerGroups
-                ? headerGroups.map((group, index) => (
-                  <div
-                    key={`${periodKey}-header-group-${group.key}`}
-                    className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
-                    style={{
-                      gridColumn: `span ${group.span}`,
-                      borderRight: index < headerGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
-                      fontWeight: 500,
-                      color: "var(--text-secondary)",
-                    }}
-                    title={group.title}
-                  >
-                    ({group.label})
-                  </div>
-                ))
-                : units.map((unit, index) => {
-                  const nextUnit = units[index + 1];
-                  const isWeekendGap = nextUnit ? differenceInCalendarDays(nextUnit.start, unit.start) > 1 : false;
-
-                  // N4: Compute relative label if timeline mode enabled
-                  const displayLabel = useRelativeTimeline
-                    ? periodKey === "week"
-                      ? `W${index + 1}`
-                      : `M${index + 1}`
-                    : unit.label;
-
-                  return (
+            {!collapseHeaders && (
+              <div
+                className="board-header"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
+                }}
+              >
+                {headerGroups
+                  ? headerGroups.map((group, index) => (
                     <div
-                      key={`${periodKey}-header-${unit.key}`}
+                      key={`${periodKey}-header-group-${group.key}`}
                       className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
                       style={{
-                        borderRight: index === units.length - 1
-                          ? "none"
-                          : isWeekendGap
-                            ? "4px solid var(--border-dark)"
-                            : "1px solid var(--border-dark)",
+                        gridColumn: `span ${group.span}`,
+                        borderRight: index < headerGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
+                        fontWeight: 500,
+                        color: "var(--text-secondary)",
                       }}
-                      title={unit.title}
+                      title={group.title}
                     >
-                      {displayLabel}
+                      ({group.label})
                     </div>
-                  );
-                })}
-            </div>
+                  ))
+                  : units.map((unit, index) => {
+                    const nextUnit = units[index + 1];
+                    const isWeekendGap = nextUnit ? differenceInCalendarDays(nextUnit.start, unit.start) > 1 : false;
+
+                    // N4: Compute relative label if timeline mode enabled
+                    const displayLabel = useRelativeTimeline
+                      ? periodKey === "week"
+                        ? `W${index + 1}`
+                        : `M${index + 1}`
+                      : unit.label;
+
+                    return (
+                      <div
+                        key={`${periodKey}-header-${unit.key}`}
+                        className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
+                        style={{
+                          borderRight: index === units.length - 1
+                            ? "none"
+                            : isWeekendGap
+                              ? "4px solid var(--border-dark)"
+                              : "1px solid var(--border-dark)",
+                        }}
+                        title={unit.title}
+                      >
+                        {displayLabel}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
 
             {(() => {
               const phaseTasks = visibleTasks;
@@ -2391,6 +2404,13 @@ function App() {
                 />
               </div>
               <div className="v2-toggle-row">
+                <span className="v2-toggle-label">Collapse timeline headers</span>
+                <div
+                  className={`v2-toggle${collapseTimelineHeaders ? " on" : ""}`}
+                  onClick={() => setCollapseTimelineHeaders((p) => !p)}
+                />
+              </div>
+              <div className="v2-toggle-row">
                 <span className="v2-toggle-label">Relative timeline (Week 1, 2, ...)</span>
                 <div
                   className={`v2-toggle${useRelativeTimeline ? " on" : ""}`}
@@ -2806,10 +2826,10 @@ function App() {
         <div className="v2-canvas">
         <div>
             {/* ==================== WEEKLY VIEW TIMELINE ==================== */}
-            {/* 
+            {/*
               Weekly view uses a "reverse Tetris" packing algorithm to minimize vertical space.
               Tasks are positioned from top to bottom, fitting into the first available space.
-              
+
               Key features:
               - Dynamic task height based on text wrapping (word-wrap simulation)
               - Special priority tasks always appear at the top (sorted first)
@@ -2844,7 +2864,7 @@ function App() {
                 return (
                   <div className="board">
                     {/* ========== WEEK HEADER ROW ========== */}
-                    <div 
+                    <div
                       className="board-header"
                       style={{
                         display: "grid",
@@ -2866,8 +2886,8 @@ function App() {
                         }
 
                         return (
-                          <div 
-                            key={index} 
+                          <div
+                            key={index}
                             className="day-header"
                             style={{
                               borderRight: index < weekColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
@@ -2968,15 +2988,15 @@ function App() {
                                 const { start, width } = position;
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                                
+
                                 // Use category color for all task bars, including priority tasks
                                 const bgColor = getTaskBarColorValue(task);
                                 const textColor = getTextColor(getTaskBarColorHex(task));
-                                
+
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
                                 const taskEndsAfterView = task.endDate > periodEnd;
-                                
+
                                 return (
                                   <div
                                     key={task.id}
@@ -3040,7 +3060,7 @@ function App() {
             {/* ==================== MONTHLY VIEW TIMELINE ==================== */}
             {/*
               Monthly view follows same structure as weekly view but with months as columns:
-              - Columns represent months instead of weeks  
+              - Columns represent months instead of weeks
               - Month boundaries are used for calculations
               - Same visual styling as weekly view (matching phase headers, grey overlays, dimmed gridlines)
               - Same "reverse Tetris" packing algorithm for vertical positioning
@@ -3063,13 +3083,18 @@ function App() {
                   if (periodTasks.length === 0) {
                     return renderStackedTimelineBoard({
                       periodKey: `week-${week.toISOString()}`,
-                      title: showWeekNumbers ? `Week ${index + 1}` : `${format(periodStart, "MMM dd")} - ${format(periodEnd, "MMM dd, yyyy")}`,
+                      title: showWeekNumbers
+                        ? `Week ${index + 1}`
+                        : collapseTimelineHeaders
+                          ? formatCollapsedDateRange(periodStart, periodEnd)
+                          : `${format(periodStart, "MMM dd")} - ${format(periodEnd, "MMM dd, yyyy")}`,
                       units: getDayTimelineUnits(visibleDays),
                       periodStart,
                       periodEnd,
                       visibleTasks: [],
                       compactSpacing: true,
                       compactTaskSpacing,
+                      collapseHeaders: collapseTimelineHeaders,
                     });
                   }
 
@@ -3084,13 +3109,18 @@ function App() {
 
                   return renderStackedTimelineBoard({
                     periodKey: `week-${week.toISOString()}`,
-                    title: showWeekNumbers ? `Week ${weekNumber}` : `${format(periodStart, "MMM dd")} - ${format(periodEnd, "MMM dd, yyyy")}`,
+                    title: showWeekNumbers
+                      ? `Week ${weekNumber}`
+                      : collapseTimelineHeaders
+                        ? formatCollapsedDateRange(periodStart, periodEnd)
+                        : `${format(periodStart, "MMM dd")} - ${format(periodEnd, "MMM dd, yyyy")}`,
                     units: getDayTimelineUnits(visibleDays),
                     periodStart,
                     periodEnd,
                     visibleTasks: periodTasks,
                     compactSpacing: true,
                     compactTaskSpacing,
+                    collapseHeaders: collapseTimelineHeaders,
                   });
                 })}
               </div>
@@ -3098,8 +3128,8 @@ function App() {
             {view === "months" && timelineLayout === "horizontal" &&
               (() => {
                 // Calculate visible period and filter tasks that overlap with it
-                const periodStart = useCustomMonthRange && customMonthStart 
-                  ? customMonthStart 
+                const periodStart = useCustomMonthRange && customMonthStart
+                  ? customMonthStart
                   : startOfMonth(currentMonth);
                 const periodEnd = useCustomMonthRange && customMonthEnd
                   ? customMonthEnd
@@ -3128,7 +3158,7 @@ function App() {
                 return (
                   <div className="board">
                     {/* ========== MONTH HEADER ROW ========== */}
-                    <div 
+                    <div
                       className="board-header"
                       style={{
                         display: "flex",
@@ -3270,15 +3300,15 @@ function App() {
                                 const { start, width } = position;
                                 const top = phaseTaskPositions.get(task.id) || 0; // Vertical position from packing algorithm
                                 const horizontalPadding = 0.3; // Small gap between adjacent tasks
-                                
+
                                 // Use category color for all task bars, including priority tasks
                                 const bgColor = getTaskBarColorValue(task);
                                 const textColor = getTextColor(getTaskBarColorHex(task));
-                                
+
                                 // Check if task extends beyond visible timeline
                                 const taskStartsBeforeView = task.startDate < periodStart;
                                 const taskEndsAfterView = task.endDate > periodEnd;
-                                
+
                                 return (
                                   <div
                                     key={task.id}
@@ -3369,11 +3399,13 @@ function App() {
                         <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>
                           {showMonthNumbers
                             ? `Month ${getRelativeMonthNumber(month, tasks)}`
-                            : `${formatCompactMonthRange(periodStart, periodEnd)}, ${format(periodEnd, "yyyy")}`}
+                            : collapseTimelineHeaders
+                              ? `${formatCollapsedDateRange(periodStart, periodEnd)}`
+                              : `${formatCompactMonthRange(periodStart, periodEnd)}, ${format(periodEnd, "yyyy")}`}
                         </span>
                         <span
                           style={{
-                            marginLeft: "12px",
+                            marginLeft: "0.3rem",
                             fontWeight: 400,
                             color: "var(--text-muted)",
                           }}
@@ -3391,6 +3423,7 @@ function App() {
                     compactTaskSpacing,
                     headerGroups,
                     showInnerUnitGridlines: !isWeekSplit,
+                    collapseHeaders: collapseTimelineHeaders,
                   });
                 })}
               </div>

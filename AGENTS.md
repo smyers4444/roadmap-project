@@ -19,8 +19,9 @@ This repository contains **Roadmap Project**, a local planning board for buildin
 - React + TypeScript app built with Vite.
 - Main application logic lives in `src/App.tsx`.
 - Styling lives primarily in `src/App.css` and `src/index.css`.
-- Timeline behavior supports weekly and monthly views.
+- Timeline behavior supports weekly and monthly views, and stacked views can collapse their day headers when desired.
 - Tasks can be added manually, edited in place, imported from tab-separated data, reordered, filtered, and exported to CSV.
+- The import modal is draggable/resizable, opens compact near the top of the viewport, and keeps an editable preview grid for pasted spreadsheet data.
 - Task filters match text plus `Phase HEX` / `Category HEX`.
 - Timeline bars and legends can switch between category and phase color sources, and bar labels can switch between task, category, and phase text.
 - Task data persists in browser-local storage on the current device/browser.

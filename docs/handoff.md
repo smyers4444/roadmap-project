@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-17 (ui-polish branch: roadmap settings header/buttons added, import modal now draggable/resizable and auto-sizing from a compact top-aligned default, import preview compacted and column-sized, imported roadmap colors fixed, legend border removal still pending)
+Last updated: 2026-06-18 (ui-polish branch: roadmap settings header/buttons added, import modal now draggable/resizable and auto-sizing from a compact top-aligned default, collapse-timeline-headers toggle added, imported roadmap colors fixed, legend border removal still pending)
 
 ## Current Snapshot
 
@@ -80,7 +80,8 @@ Work these one at a time. After each change: review with user, wait for approval
 - Import preview now uses its own bounded scroll shell, denser typography, reduced padding, and column-specific widths so hex/date/line-padding fields stay compact while text fields keep reasonable room.
 - The import modal can now be dragged by its header and resized from the bottom-right corner.
 - The import modal opens near the top of the viewport in a compact state and expands toward a larger viewport-bounded size once preview rows are present, while still staying smaller for tiny imports and one-row previews.
-- `docs/product-brief.md` now matches the current presentation-mode behavior and records the remaining queued items (`I5` two-digit import year bug, `E11` Add Task should open the editor, `S4` legend border removal).
+- The roadmap settings Display section now includes `Collapse timeline headers`, which hides stacked timeline day headers and switches stacked month titles to weekday-aware date ranges.
+- `docs/product-brief.md` now matches the current presentation-mode behavior and tracks the completed `I5` / `E11` fixes alongside the remaining legend work.
 
 ## Key Architecture Notes
 
@@ -107,4 +108,4 @@ Work these one at a time. After each change: review with user, wait for approval
 - `CLAUDE.md` — project guidance and conventions
 - `docs/handoff.md` — this file
 
-**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, matching `0.25` line padding step, imported roadmap colors honoring explicit hex values, and the roadmap settings menu header/buttons. Remaining queue items are task-settings menu parity, an empty-roadmap import CTA, and legend border removal. `npm run build` and `npx eslint src/App.tsx` need to be rerun after this slice.
+**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, matching `0.25` line padding step, imported roadmap colors honoring explicit hex values, the roadmap settings menu header/buttons, the compact import modal rewrite, and the stacked-header collapse toggle. Remaining queue items are task-settings menu parity, an empty-roadmap import CTA, and legend border removal. `npm run build`, `npx eslint src/App.tsx`, and `git diff --check` are clean after this slice.
