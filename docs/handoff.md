@@ -13,7 +13,7 @@ This file is a rolling current-state brief for handing work to another chat and 
 - Update this file after material implementation changes, commits, or verification results.
 - Always leave the next recommended task clear enough for a new agent to start.
 
-Last updated: 2026-06-18 (ui-polish branch: roadmap settings header/buttons added, import modal now draggable/resizable and auto-sizing from a compact top-aligned default, collapse-timeline-headers toggle added, imported roadmap colors fixed, legend border removal still pending)
+Last updated: 2026-06-18 (ui-polish branch: timeline/calendar styling boundary cleanup landed, static header/chip/arrow presentation moved into CSS, legend border removal still pending)
 
 ## Current Snapshot
 
@@ -50,6 +50,8 @@ Roadmap Project v2 redesign—ground-up rewrite driven by product brief (`docs/p
 
 ### Completed this session
 
+- **Timeline/calendar styling cleanup** — Static presentation for timeline task bars, month/week headers, calendar chips, arrows, and selected/dimmed/dragged states now lives in reusable CSS classes. `src/App.tsx` keeps geometry and data-driven colors inline; `npm run build`, `npx eslint src/App.tsx`, and `git diff --check` all pass.
+- **Task panel/table/legend cleanup** — Moved purely presentational inline styles out of the task panel toolbar, task table headers/cells, row action controls, drag handle, hex color swatches, footer spacing, and legend card/items into reusable `App.css` classes. Behavior, sort state, drag handling, and data-driven widths stayed in TSX.
 - **Outer padding** — Header, canvas, task panel tab, and task panel margins increased from 16px to 20–30px so the roadmap doesn't sit flush against the viewport edge. Canvas: 30px L/R, 10px top. Task panel: 30px L/R, 24px top gap.
 - **Edit modal field removal** — Sub-task, Owner, and Week fields removed from the task edit modal. These fields still exist on the task object, still import from CSV, and still export to CSV — they are just not editable through the modal.
 - **Delete button in edit modal** — Red outlined "Delete" button added to the far left of the edit modal footer (`.v2-btn-danger` style). Clicking it prompts `window.confirm()` with the task name before removing the task and closing the modal.
@@ -108,4 +110,4 @@ Work these one at a time. After each change: review with user, wait for approval
 - `CLAUDE.md` — project guidance and conventions
 - `docs/handoff.md` — this file
 
-**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, matching `0.25` line padding step, imported roadmap colors honoring explicit hex values, the roadmap settings menu header/buttons, the compact import modal rewrite, and the stacked-header collapse toggle. Remaining queue items are task-settings menu parity, an empty-roadmap import CTA, and legend border removal. `npm run build`, `npx eslint src/App.tsx`, and `git diff --check` are clean after this slice.
+**Current state:** All prior phases merged to master. `ui-polish` branch has 9 commits of UI polish, with the presentation-mode refinement already reviewed. This working tree now includes the import-year fix, Add Task editor flow, matching `0.25` line padding step, imported roadmap colors honoring explicit hex values, the roadmap settings menu header/buttons, the compact import modal rewrite, the stacked-header collapse toggle, and the task panel/table/legend separation-of-concerns cleanup. Remaining queue items are task-settings menu parity, an empty-roadmap import CTA, and legend border removal. `npm run build` and `npx eslint src/App.tsx` are clean after this slice.

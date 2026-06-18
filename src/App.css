@@ -70,6 +70,10 @@
   flex-direction: column;
 }
 
+.v2-content-area--presentation {
+  padding-top: 48px;
+}
+
 /* ══════════════════════════════════════════════════════
    v2 LAYOUT SHELL
    Z-index stacking contract:
@@ -230,22 +234,32 @@
 }
 
 .v2-settings-panel {
-  position: fixed;
-  right: 16px;
-  top: 56px;
   width: 248px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
   padding: 12px;
-  z-index: 1000;
   max-height: calc(100vh - 72px);
   overflow-y: auto;
 }
 
+.v2-settings-panel--anchored {
+  position: fixed;
+  z-index: 1001;
+}
+
+.v2-settings-panel--compact {
+  max-height: calc(100vh - 48px);
+  height: fit-content;
+}
+
 .v2-settings-section {
   margin-bottom: 12px;
+}
+
+.v2-settings-section--flush {
+  margin-top: 0;
 }
 
 .v2-settings-section:last-child {
@@ -259,6 +273,26 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.v2-settings-heading--interactive {
+  cursor: pointer;
+}
+
+.v2-settings-heading--static {
+  cursor: default;
+}
+
+.v2-settings-heading--title {
+  margin-bottom: 8px;
+}
+
+.v2-settings-heading__chevron {
+  font-size: 14px;
 }
 
 .v2-settings-menu-actions {
@@ -317,6 +351,23 @@
   background: #f5f5f5;
 }
 
+.v2-btn-sm--full-width {
+  width: 100%;
+}
+
+.v2-btn-sm--stacked {
+  margin-top: 6px;
+}
+
+.v2-btn-sm--danger {
+  color: #c0392b;
+  border-color: #e0b0b0;
+}
+
+.v2-btn-sm--danger:hover {
+  background: #fef2f2;
+}
+
 .v2-btn-sm-active {
   background: #111 !important;
   color: #fff !important;
@@ -335,6 +386,25 @@
   white-space: nowrap;
 }
 
+.v2-control-input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.v2-control-input--compact {
+  width: 42px;
+  height: 24px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.v2-control-input--hex {
+  width: 70px;
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
 .v2-toggle-row {
   display: flex;
   align-items: center;
@@ -344,6 +414,10 @@
 
 .v2-settings-group {
   margin-top: 8px;
+}
+
+.v2-settings-group--spaced {
+  margin-top: 10px;
 }
 
 .v2-settings-subheading {
@@ -399,6 +473,53 @@
   border: none;
   border-top: 1px solid #eee;
   margin: 8px 0;
+}
+
+.v2-legend-card {
+  padding: 15px;
+  background-color: var(--bg-primary);
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+}
+
+.v2-legend-title {
+  margin: 0 0 10px 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.v2-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  column-gap: 12px;
+  row-gap: 8px;
+}
+
+.v2-legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.v2-legend-swatch {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  border: 1px solid var(--border-medium);
+}
+
+.v2-legend-label {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.v2-canvas--legend {
+  padding-top: 0;
 }
 
 /* ── Import modal ── */
@@ -701,6 +822,25 @@
   color: #555;
 }
 
+.v2-task-panel-clear {
+  margin-left: 10px;
+}
+
+.v2-panel-toolbar-status {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.v2-panel-toolbar-clear {
+  font-size: 11px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  padding: 0;
+}
+
 /* ── Task panel (expanded) ── */
 .v2-task-panel {
   background: #fff;
@@ -894,6 +1034,72 @@
   font-size: 10px;
   color: #888;
   background: #fafafa;
+}
+
+.v2-task-table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  flex: 0 0 auto;
+}
+
+.v2-task-table-col--drag {
+  width: 18px;
+}
+
+.v2-task-table-col--actions {
+  width: 110px;
+}
+
+.v2-task-table-row--dragged {
+  background-color: var(--bg-secondary);
+}
+
+.v2-task-table-drag-handle {
+  color: #ccc;
+  cursor: grab;
+  font-size: 12px;
+  user-select: none;
+  display: inline-block;
+}
+
+.v2-task-table-color-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.v2-task-table-color-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.v2-task-table-control-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.v2-task-row-action--compact {
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+.v2-number-input--line-pad {
+  width: 40px;
+  text-align: center;
+}
+
+.v2-task-table-sort-indicator {
+  font-size: 8px;
+  margin-left: 2px;
+}
+
+.v2-panel-footer-note {
+  margin-left: 10px;
 }
 
 h1 {
@@ -1100,6 +1306,17 @@ button:hover {
   font-weight: 700;
 }
 
+.stacked-period-title-main {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.stacked-period-title-meta {
+  margin-left: 0.3rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
 .stacked-period-board-scroll {
   width: 100%;
 }
@@ -1223,6 +1440,9 @@ button:hover {
   position: relative;
   z-index: 1;
   box-sizing: border-box;
+  align-self: center;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .calendar-task-chip:hover {
@@ -1231,6 +1451,10 @@ button:hover {
 
 .calendar-task-chip--selected {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+.calendar-task-chip--dimmed {
+  opacity: 0.78;
 }
 
 .calendar-task-chip-dot {
@@ -1299,27 +1523,42 @@ button:hover {
 
 /* ========== BOARD HEADER (Month/Week Headers) ========== */
 .board-header {
-  /* Grid layout applied via inline styles in JSX */
   background-color: var(--bg-header-dark); /* Light gray to distinguish from white grid */
   border-bottom: 1px solid var(--border-dark);
 }
 
+.board-header--grid {
+  display: grid;
+}
+
+.board-header--column {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Individual month/week header cells */
 .day-header {
-  /* flex: 1; -- REMOVED: now using grid */
   padding: 6px 8px;
   text-align: center;
-  /* borderRight applied via inline styles in JSX */
   font-weight: 700;
   font-size: 0.8rem;
   color: var(--text-primary);
-  box-sizing: border-box; /* Ensure padding is included in width */
+  box-sizing: border-box;
   line-height: 1.1;
 }
 
 .day-header--compact {
   padding: 3px 8px;
   font-size: 0.75rem;
+}
+
+.day-header--muted {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.day-header--month {
+  font-size: 0.8rem;
 }
 
 .day-header:last-child {
@@ -1346,6 +1585,18 @@ button:hover {
   border-right: none;
 }
 
+.timeline-board-frame {
+  position: relative;
+}
+
+.timeline-board-track {
+  width: 100%;
+  position: relative;
+  display: grid;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-medium);
+}
+
 .task-bar {
   position: absolute;
   min-height: 28px;
@@ -1369,6 +1620,47 @@ button:hover {
   word-break: break-word;
   line-height: 1.15;
   hyphens: auto;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.task-bar--spaced {
+  justify-content: space-between;
+}
+
+.task-bar--selected {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.task-bar--dimmed {
+  opacity: 0.72;
+}
+
+.task-bar--dragged {
+  opacity: 0.5;
+}
+
+.task-bar__label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.task-bar__arrow {
+  font-weight: 700;
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.task-bar__arrow--start {
+  margin-left: 4px;
+}
+
+.task-bar__arrow--end {
+  margin-right: 4px;
 }
 
 .task-bar:hover {

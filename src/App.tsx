@@ -1917,9 +1917,8 @@ function App() {
           >
             {!collapseHeaders && (
               <div
-                className="board-header"
+                className="board-header board-header--grid"
                 style={{
-                  display: "grid",
                   gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
                 }}
               >
@@ -1927,12 +1926,10 @@ function App() {
                   ? headerGroups.map((group, index) => (
                     <div
                       key={`${periodKey}-header-group-${group.key}`}
-                      className={`day-header${compactHeaderPadding ? " day-header--compact" : ""}`}
+                      className={`day-header${compactHeaderPadding ? " day-header--compact" : ""} day-header--muted`}
                       style={{
                         gridColumn: `span ${group.span}`,
                         borderRight: index < headerGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
-                        fontWeight: 500,
-                        color: "var(--text-secondary)",
                       }}
                       title={group.title}
                     >
@@ -2024,17 +2021,16 @@ function App() {
                 });
 
               return (
-                <div key={`${periodKey}-board`} style={{ position: "relative" }}>
-                  <div style={{ position: "relative", minHeight: `${Math.max(compactTaskSpacing ? 28 : 40, phaseTotalHeight + (compactTaskSpacing ? 2 : 0))}px` }}>
+                <div key={`${periodKey}-board`} className="timeline-board-frame">
+                  <div
+                    className="timeline-board-frame"
+                    style={{ minHeight: `${Math.max(compactTaskSpacing ? 28 : 40, phaseTotalHeight + (compactTaskSpacing ? 2 : 0))}px` }}
+                  >
                     <div
+                      className="timeline-board-track"
                       style={{
-                        width: "100%",
-                        position: "relative",
-                        display: "grid",
                         gridTemplateColumns: `repeat(${units.length}, minmax(0, 1fr))`,
-                        backgroundColor: "var(--bg-primary)",
                         minHeight: `${Math.max(compactTaskSpacing ? 28 : 40, phaseTotalHeight + (compactTaskSpacing ? 2 : 0))}px`,
-                        borderBottom: "1px solid var(--border-medium)",
                       }}
                     >
                       {units.map((_, index) => {
@@ -2083,7 +2079,13 @@ function App() {
                         return (
                           <div
                             key={`${periodKey}-task-${task.id}`}
-                            className="task-bar"
+                            className={`task-bar${selectedTimelineTaskId === task.id ? " task-bar--selected" : ""}${
+                              draggedTask === task.id
+                                ? " task-bar--dragged"
+                                : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id
+                                  ? " task-bar--dimmed"
+                                  : ""
+                            }`}
                             draggable
                             aria-pressed={selectedTimelineTaskId === task.id}
                             onDragStart={() => handleDragStart(task.id)}
@@ -2111,25 +2113,14 @@ function App() {
                               top: `${top}px`,
                               backgroundColor: bgColor,
                               color: textColor,
-                              display: "flex",
-                              alignItems: "center",
-                              cursor: "pointer",
-                              opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
-                              transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
-                              boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
                             }}
                           >
                             {taskStartsBeforeView ? (
-                              <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
+                              <span className="task-bar__arrow task-bar__arrow--start">◀</span>
                             ) : null}
                             <span
+                              className="task-bar__label"
                               style={{
-                                flex: 1,
-                                minWidth: 0,
-                                textAlign: "center",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "normal",
                                 paddingLeft: labelPaddingLeft,
                                 paddingRight: labelPaddingRight,
                               }}
@@ -2137,7 +2128,7 @@ function App() {
                               {getTaskBarText(task)}
                             </span>
                             {taskEndsAfterView ? (
-                              <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
+                              <span className="task-bar__arrow task-bar__arrow--end">▶</span>
                             ) : null}
                           </div>
                         );
@@ -2229,9 +2220,9 @@ function App() {
       {!presentationMode && showSettingsPanel && (
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowSettingsPanel(false)} />
-          <div className="v2-settings-panel" style={{ position: "fixed", top: settingsPanelPos.top, right: settingsPanelPos.right, zIndex: 1001 }}>
-            <div className="v2-settings-section" style={{ marginTop: "0" }}>
-              <div className="v2-settings-heading" style={{ cursor: "default", display: "flex", justifyContent: "space-between", userSelect: "none", marginBottom: "8px" }}>
+          <div className="v2-settings-panel v2-settings-panel--anchored" style={{ top: settingsPanelPos.top, right: settingsPanelPos.right }}>
+            <div className="v2-settings-section v2-settings-section--flush">
+              <div className="v2-settings-heading v2-settings-heading--static v2-settings-heading--title">
                 <span>Roadmap settings</span>
               </div>
               <div className="v2-settings-menu-actions">
@@ -2254,8 +2245,8 @@ function App() {
 
             {/* Range mode (N1) */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsRangeModeExpanded(p => !p)}>
-                <span>Range mode</span><span style={{ fontSize: "14px" }}>{settingsRangeModeExpanded ? "▾" : "▸"}</span>
+              <div className="v2-settings-heading v2-settings-heading--interactive" onClick={() => setSettingsRangeModeExpanded(p => !p)}>
+                <span>Range mode</span><span className="v2-settings-heading__chevron">{settingsRangeModeExpanded ? "▾" : "▸"}</span>
               </div>
               {settingsRangeModeExpanded && <>
               <select
@@ -2344,8 +2335,8 @@ function App() {
 
             {/* Layout */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsLayoutExpanded(p => !p)}>
-                <span>Layout</span><span style={{ fontSize: "14px" }}>{settingsLayoutExpanded ? "▾" : "▸"}</span>
+              <div className="v2-settings-heading v2-settings-heading--interactive" onClick={() => setSettingsLayoutExpanded(p => !p)}>
+                <span>Layout</span><span className="v2-settings-heading__chevron">{settingsLayoutExpanded ? "▾" : "▸"}</span>
               </div>
               {settingsLayoutExpanded && <>
               <div className="v2-toggle-row">
@@ -2382,8 +2373,8 @@ function App() {
 
             {/* Display */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsDisplayExpanded(p => !p)}>
-                <span>Display</span><span style={{ fontSize: "14px" }}>{settingsDisplayExpanded ? "▾" : "▸"}</span>
+              <div className="v2-settings-heading v2-settings-heading--interactive" onClick={() => setSettingsDisplayExpanded(p => !p)}>
+                <span>Display</span><span className="v2-settings-heading__chevron">{settingsDisplayExpanded ? "▾" : "▸"}</span>
               </div>
               {settingsDisplayExpanded && <>
               <div className="v2-toggle-row">
@@ -2424,8 +2415,8 @@ function App() {
 
             {/* Colors */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsColorsExpanded(p => !p)}>
-                <span>Colors</span><span style={{ fontSize: "14px" }}>{settingsColorsExpanded ? "▾" : "▸"}</span>
+              <div className="v2-settings-heading v2-settings-heading--interactive" onClick={() => setSettingsColorsExpanded(p => !p)}>
+                <span>Colors</span><span className="v2-settings-heading__chevron">{settingsColorsExpanded ? "▾" : "▸"}</span>
               </div>
               {settingsColorsExpanded && <>
               <div className="v2-settings-group">
@@ -2447,7 +2438,7 @@ function App() {
                   </button>
                 </div>
               </div>
-              <div className="v2-settings-group" style={{ marginTop: "10px" }}>
+              <div className="v2-settings-group v2-settings-group--spaced">
                 <div className="v2-settings-subheading">Bar label source</div>
                 <div className="v2-settings-pills">
                   <button
@@ -2480,12 +2471,11 @@ function App() {
 
             {/* Danger */}
             <div className="v2-settings-section">
-              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setSettingsDangerExpanded(p => !p)}>
-                <span>Danger</span><span style={{ fontSize: "14px" }}>{settingsDangerExpanded ? "▾" : "▸"}</span>
+              <div className="v2-settings-heading v2-settings-heading--interactive" onClick={() => setSettingsDangerExpanded(p => !p)}>
+                <span>Danger</span><span className="v2-settings-heading__chevron">{settingsDangerExpanded ? "▾" : "▸"}</span>
               </div>
               {settingsDangerExpanded && <button
-                className="v2-btn-sm"
-                style={{ color: "#c0392b", borderColor: "#e0b0b0", width: "100%" }}
+                className="v2-btn-sm v2-btn-sm--full-width v2-btn-sm--danger"
                 onClick={() => {
                   if (window.confirm(`Clear all ${tasks.length} tasks? This cannot be undone.`)) {
                     setTasks([]);
@@ -2821,7 +2811,7 @@ function App() {
       )}
 
       {/* ─── CONTENT AREA (scrollable) ─── */}
-      <div className="v2-content-area" style={{ paddingTop: presentationMode ? "48px" : "0" }}>
+      <div className={`v2-content-area${presentationMode ? " v2-content-area--presentation" : ""}`}>
         {/* ─── TIMELINE CANVAS ─── */}
         <div className="v2-canvas">
         <div>
@@ -2865,9 +2855,8 @@ function App() {
                   <div className="board">
                     {/* ========== WEEK HEADER ROW ========== */}
                     <div
-                      className="board-header"
+                      className="board-header board-header--grid"
                       style={{
-                        display: "grid",
                         gridTemplateColumns: `repeat(${weekSpan}, 1fr)`,
                       }}
                     >
@@ -2950,23 +2939,17 @@ function App() {
                       return (
                         <div
                           key={`phase-section-${phase}`}
-                          style={{
-                            position: "relative",
-                          }}
+                          className="timeline-board-frame"
                         >
                           {/* ========== TASK AREA ========== */}
                           {/* Container for all task bars in the combined board */}
-                          <div style={{ position: "relative", minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
+                          <div className="timeline-board-frame" style={{ minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
                             {/* Grid for column structure */}
                             <div
+                              className="timeline-board-track"
                               style={{
-                                width: "100%",
-                                position: "relative",
-                                display: "grid",
                                 gridTemplateColumns: `repeat(${weekSpan}, 1fr)`,
-                                backgroundColor: "var(--bg-primary)",
                                 minHeight: `${Math.max(40, phaseTotalHeight)}px`,
-                                borderBottom: "1px solid var(--border-medium)",
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
@@ -3000,7 +2983,13 @@ function App() {
                                 return (
                                   <div
                                     key={task.id}
-                                    className="task-bar"
+                                    className={`task-bar task-bar--spaced${selectedTimelineTaskId === task.id ? " task-bar--selected" : ""}${
+                                      draggedTask === task.id
+                                        ? " task-bar--dragged"
+                                        : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id
+                                          ? " task-bar--dimmed"
+                                          : ""
+                                    }`}
                                     draggable
                                     aria-pressed={selectedTimelineTaskId === task.id}
                                     onDragStart={() => handleDragStart(task.id)}
@@ -3030,21 +3019,14 @@ function App() {
                                       top: `${top}px`,
                                       backgroundColor: bgColor,
                                       color: textColor,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "space-between",
-                                      cursor: "pointer",
-                                      opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
-                                      transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
-                                      boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
                                     }}
                                   >
                                     {taskStartsBeforeView && (
-                                      <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
+                                      <span className="task-bar__arrow task-bar__arrow--start">◀</span>
                                     )}
-                                    <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{getTaskBarText(task)}</span>
+                                    <span className="task-bar__label">{getTaskBarText(task)}</span>
                                     {taskEndsAfterView && (
-                                      <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
+                                      <span className="task-bar__arrow task-bar__arrow--end">▶</span>
                                     )}
                                   </div>
                                 );
@@ -3158,16 +3140,10 @@ function App() {
                 return (
                   <div className="board">
                     {/* ========== MONTH HEADER ROW ========== */}
-                    <div
-                      className="board-header"
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                      }}
-                    >
+                    <div className="board-header board-header--column">
                       <div
+                        className="board-header board-header--grid"
                         style={{
-                          display: "grid",
                           gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
                         }}
                       >
@@ -3175,12 +3151,11 @@ function App() {
                           const monthNumber = showMonthNumbers ? getRelativeMonthNumber(month, tasks) : index + 1;
 
                           return (
-                          <div
+                            <div
                               key={`month-${month.toISOString()}`}
-                              className="day-header day-header--compact"
-                            style={{
+                              className="day-header day-header--compact day-header--month"
+                              style={{
                                 borderRight: index < monthColumns.length - 1 ? "1px solid var(--border-dark)" : "none",
-                                fontSize: "0.8rem",
                               }}
                               title={`${format(month, "MMM dd, yyyy")} – ${format(endOfMonth(month), "MMM dd, yyyy")}`}
                             >
@@ -3190,19 +3165,17 @@ function App() {
                         })}
                       </div>
                       <div
+                        className="board-header board-header--grid"
                         style={{
-                          display: "grid",
                           gridTemplateColumns: `repeat(${weekHeaderGroups.length}, 1fr)`,
                         }}
                       >
                         {weekHeaderGroups.map((group, index) => (
                           <div
                             key={`month-week-${group.key}`}
-                            className="day-header day-header--compact"
+                            className="day-header day-header--compact day-header--muted"
                             style={{
                               borderRight: index < weekHeaderGroups.length - 1 ? "1px solid var(--border-dark)" : "none",
-                              fontSize: "0.75rem",
-                              color: "var(--text-secondary)",
                             }}
                             title={group.title}
                           >
@@ -3262,23 +3235,17 @@ function App() {
                       return (
                         <div
                           key={`phase-section-${phase}`}
-                          style={{
-                            position: "relative",
-                          }}
+                          className="timeline-board-frame"
                         >
                           {/* ========== TASK AREA ========== */}
                           {/* Container for all task bars in the combined board */}
-                          <div style={{ position: "relative", minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
+                          <div className="timeline-board-frame" style={{ minHeight: `${Math.max(40, phaseTotalHeight)}px` }}>
                             {/* Grid for column structure */}
                             <div
+                              className="timeline-board-track"
                               style={{
-                                width: "100%",
-                                position: "relative",
-                                display: "grid",
                                 gridTemplateColumns: `repeat(${monthColumns.length}, 1fr)`,
-                                backgroundColor: "var(--bg-primary)",
                                 minHeight: `${Math.max(40, phaseTotalHeight)}px`,
-                                borderBottom: "1px solid var(--border-medium)",
                               }}
                             >
                               {/* Grid cells with borders (except last column) */}
@@ -3312,7 +3279,13 @@ function App() {
                                 return (
                                   <div
                                     key={task.id}
-                                    className="task-bar"
+                                    className={`task-bar task-bar--spaced${selectedTimelineTaskId === task.id ? " task-bar--selected" : ""}${
+                                      draggedTask === task.id
+                                        ? " task-bar--dragged"
+                                        : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id
+                                          ? " task-bar--dimmed"
+                                          : ""
+                                    }`}
                                     draggable
                                     aria-pressed={selectedTimelineTaskId === task.id}
                                     onDragStart={() => handleDragStart(task.id)}
@@ -3342,21 +3315,14 @@ function App() {
                                       top: `${top}px`,
                                       backgroundColor: bgColor,
                                       color: textColor,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "space-between",
-                                      cursor: "pointer",
-                                      opacity: draggedTask === task.id ? 0.5 : selectedTimelineTaskId !== null && selectedTimelineTaskId !== task.id ? 0.72 : 1,
-                                      transition: "opacity 0.2s, box-shadow 0.2s, transform 0.2s",
-                                      boxShadow: selectedTimelineTaskId === task.id ? "0 0 0 3px rgba(37, 99, 235, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.9)" : undefined,
                                     }}
                                   >
                                     {taskStartsBeforeView && (
-                                      <span style={{ marginLeft: "4px", fontWeight: "bold", fontSize: "1.1em" }}>◀</span>
+                                      <span className="task-bar__arrow task-bar__arrow--start">◀</span>
                                     )}
-                                    <span style={{ flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal" }}>{getTaskBarText(task)}</span>
+                                    <span className="task-bar__label">{getTaskBarText(task)}</span>
                                     {taskEndsAfterView && (
-                                      <span style={{ marginRight: "4px", fontWeight: "bold", fontSize: "1.1em" }}>▶</span>
+                                      <span className="task-bar__arrow task-bar__arrow--end">▶</span>
                                     )}
                                   </div>
                                 );
@@ -3396,20 +3362,14 @@ function App() {
                     periodKey: `month-${month.toISOString()}`,
                     title: (
                       <>
-                        <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>
+                        <span className="stacked-period-title-main">
                           {showMonthNumbers
                             ? `Month ${getRelativeMonthNumber(month, tasks)}`
                             : collapseTimelineHeaders
                               ? `${formatCollapsedDateRange(periodStart, periodEnd)}`
                               : `${formatCompactMonthRange(periodStart, periodEnd)}, ${format(periodEnd, "yyyy")}`}
                         </span>
-                        <span
-                          style={{
-                            marginLeft: "0.3rem",
-                            fontWeight: 400,
-                            color: "var(--text-muted)",
-                          }}
-                        >
+                        <span className="stacked-period-title-meta">
                           weeks {getRelativeWeekNumberFromAnchor(periodStart, monthRangeStart)} – {getRelativeWeekNumberFromAnchor(periodEnd, monthRangeStart)}
                         </span>
                       </>
@@ -3503,7 +3463,9 @@ function App() {
                                 <button
                                   key={`${task.id}-week-${weekIndex}`}
                                   type="button"
-                                  className={`calendar-task-chip${isSelected ? " calendar-task-chip--selected" : ""}`}
+                                  className={`calendar-task-chip${isSelected ? " calendar-task-chip--selected" : ""}${
+                                    selectedTimelineTaskId !== null && !isSelected ? " calendar-task-chip--dimmed" : ""
+                                  }`}
                                   aria-pressed={isSelected}
                                   onClick={() => toggleTimelineTaskSelection(task.id)}
                                   onContextMenu={(e) => {
@@ -3518,15 +3480,12 @@ function App() {
                                     `Start: ${format(task.startDate, "MMM dd, yyyy")}`,
                                     `End: ${format(task.endDate, "MMM dd, yyyy")}`,
                                   ].filter(Boolean).join("\n")}
-                            style={{
-                              gridColumn: `${startIndex + 1} / ${endIndex + 2}`,
-                              gridRow: `${lane + 2}`,
-                              alignSelf: "center",
-                              backgroundColor: blendHexWithWhite(getTaskBarColorHex(task)),
-                              borderColor: colorValue,
-                              color: "var(--text-primary)",
-                              opacity: selectedTimelineTaskId !== null && !isSelected ? 0.78 : 1,
-                            }}
+                                  style={{
+                                    gridColumn: `${startIndex + 1} / ${endIndex + 2}`,
+                                    gridRow: `${lane + 2}`,
+                                    backgroundColor: blendHexWithWhite(getTaskBarColorHex(task)),
+                                    borderColor: colorValue,
+                                  }}
                                 >
                                   <span className="calendar-task-chip-dot" style={{ backgroundColor: colorValue }}></span>
                                   {taskStartsBeforeSegment && (
@@ -3555,7 +3514,7 @@ function App() {
       </div>
 
       {/* ─── LEGENDS ─── */}
-      <div className="v2-canvas" style={{ paddingTop: 0 }}>
+      <div className="v2-canvas v2-canvas--legend">
         {(() => {
           const visibleColorValues = Array.from(
             new Set(
@@ -3568,17 +3527,17 @@ function App() {
           if (visibleColorValues.length === 0) return null;
 
           return (
-            <div style={{ padding: "15px", backgroundColor: "var(--bg-primary)", borderRadius: "4px", border: "1px solid var(--border-light)" }}>
-              <h4 style={{ margin: "0 0 10px 0", color: "var(--text-secondary)", fontSize: "0.875rem", fontWeight: 600 }}>{getColorKeyLabel()}</h4>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", columnGap: "12px", rowGap: "8px" }}>
+            <div className="v2-legend-card">
+              <h4 className="v2-legend-title">{getColorKeyLabel()}</h4>
+              <div className="v2-legend-grid">
                 {visibleColorValues.map((value) => {
                   const taskWithValue = visibleLegendTasks.find((task) => getColorKeyValue(task) === value);
                   const colorHex = getTaskBarColorHex(taskWithValue || visibleLegendTasks[0]);
                   const color = colorHex ? `#${colorHex.replace(/^#/, "")}` : "var(--task-bg-fallback)";
                   return (
-                    <div key={value} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                      <div style={{ width: "20px", height: "20px", minWidth: "20px", minHeight: "20px", flexShrink: 0, backgroundColor: color, borderRadius: "3px", border: "1px solid var(--border-medium)" }} />
-                      <span style={{ color: "var(--text-primary)", fontSize: "0.875rem", lineHeight: "1.2" }}>{value}</span>
+                    <div key={value} className="v2-legend-item">
+                      <div className="v2-legend-swatch" style={{ backgroundColor: color }} />
+                      <span className="v2-legend-label">{value}</span>
                     </div>
                   );
                 })}
@@ -3618,13 +3577,13 @@ function App() {
               onChange={(e) => setFilterText(e.target.value)}
             />
             {(filterText.trim() || selectedTimelineTask) && (
-              <span style={{ fontSize: "11px", color: "#888", whiteSpace: "nowrap" }}>
+              <span className="v2-panel-toolbar-status">
                 {filteredAndSortedTasks.length} result{filteredAndSortedTasks.length !== 1 ? "s" : ""}
                 {selectedTimelineTask && (
                   <>
                     {" · "}
                     <button
-                      style={{ fontSize: "11px", background: "none", border: "none", cursor: "pointer", color: "#888", padding: 0 }}
+                      className="v2-panel-toolbar-clear"
                       onClick={(e) => { e.stopPropagation(); setSelectedTimelineTaskId(null); }}
                     >
                       ✕ clear
@@ -3657,11 +3616,11 @@ function App() {
               </svg>
             </button>
           </div>
-          <div style={{ overflowX: "auto", overflowY: "auto", flex: "0 0 auto" }}>
+          <div className="v2-task-table-scroll">
             <table className="v2-task-table">
               <thead>
                 <tr>
-                  <th style={{ width: "18px" }}></th>
+                  <th className="v2-task-table-col--drag"></th>
                   {(
                     [
                       { key: "displayOrder" as const, label: "Order", width: "48px" },
@@ -3686,11 +3645,11 @@ function App() {
                     >
                       {col.label}
                       {sortBy === col.key && (
-                        <span style={{ fontSize: "8px", marginLeft: "2px" }}>{sortOrder === "asc" ? "▲" : "▼"}</span>
+                        <span className="v2-task-table-sort-indicator">{sortOrder === "asc" ? "▲" : "▼"}</span>
                       )}
                     </th>
                   ))}
-                  <th style={{ width: "110px" }}>Actions</th>
+                  <th className="v2-task-table-col--actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -3702,15 +3661,15 @@ function App() {
                     onDragOver={handleDragOver}
                     onDrop={() => handleDrop(t.id)}
                     onDragEnd={handleDragEnd}
-                    style={{ backgroundColor: t.id === draggedTask ? "var(--bg-secondary)" : undefined }}
+                    className={t.id === draggedTask ? "v2-task-table-row--dragged" : undefined}
                   >
-                    <td><span style={{ color: "#ccc", cursor: "grab", fontSize: "12px", userSelect: "none" }}>⠇</span></td>
+                    <td><span className="v2-task-table-drag-handle">⠇</span></td>
                     <td>{t.displayOrder}</td>
                     <td><input type="text" value={t.phase || ""} onChange={(e) => updateTask(t.id, "phase", e.target.value)} /></td>
                     {showHexColumns && (
                       <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                          {t.phaseHex && <span style={{ width: "9px", height: "9px", borderRadius: "2px", backgroundColor: `#${t.phaseHex.replace(/^#/, "")}`, display: "inline-block", border: "1px solid rgba(0,0,0,.1)", flexShrink: 0 }} />}
+                        <div className="v2-task-table-color-row">
+                          {t.phaseHex && <span className="v2-task-table-color-swatch" style={{ backgroundColor: `#${t.phaseHex.replace(/^#/, "")}` }} />}
                           <input type="text" value={t.phaseHex || ""} onChange={(e) => updateTask(t.id, "phaseHex", e.target.value)} placeholder="hex" />
                         </div>
                       </td>
@@ -3718,8 +3677,8 @@ function App() {
                     <td><input type="text" value={t.category || ""} onChange={(e) => updateTask(t.id, "category", e.target.value)} /></td>
                     {showHexColumns && (
                       <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                          {t.categoryHex && <span style={{ width: "9px", height: "9px", borderRadius: "2px", backgroundColor: `#${t.categoryHex.replace(/^#/, "")}`, display: "inline-block", border: "1px solid rgba(0,0,0,.1)", flexShrink: 0 }} />}
+                        <div className="v2-task-table-color-row">
+                          {t.categoryHex && <span className="v2-task-table-color-swatch" style={{ backgroundColor: `#${t.categoryHex.replace(/^#/, "")}` }} />}
                           <input type="text" value={t.categoryHex || ""} onChange={(e) => updateTask(t.id, "categoryHex", e.target.value)} placeholder="hex" />
                         </div>
                       </td>
@@ -3742,12 +3701,11 @@ function App() {
                       />
                     </td>
                     <td className="v2-task-table-line-pad-cell">
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <div className="v2-task-table-control-row">
                         <button
-                          className="v2-task-row-action"
+                          className="v2-task-row-action v2-task-row-action--compact"
                           title="Decrease by 0.25"
                           onClick={() => updateTask(t.id, "lineHeightAdjust", Math.max(0, (t.lineHeightAdjust ?? 0) - 0.25))}
-                          style={{ padding: "2px 4px", fontSize: "11px" }}
                         >
                           −
                         </button>
@@ -3756,20 +3714,19 @@ function App() {
                           value={t.lineHeightAdjust ?? 0}
                           onChange={(e) => updateTask(t.id, "lineHeightAdjust", Number(e.target.value))}
                           step={0.25}
-                          style={{ width: "40px", textAlign: "center" }}
+                          className="v2-number-input--line-pad"
                         />
                         <button
-                          className="v2-task-row-action"
+                          className="v2-task-row-action v2-task-row-action--compact"
                           title="Increase by 0.25"
                           onClick={() => updateTask(t.id, "lineHeightAdjust", (t.lineHeightAdjust ?? 0) + 0.25)}
-                          style={{ padding: "2px 4px", fontSize: "11px" }}
                         >
                           +
                         </button>
                       </div>
                     </td>
                     <td className="v2-task-table-actions-cell">
-                      <div style={{ display: "flex", gap: "4px" }}>
+                      <div className="v2-task-table-control-row">
                         <button
                           className="v2-task-row-action"
                           title="Edit"
@@ -3800,7 +3757,7 @@ function App() {
           </div>
           <div className="v2-panel-footer">
             {tasks.length} task{tasks.length !== 1 ? "s" : ""} · drag ⠇ to reorder · click a header to sort
-            <span style={{ marginLeft: "10px" }}>Saved in this browser only.</span>
+            <span className="v2-panel-footer-note">Saved in this browser only.</span>
           </div>
         </div>
       )}
@@ -3808,9 +3765,9 @@ function App() {
       {!presentationMode && showColorsPanel && (
         <>
           <div className="v2-settings-backdrop" onClick={() => setShowColorsPanel(false)} />
-          <div className="v2-settings-panel" style={{ position: "fixed", top: colorsPanelPos.top, right: colorsPanelPos.right, zIndex: 1001, width: "248px", height: "fit-content", maxHeight: "calc(100vh - 48px)", overflowY: "auto" }}>
-            <div className="v2-settings-section" style={{ marginTop: "0" }}>
-              <div className="v2-settings-heading" style={{ cursor: "default", display: "flex", justifyContent: "space-between", userSelect: "none", marginBottom: "8px" }}>
+          <div className="v2-settings-panel v2-settings-panel--anchored v2-settings-panel--compact" style={{ top: colorsPanelPos.top, right: colorsPanelPos.right }}>
+            <div className="v2-settings-section v2-settings-section--flush">
+              <div className="v2-settings-heading v2-settings-heading--static v2-settings-heading--title">
                 <span>Task settings</span>
               </div>
               <div className="v2-settings-menu-actions">
@@ -3830,9 +3787,9 @@ function App() {
             </div>
 
             <hr className="v2-divider" />
-            <div className="v2-settings-section" style={{ marginTop: "0" }}>
-              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setTaskSettingsDisplayExpanded(p => !p)}>
-                <span>Display</span><span style={{ fontSize: "14px" }}>{taskSettingsDisplayExpanded ? "▾" : "▸"}</span>
+            <div className="v2-settings-section v2-settings-section--flush">
+              <div className="v2-settings-heading v2-settings-heading--interactive" onClick={() => setTaskSettingsDisplayExpanded(p => !p)}>
+                <span>Display</span><span className="v2-settings-heading__chevron">{taskSettingsDisplayExpanded ? "▾" : "▸"}</span>
               </div>
               {taskSettingsDisplayExpanded && <>
               <div className="v2-toggle-row">
@@ -3846,8 +3803,7 @@ function App() {
               </div>
               {import.meta.env.DEV && (
                 <button
-                  className="v2-btn-sm"
-                  style={{ width: "100%", marginTop: "6px" }}
+                  className="v2-btn-sm v2-btn-sm--full-width v2-btn-sm--stacked"
                   onClick={() => { addTestTask(); setShowColorsPanel(false); }}
                 >
                   Add test task
@@ -3860,12 +3816,11 @@ function App() {
 
             <div className="v2-settings-section">
               <div
-                className="v2-settings-heading"
-                style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }}
+                className="v2-settings-heading v2-settings-heading--interactive"
                 onClick={() => setTaskSettingsPhasesExpanded(e => !e)}
               >
                 <span>Phases</span>
-                <span style={{ fontSize: "14px" }}>{taskSettingsPhasesExpanded ? "▾" : "▸"}</span>
+                <span className="v2-settings-heading__chevron">{taskSettingsPhasesExpanded ? "▾" : "▸"}</span>
               </div>
               {taskSettingsPhasesExpanded && (phases.length === 0 ? (
                 <em style={{ color: "#999", fontSize: "11px" }}>No phases</em>
@@ -3894,12 +3849,11 @@ function App() {
 
             <div className="v2-settings-section">
               <div
-                className="v2-settings-heading"
-                style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }}
+                className="v2-settings-heading v2-settings-heading--interactive"
                 onClick={() => setTaskSettingsCategoriesExpanded(e => !e)}
               >
                 <span>Categories</span>
-                <span style={{ fontSize: "14px" }}>{taskSettingsCategoriesExpanded ? "▾" : "▸"}</span>
+                <span className="v2-settings-heading__chevron">{taskSettingsCategoriesExpanded ? "▾" : "▸"}</span>
               </div>
               {taskSettingsCategoriesExpanded && (categories.length === 0 ? (
                 <em style={{ color: "#999", fontSize: "11px" }}>No categories</em>
@@ -3927,12 +3881,11 @@ function App() {
             <hr className="v2-divider" />
 
             <div className="v2-settings-section">
-              <div className="v2-settings-heading" style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", userSelect: "none" }} onClick={() => setTaskSettingsDangerExpanded(p => !p)}>
-                <span>Danger</span><span style={{ fontSize: "14px" }}>{taskSettingsDangerExpanded ? "▾" : "▸"}</span>
+              <div className="v2-settings-heading v2-settings-heading--interactive" onClick={() => setTaskSettingsDangerExpanded(p => !p)}>
+                <span>Danger</span><span className="v2-settings-heading__chevron">{taskSettingsDangerExpanded ? "▾" : "▸"}</span>
               </div>
               {taskSettingsDangerExpanded && <button
-                className="v2-btn-sm"
-                style={{ color: "#c0392b", borderColor: "#e0b0b0", width: "100%" }}
+                className="v2-btn-sm v2-btn-sm--full-width v2-btn-sm--danger"
                 onClick={() => {
                   if (window.confirm(`Clear all ${tasks.length} tasks? This cannot be undone.`)) {
                     setTasks([]);
@@ -3955,4 +3908,3 @@ function App() {
 }
 
 export default App;
-
